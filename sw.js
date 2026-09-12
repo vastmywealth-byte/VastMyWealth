@@ -5,9 +5,7 @@ const CACHE_NAME = 'vmw-cache-v2';
 const urlsToCache = [
   './',
   './index.html',
-  './banker.html',
-  './style.css',
-  './manifest.json',
+    './manifest.json',
   './1000550390.png'
 ];
 
