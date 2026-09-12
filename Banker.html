@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banker Module — VastMyWealth</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0B1E3D">
+<link rel="apple-touch-icon" href="1000550390.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <div class="content-panel">
+    <a href="index.html" class="back-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      Back to portal
+    </a>
+
+    <h1>Banker module</h1>
+    <p class="lede">Generate your banker code, manage cases, onboard your team, and track payouts — all from one dashboard.</p>
+
+    <ul class="feature-list">
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+        Route rejected cases to matching lenders automatically
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+        Add your team and manage submissions in one place
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+        Track disbursements and payouts by login
+      </li>
+    </ul>
+
+    <div class="stack cta-single">
+      <a href="https://vastmywealth-byte.github.io/Bank-Channel/" class="portal-card primary card-apply">
+        <span class="icon-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><circle cx="12" cy="11" r="1.4"/><path d="M12 12.4v2.6"/></svg>
+        </span>
+        <span class="card-text">
+          <span class="card-title">Enter Banker Portal</span>
+          <span class="card-desc">Log in or register with your banker code</span>
+        </span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </a>
+    </div>
+
+    <p class="footer-note">Secured with 256-bit encryption.<br>A VastMyWealth Digital product.</p>
+  </div>
+
+  <div class="visual-panel">
+    <div class="chart-caption">
+      <div class="eyebrow-text">Banker network</div>
+      <p>Every case routed to the right lender, every payout tracked.</p>
+    </div>
+    <svg viewBox="0 0 440 340" width="82%" style="max-width:380px;">
+      <circle cx="220" cy="170" r="34" fill="none" stroke="#C89B3C" stroke-width="2.2"/>
+      <circle cx="220" cy="170" r="6" fill="#C89B3C"/>
+      <g stroke="#C89B3C" stroke-width="1.6" stroke-linecap="round" opacity="0.85">
+        <line x1="220" y1="170" x2="90" y2="90"/>
+        <line x1="220" y1="170" x2="350" y2="90"/>
+        <line x1="220" y1="170" x2="80" y2="250"/>
+        <line x1="220" y1="170" x2="360" y2="250"/>
+        <line x1="220" y1="170" x2="220" y2="40"/>
+      </g>
+      <g fill="#F5F6F8">
+        <circle class="node" cx="90" cy="90" r="5" style="animation-delay:0.3s"/>
+        <circle class="node" cx="350" cy="90" r="5" style="animation-delay:0.5s"/>
+        <circle class="node" cx="80" cy="250" r="5" style="animation-delay:0.7s"/>
+        <circle class="node" cx="360" cy="250" r="5" style="animation-delay:0.9s"/>
+        <circle class="node" cx="220" cy="40" r="5" style="animation-delay:1.1s"/>
+      </g>
+    </svg>
+  </div>
+
+</div>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Service worker registered:', reg.scope))
+        .catch(err => console.error('Service worker registration failed:', err));
+    });
+  }
+</script>
+
+</body>
+</html>
