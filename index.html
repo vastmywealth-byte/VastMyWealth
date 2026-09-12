@@ -1,106 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VastMyWealth — Loan & Channel Portal</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0B1E3D">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="apple-touch-icon" href="1000550390.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
+// Bump this version number whenever you update cached files,
+// so returning users get the fresh version instead of a stale cache.
+const CACHE_NAME = 'vmw-cache-v3';
 
-<div class="shell">
+const urlsToCache = [
+  './',
+  './index.html',
+  './banker.html',
+  './style.css',
+  './manifest.json',
+  './1000550390.png'
+];
 
-  <div class="content-panel">
-    <div class="brand-row">
-      <img src="1000550390.png" alt="" class="brand-mark" onerror="this.style.display='none'">
-      <span class="brand-name">VastMyWealth</span>
-    </div>
+// On install, pre-cache the core files so the app can still open offline.
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+  );
+  self.skipWaiting();
+});
 
-    <h1>Institutional loan &amp; channel portal</h1>
-    <p class="lede">Apply for a loan, manage your partner channel, or access banker tools — all from one secure portal.</p>
+// Clean up old caches when a new service worker takes over.
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      )
+    )
+  );
+  self.clients.claim();
+});
 
-    <div class="stack">
-      <a href="https://loan.vastmywealth.com/portal-unified-application.html?ref=P592020" class="portal-card primary card-apply">
-        <span class="icon-chip">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10"/><path d="M19 21V10"/><path d="M9 21V10"/><path d="M15 21V10"/><path d="M2 10l10-6 10 6"/></svg>
-        </span>
-        <span class="card-text">
-          <span class="card-title">Apply for Loan</span>
-          <span class="card-desc">Start a new application in minutes</span>
-        </span>
-        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-      </a>
-
-      <a href="https://loan.vastmywealth.com/partner-login.html" class="portal-card card-partner">
-        <span class="icon-chip">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6"/><rect x="2" y="7" width="8" height="10" rx="4"/><rect x="14" y="7" width="8" height="10" rx="4"/></svg>
-        </span>
-        <span class="card-text">
-          <span class="card-title">Partner Login/Register</span>
-          <span class="card-desc">Manage your channel and leads</span>
-        </span>
-        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-      </a>
-
-      <a href="banker.html" class="portal-card card-banker">
-        <span class="icon-chip">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><circle cx="12" cy="11" r="1.4"/><path d="M12 12.4v2.6"/></svg>
-        </span>
-        <span class="card-text">
-          <span class="card-title">Banker Module</span>
-          <span class="card-desc">Access channel and case tools</span>
-        </span>
-        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-      </a>
-    </div>
-
-    <p class="footer-note">Secured with 256-bit encryption.<br>A VastMyWealth Digital product.</p>
-  </div>
-
-  <div class="visual-panel">
-    <div class="chart-caption">
-      <div class="eyebrow-text">Channel growth</div>
-      <p>Loans, partners and bankers, working from a single dashboard.</p>
-    </div>
-    <svg viewBox="0 0 440 340" width="88%" style="max-width:420px;">
-      <defs>
-        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#C89B3C" stop-opacity="0.32"/>
-          <stop offset="100%" stop-color="#C89B3C" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      <path d="M20,270 L92,236 L156,252 L222,186 L288,202 L354,124 L420,72 L420,320 L20,320 Z" fill="url(#areaGrad)"/>
-      <path class="growth-line" d="M20,270 L92,236 L156,252 L222,186 L288,202 L354,124 L420,72"
-            fill="none" stroke="#C89B3C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle class="node" cx="20" cy="270" r="4.5" fill="#F5F6F8" style="animation-delay:1.9s"/>
-      <circle class="node" cx="92" cy="236" r="4.5" fill="#F5F6F8" style="animation-delay:2.0s"/>
-      <circle class="node" cx="156" cy="252" r="4.5" fill="#F5F6F8" style="animation-delay:2.1s"/>
-      <circle class="node" cx="222" cy="186" r="4.5" fill="#F5F6F8" style="animation-delay:2.2s"/>
-      <circle class="node" cx="288" cy="202" r="4.5" fill="#F5F6F8" style="animation-delay:2.3s"/>
-      <circle class="node" cx="354" cy="124" r="4.5" fill="#F5F6F8" style="animation-delay:2.4s"/>
-      <circle class="node" cx="420" cy="72" r="5.5" fill="#C89B3C" style="animation-delay:2.5s"/>
-    </svg>
-  </div>
-
-</div>
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service worker registered:', reg.scope))
-        .catch(err => console.error('Service worker registration failed:', err));
-    });
-  }
-</script>
-
-</body>
-</html>
+// Serve from cache first, fall back to network.
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => response || fetch(event.request))
+  );
+});
