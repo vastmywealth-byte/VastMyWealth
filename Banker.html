@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VastMyWealth — Bank Channel CRM</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0E1B3D">
+<link rel="apple-touch-icon" href="1000550390.png">
+<style>
+  :root{
+    --navy:#0E1B3D; --navy-mid:#122654; --navy-light:#1B3466;
+    --gold:#D4A741; --gold-light:#EACD86;
+    --card:#FFFFFF; --text:#1B2333; --muted:#8B93A7; --line:#EDEFF3;
+    --submitted:#B45309; --submitted-bg:#FEF3C7;
+    --disbursed:#1D4ED8; --disbursed-bg:#DBEAFE;
+    --rejected:#B91C1C; --rejected-bg:#FEE2E2;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--navy); color:var(--text); -webkit-font-smoothing:antialiased; }
+  button{cursor:pointer; border:none; font-family:inherit;}
+  input,select,textarea{font-family:inherit;}
+
+  /* ---------- Splash / auth screens ---------- */
+  #authScreen{min-height:100vh; display:flex; flex-direction:column; background:var(--navy); position:relative; overflow:hidden;}
+  #authScreen::before{
+    content:""; position:absolute; top:0; left:0; right:0; height:340px; pointer-events:none; z-index:0;
+    background-image:
+      radial-gradient(circle at 18% 30%, rgba(212,167,65,.10) 0, transparent 45%),
+      radial-gradient(circle at 82% 12%, rgba(212,167,65,.08) 0, transparent 40%);
+  }
+  .network-motif{position:absolute; top:0; left:0; right:0; height:300px; z-index:0; opacity:.5; pointer-events:none;}
+  .splash-top{ background:#fff; border-radius:0 0 40px 40px; padding:40px 24px 30px; text-align:center; box-shadow:0 4px 0 var(--gold); position:relative; z-index:1; }
+  .splash-logo{width:72px; height:72px; margin:0 auto 14px; border-radius:50%; background:var(--navy); display:flex; align-items:center; justify-content:center; color:var(--gold); font-weight:800; font-size:24px; box-shadow:0 0 0 6px rgba(212,167,65,.15);}
+  .splash-top h1{font-size:24px; margin:0; color:var(--navy); font-weight:800;}
+  .splash-top .tagline{color:#2B5FCB; font-size:13px; font-weight:600; margin-top:4px; letter-spacing:.3px;}
+  .back-to-portal{display:inline-block; margin-top:10px; font-size:12px; font-weight:700; color:#2B5FCB; text-decoration:none;}
+  .back-to-portal:hover{text-decoration:underline;}
+  .auth-body{flex:1; padding:28px 22px 50px; max-width:420px; width:100%; margin:0 auto; position:relative; z-index:1;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .headline{color:#fff; font-size:21px; line-height:1.35; font-weight:800; margin:6px 0 4px;}
+  .headline .accent{color:var(--gold);}
+  .subtext{color:#AFC0E8; font-size:13.5px; margin:0 0 22px; line-height:1.5;}
+
+  /* One deliberate entrance moment on the landing view — nowhere else */
+  @keyframes riseIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  #landingView.active .headline{animation:riseIn .5s ease-out both;}
+  #landingView.active .subtext{animation:riseIn .5s ease-out .08s both;}
+  #landingView.active .benefit-item{animation:riseIn .45s ease-out both;}
+  #landingView.active .benefit-item:nth-child(1){animation-delay:.14s;}
+  #landingView.active .benefit-item:nth-child(2){animation-delay:.2s;}
+  #landingView.active .benefit-item:nth-child(3){animation-delay:.26s;}
+  #landingView.active .btn-primary{animation:riseIn .45s ease-out .34s both;}
+  #landingView.active .btn-secondary{animation:riseIn .45s ease-out .4s both;}
+
+  .benefit-list{display:flex; flex-direction:column; gap:10px; margin-bottom:24px;}
+  .benefit-item{display:flex; gap:12px; align-items:flex-start; background:var(--navy-mid); border:1px solid var(--navy-light); padding:12px 14px; border-radius:10px;}
+  .benefit-icon{width:26px; height:26px; border-radius:50%; background:var(--gold); color:var(--navy); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0;}
+  .benefit-text{font-size:13px; color:#DCE4F5; line-height:1.45;}
+  .benefit-text b{color:#fff;}
+
+  .form-group{margin-bottom:16px;}
+  label{display:block; margin-bottom:6px; font-weight:700; color:#DCE4F5; font-size:12.5px;}
+  input[type=text],input[type=email],input[type=tel],input[type=password],select,textarea{
+    width:100%; padding:13px 14px; border:1px solid var(--navy-light); border-radius:10px;
+    font-size:14.5px; background:var(--navy-mid); color:#fff;
+  }
+  input::placeholder,textarea::placeholder{color:#7C8AB5;}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--gold); outline-offset:1px;}
+  select option{background:var(--navy-mid); color:#fff;}
+
+  .checkbox-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;}
+  .checkbox-grid label{display:flex; align-items:center; gap:8px; font-weight:500; font-size:13px; background:var(--navy-mid); border:1px solid var(--navy-light); padding:10px; border-radius:8px; margin:0; color:#DCE4F5;}
+  .checkbox-grid input{width:auto;}
+
+  .btn-primary{width:100%; background:var(--gold); color:var(--navy); padding:14px; border-radius:10px; font-size:15px; font-weight:800; transition:transform .12s ease, background .12s ease;}
+  .btn-primary:active:not(:disabled){transform:scale(.97); background:var(--gold-light);}
+  .btn-primary:disabled{opacity:.55;}
+  .btn-secondary{width:100%; background:transparent; border:1px solid var(--gold); color:var(--gold-light); padding:13px; border-radius:10px; font-size:14px; font-weight:700; margin-top:10px; transition:transform .12s ease;}
+  .btn-secondary:active{transform:scale(.97);}
+  .link-row{display:flex; justify-content:space-between; margin-top:16px; font-size:12.5px;}
+  .link-btn{background:none; color:var(--gold-light); text-decoration:underline; font-weight:600; padding:0; font-size:12.5px;}
+  .msg-box{margin-top:14px; padding:12px 14px; border-radius:8px; font-size:13px; line-height:1.5; display:none;}
+  .msg-box.success{background:rgba(21,128,61,.18); color:#86EFAC; border:1px solid rgba(21,128,61,.4); display:block;}
+  .msg-box.error{background:rgba(185,28,28,.18); color:#FCA5A5; border:1px solid rgba(185,28,28,.4); display:block;}
+
+  /* ---------- Main app ---------- */
+  #app{display:none; min-height:100vh; background:var(--navy); padding-bottom:70px;}
+  header.topbar{background:#fff; padding:14px 16px; position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; border-radius:0 0 18px 18px; box-shadow:0 4px 0 var(--gold);}
+  header.topbar h2{font-size:15px; margin:0; font-weight:800; color:var(--navy);}
+  header.topbar .header-actions{display:flex; gap:8px;}
+  .icon-pill{background:var(--navy); color:var(--gold-light); padding:8px 12px; border-radius:8px; font-size:12px; font-weight:700;}
+
+  .locked-badge{display:inline-flex; align-items:center; gap:8px; margin:14px 16px 0; background:var(--navy-mid); border:1px solid var(--gold); color:var(--gold-light); padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700;}
+  .status-dot{width:7px; height:7px; border-radius:50%; background:var(--gold); flex-shrink:0;}
+  .status-dot.live{animation:dotPulse 1.6s ease-in-out infinite;}
+  @keyframes dotPulse{ 0%,100%{box-shadow:0 0 0 0 rgba(212,167,65,.5);} 50%{box-shadow:0 0 0 5px rgba(212,167,65,0);} }
+
+  main.content{padding:14px 16px 20px;}
+  .section-card{background:var(--card); border-radius:var(--radius); padding:18px 16px; margin-bottom:14px; box-shadow:0 4px 14px rgba(0,0,0,.18);}
+  .section-card h3{margin:0 0 4px; font-size:15.5px; color:var(--navy); font-weight:800; position:relative; padding-left:12px;}
+  .section-card h3::before{content:""; position:absolute; left:0; top:2px; bottom:2px; width:3px; border-radius:3px; background:var(--gold);}
+  .section-card .desc{font-size:12.5px; color:var(--muted); margin:0 0 16px 12px; line-height:1.5;}
+
+  .light-form label{color:var(--navy); font-size:12.5px;}
+  .light-form input,.light-form select,.light-form textarea{background:#F8FAFC; border:1px solid var(--line); color:var(--text);}
+  .light-form select option{background:#fff; color:var(--text);}
+  .light-form .checkbox-grid label{background:#F8FAFC; border:1px solid var(--line); color:var(--text);}
+
+  .code-chip{display:inline-flex; align-items:center; gap:6px; background:var(--gold-light); color:var(--navy); padding:6px 12px; border-radius:20px; font-size:12.5px; font-weight:700; margin:0 6px 6px 0;}
+  .code-chip::before{content:"●"; font-size:7px; color:var(--navy); opacity:.55;}
+
+  .business-row{background:#F8FAFC; border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:8px;}
+  .business-row-top{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+  .business-name{font-weight:700; font-size:14px; color:var(--navy);}
+  .business-meta{font-size:11.5px; color:var(--muted); margin-top:3px;}
+  .status-chip{font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; white-space:nowrap;}
+  .status-chip.submitted{background:var(--submitted-bg); color:var(--submitted);}
+  .status-chip.rejected{background:var(--rejected-bg); color:var(--rejected);}
+  .status-chip.disbursed{background:var(--disbursed-bg); color:var(--disbursed);}
+  .reroute-btn{font-size:11.5px; color:var(--rejected); background:none; text-decoration:underline; font-weight:700; padding:0; margin-top:8px;}
+  .reroute-note{font-size:11.5px; color:var(--muted); margin-top:6px;}
+
+  .team-row{display:flex; justify-content:space-between; align-items:center; background:#F8FAFC; border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:8px;}
+  .team-name{font-weight:700; font-size:14px; color:var(--navy);}
+  .team-status{font-size:11px; color:var(--muted); margin-top:2px;}
+
+  .pool-row{background:#F8FAFC; border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:10px;}
+  .pool-actions{display:flex; gap:6px; flex-shrink:0;}
+  .pool-actions button{padding:8px 12px; border-radius:8px; font-size:12px; font-weight:700;}
+  .btn-mini-gold{background:var(--gold); color:var(--navy);}
+  .btn-mini-outline{background:transparent; border:1px solid var(--navy); color:var(--navy);}
+
+  .bottom-nav{position:fixed; bottom:0; left:0; right:0; background:#fff; display:flex; box-shadow:0 -4px 14px rgba(0,0,0,.15); z-index:15;}
+  .nav-btn{flex:1; padding:11px 4px; text-align:center; font-size:10.5px; font-weight:700; color:var(--muted); background:none;}
+  .nav-btn.active{color:var(--navy);}
+  .nav-btn .nav-icon{display:block; font-size:18px; margin-bottom:2px;}
+
+  .empty-state{text-align:center; padding:30px 10px; color:var(--muted); font-size:13px;}
+
+  .sheet-backdrop{display:none; position:fixed; inset:0; background:rgba(6,12,28,.6); z-index:20;}
+  .sheet{position:fixed; left:0; right:0; bottom:0; background:var(--navy); border-radius:20px 20px 0 0; max-height:88vh; overflow-y:auto; z-index:21; padding:18px 16px 28px; box-shadow:0 -6px 0 var(--gold);}
+  .sheet-handle{width:36px; height:4px; background:var(--navy-light); border-radius:3px; margin:0 auto 14px;}
+  .sheet h3{margin:0 0 14px; color:#fff; font-size:16px;}
+  .close-x{position:absolute; top:14px; right:14px; background:none; font-size:20px; color:#AFC0E8; padding:4px;}
+
+  .chat-thread{max-height:240px; overflow-y:auto; background:var(--navy-mid); border-radius:10px; padding:10px; margin-bottom:12px;}
+  @keyframes bubbleIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .chat-bubble{max-width:80%; padding:8px 12px; border-radius:14px; font-size:13px; margin-bottom:8px; line-height:1.4; animation:bubbleIn .25s ease-out both;}
+  .chat-bubble.banker{background:var(--gold); color:var(--navy); margin-left:auto; border-bottom-right-radius:4px;}
+  .chat-bubble.cp{background:var(--navy-light); color:#fff; margin-right:auto; border-bottom-left-radius:4px;}
+
+  .toast{position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--gold); color:var(--navy); padding:10px 18px; border-radius:24px; font-size:13px; font-weight:700; z-index:30; display:none; max-width:90%; text-align:center;}
+  .toast.error{background:var(--rejected); color:#fff;}
+</style>
+</head>
+<body>
+
+<!-- ===================== AUTH SCREENS ===================== -->
+<div id="authScreen">
+  <svg class="network-motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g stroke="#D4A741" stroke-width="1" opacity="0.35">
+      <line x1="30" y1="60" x2="110" y2="30"/><line x1="110" y1="30" x2="200" y2="55"/>
+      <line x1="200" y1="55" x2="300" y2="25"/><line x1="200" y1="55" x2="250" y2="120"/>
+      <line x1="110" y1="30" x2="60" y2="120"/><line x1="300" y1="25" x2="370" y2="80"/>
+      <line x1="60" y1="120" x2="150" y2="150"/><line x1="150" y1="150" x2="250" y2="120"/>
+    </g>
+    <g fill="#D4A741">
+      <circle cx="30" cy="60" r="3"/><circle cx="110" cy="30" r="3"/><circle cx="200" cy="55" r="4"/>
+      <circle cx="300" cy="25" r="3"/><circle cx="250" cy="120" r="3"/><circle cx="60" cy="120" r="3"/>
+      <circle cx="370" cy="80" r="3"/><circle cx="150" cy="150" r="3"/>
+    </g>
+  </svg>
+  <div class="splash-top">
+    <div class="splash-logo">VMW</div>
+    <h1>VastMyWealth</h1>
+    <div class="tagline">Bank Channel Partner Portal</div>
+    <a href="index.html" class="back-to-portal">← Back to portal</a>
+  </div>
+  <div class="auth-body">
+
+    <!-- LANDING -->
+    <div id="landingView" class="view active">
+      <div class="headline">Grow beyond <span class="accent">your own book</span></div>
+      <div class="subtext">Log business, recover policy-rejected files, and build your own channel partner network — all from one dashboard.</div>
+      <div class="benefit-list">
+        <div class="benefit-item"><div class="benefit-icon">₹</div><div class="benefit-text"><b>Scale your sourcing</b> with tracked DSA codes and automated bank notifications.</div></div>
+        <div class="benefit-item"><div class="benefit-icon">↻</div><div class="benefit-text"><b>No file is a dead end</b> — policy-rejected cases route to an alternative lender instead of disappearing.</div></div>
+        <div class="benefit-item"><div class="benefit-icon">☰</div><div class="benefit-text"><b>Build your CP network</b> — recruit your own partners, and unlock our verified partner pool at ₹10L/month disbursement.</div></div>
+      </div>
+      <button class="btn-primary" onclick="showView('requestCodeView')">Get Your VastMyWealth DSA Code</button>
+      <button class="btn-secondary" onclick="showView('loginView')">Already Registered? Login</button>
+    </div>
+
+    <!-- REQUEST CODE -->
+    <div id="requestCodeView" class="view">
+      <div class="headline">Request Your <span class="accent">DSA Code</span></div>
+      <div class="subtext">We'll send onboarding documents to your bank and dispatch your login PIN to your official email. Your bank issues the actual DSA code — you'll submit it once you have it.</div>
+      <form id="requestCodeForm">
+        <div class="form-group"><label>Official Bank Email ID</label><input type="email" id="reqEmail" required placeholder="name@bankdomain.com"></div>
+        <div class="form-group"><label>Mobile Number</label><input type="tel" id="reqMobile" required pattern="[0-9]{10}" placeholder="9876543210"></div>
+        <div class="form-group"><label>Bank Name</label><input type="text" id="reqBank" required placeholder="e.g. HDFC Bank"></div>
+        <button type="submit" id="reqBtn" class="btn-primary">Send Request</button>
+      </form>
+      <div id="reqResult" class="msg-box"></div>
+      <div class="link-row"><button class="link-btn" onclick="showView('landingView')">← Back</button><button class="link-btn" onclick="showView('loginView')">Go to Login</button></div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginView" class="view">
+      <div class="headline">Welcome <span class="accent">Back</span></div>
+      <div class="subtext">Login with your registered mobile number and PIN.</div>
+      <form id="loginForm">
+        <div class="form-group"><label>Mobile Number</label><input type="tel" id="loginMobile" required placeholder="Registered mobile"></div>
+        <div class="form-group"><label>4-Digit PIN</label><input type="password" id="loginPin" required maxlength="4" placeholder="••••"></div>
+        <button type="submit" id="loginBtn" class="btn-primary">Login</button>
+      </form>
+      <div id="loginResult" class="msg-box"></div>
+      <div class="link-row"><button class="link-btn" onclick="showView('landingView')">← Back</button><button class="link-btn" onclick="showView('forgotPinView')">Forgot PIN?</button></div>
+      <button class="link-btn" style="margin-top:16px;" onclick="showView('changeJobView')">Changed jobs? Update your bank →</button>
+    </div>
+
+    <!-- FORGOT PIN -->
+    <div id="forgotPinView" class="view">
+      <div class="headline">Reset Your <span class="accent">PIN</span></div>
+      <div class="subtext">We'll email your PIN to your registered official email.</div>
+      <form id="forgotPinForm">
+        <div class="form-group"><label>Registered Mobile Number</label><input type="tel" id="fpMobile" required placeholder="Registered mobile"></div>
+        <button type="submit" id="fpBtn" class="btn-primary">Send PIN</button>
+      </form>
+      <div id="fpResult" class="msg-box"></div>
+      <div class="link-row"><button class="link-btn" onclick="showView('loginView')">← Back to Login</button></div>
+    </div>
+
+    <!-- CHANGE JOB -->
+    <div id="changeJobView" class="view">
+      <div class="headline">Update Your <span class="accent">Bank</span></div>
+      <div class="subtext">Moved to a new institution? Verify your mobile + PIN and your new official email — your team and business history carry over automatically.</div>
+      <form id="changeJobForm">
+        <div class="form-group"><label>Registered Mobile Number</label><input type="tel" id="cjMobile" required placeholder="Registered mobile"></div>
+        <div class="form-group"><label>Current PIN</label><input type="password" id="cjPin" required maxlength="4" placeholder="••••"></div>
+        <div class="form-group"><label>New Official Bank Email</label><input type="email" id="cjEmail" required placeholder="name@newbank.com"></div>
+        <div class="form-group"><label>New Bank Name</label><input type="text" id="cjBank" required placeholder="e.g. Axis Bank"></div>
+        <button type="submit" id="cjBtn" class="btn-primary">Update & Carry Over My Team</button>
+      </form>
+      <div id="cjResult" class="msg-box"></div>
+      <div class="link-row"><button class="link-btn" onclick="showView('loginView')">← Back to Login</button></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== MAIN APP ===================== -->
+<div id="app">
+  <header class="topbar">
+    <h2>Bank Channel CRM</h2>
+    <div class="header-actions">
+      <button class="icon-pill" id="logoutBtn">Logout</button>
+    </div>
+  </header>
+  <div class="locked-badge" id="cpPoolStatusBadge" style="display:none;"></div>
+
+  <main class="content">
+
+    <!-- TAB: CODES -->
+    <div id="tabCodes" class="tab-pane">
+      <div class="section-card">
+        <h3>Your DSA Codes</h3>
+        <p class="desc">These are the bank + loan-type combinations you can currently log business under.</p>
+        <div id="codesList"></div>
+        <button class="btn-secondary" style="margin-top:10px; color:var(--navy); border-color:var(--navy);" onclick="openSubmitCodeSheet()">+ Submit a DSA Code</button>
+      </div>
+    </div>
+
+    <!-- TAB: LOG BUSINESS -->
+    <div id="tabLog" class="tab-pane" style="display:none;">
+      <div class="section-card">
+        <h3>Log New Business</h3>
+        <p class="desc">Enter customer details. Documents are shared with us separately via WhatsApp or email — no upload needed here.</p>
+        <form id="businessForm" class="light-form">
+          <div class="form-group"><label>Customer Full Name</label><input type="text" id="custName" required></div>
+          <div class="form-group"><label>Customer Mobile</label><input type="tel" id="custMobile" required></div>
+          <div class="form-group"><label>Bank / Loan Type</label><select id="custLoanCode" required><option value="">Select a code...</option></select></div>
+          <div class="form-group">
+            <label><input type="checkbox" id="isCPFile" style="width:auto; margin-right:6px;"> This is my channel partner's file</label>
+          </div>
+          <div class="form-group" id="cpPickerGroup" style="display:none;"><label>Which Channel Partner?</label><select id="cpPicker"><option value="">Select...</option></select></div>
+          <div class="form-group"><label>Notes (optional)</label><textarea id="custNotes" rows="2" placeholder="e.g. docs shared on WhatsApp"></textarea></div>
+          <button type="submit" id="logBtn" class="btn-primary">Submit Business File</button>
+        </form>
+        <div id="logResult" class="msg-box"></div>
+      </div>
+    </div>
+
+    <!-- TAB: TRACK -->
+    <div id="tabTrack" class="tab-pane" style="display:none;">
+      <div class="section-card">
+        <h3>Track Business & Rejections</h3>
+        <p class="desc">If a bank declines a file on policy grounds, reroute it to an alternative instead of losing it.</p>
+        <div id="businessLogList"></div>
+      </div>
+    </div>
+
+    <!-- TAB: TEAM -->
+    <div id="tabTeam" class="tab-pane" style="display:none;">
+      <div class="section-card">
+        <h3>My Channel Partners</h3>
+        <p class="desc">Recruit your own partners directly — their contact details unlock once they submit banking details.</p>
+        <div id="myTeamList"></div>
+        <form id="recruitForm" class="light-form" style="margin-top:14px;">
+          <div class="form-group"><label>Channel Partner Name</label><input type="text" id="recruitName" required></div>
+          <button type="submit" id="recruitBtn" class="btn-primary">Send Onboarding Invitation</button>
+        </form>
+        <div id="recruitResult" class="msg-box"></div>
+      </div>
+
+      <div class="section-card" id="cpPoolCard" style="display:none;">
+        <h3>VastMyWealth Partner Pool</h3>
+        <p class="desc">Unlocked at ₹10L/month disbursement. Names only — message a partner to introduce yourself; your contact details stay private on both sides.</p>
+        <div id="cpPoolList"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="bottom-nav">
+    <button class="nav-btn active" data-tab="tabCodes"><span class="nav-icon">🔑</span>Codes</button>
+    <button class="nav-btn" data-tab="tabLog"><span class="nav-icon">＋</span>Log Business</button>
+    <button class="nav-btn" data-tab="tabTrack"><span class="nav-icon">📊</span>Track</button>
+    <button class="nav-btn" data-tab="tabTeam"><span class="nav-icon">☰</span>Team</button>
+  </div>
+</div>
+
+<!-- ===================== SUBMIT CODE SHEET ===================== -->
+<div class="sheet-backdrop" id="submitCodeBackdrop"></div>
+<div class="sheet" id="submitCodeSheet" style="display:none;">
+  <div class="sheet-handle"></div>
+  <button class="close-x" onclick="closeSheet('submitCodeSheet','submitCodeBackdrop')">✕</button>
+  <h3>Submit Your DSA Code</h3>
+  <form id="submitCodeForm" class="light-form" style="background:var(--card); border-radius:12px; padding:16px;">
+    <div class="form-group"><label>Bank Name</label><input type="text" id="scBank" required></div>
+    <div class="form-group">
+      <label>Applicable Loan Type(s)</label>
+      <div class="checkbox-grid">
+        <label><input type="checkbox" name="scLoanType" value="PL"> Personal Loan</label>
+        <label><input type="checkbox" name="scLoanType" value="BL"> Business Loan</label>
+      </div>
+    </div>
+    <div class="form-group"><label>DSA Code (as issued by your bank)</label><input type="text" id="scCode" required></div>
+    <button type="submit" id="scBtn" class="btn-primary">Submit Code</button>
+  </form>
+  <div id="scResult" class="msg-box"></div>
+</div>
+
+<!-- ===================== REROUTE SHEET ===================== -->
+<div class="sheet-backdrop" id="rerouteBackdrop"></div>
+<div class="sheet" id="rerouteSheet" style="display:none;">
+  <div class="sheet-handle"></div>
+  <button class="close-x" onclick="closeSheet('rerouteSheet','rerouteBackdrop')">✕</button>
+  <h3>Mark Rejected & Reroute</h3>
+  <form id="rerouteForm" class="light-form" style="background:var(--card); border-radius:12px; padding:16px;">
+    <div class="form-group"><label>Rejection Reason</label><input type="text" id="rrReason" required placeholder="e.g. CIBIL drop, income mismatch"></div>
+    <div class="form-group">
+      <label>Route To</label>
+      <select id="rrRouteType">
+        <option value="network">An in-network banker</option>
+        <option value="dsa">An associated DSA</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Target Name</label><input type="text" id="rrTargetName" required placeholder="Bank/DSA name"></div>
+    <div class="form-group"><label>Target Email</label><input type="email" id="rrTargetEmail" required placeholder="Where the referral is sent"></div>
+    <button type="submit" id="rrBtn" class="btn-primary">Confirm Reroute</button>
+  </form>
+  <div id="rrResult" class="msg-box"></div>
+</div>
+
+<!-- ===================== CP CHAT SHEET ===================== -->
+<div class="sheet-backdrop" id="chatBackdrop"></div>
+<div class="sheet" id="chatSheet" style="display:none;">
+  <div class="sheet-handle"></div>
+  <button class="close-x" onclick="closeSheet('chatSheet','chatBackdrop')">✕</button>
+  <h3 id="chatHeading">Message</h3>
+  <div class="chat-thread" id="chatThread"></div>
+  <form id="chatForm" class="light-form" style="display:flex; gap:8px;">
+    <input type="text" id="chatInput" placeholder="Type a message..." style="flex:1;" required>
+    <button type="submit" class="btn-primary" style="width:auto; padding:12px 18px;">Send</button>
+  </form>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ⚠️ SET THIS to your Bank Channel CRM Apps Script Web App URL
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec";
+
+var SESSION = { bankerId: null, bankerEmail: null, mobile: null, pin: null };
+var MY_CODES = [];
+var MY_LOGS = [];
+var MY_TEAM = [];
+var CP_POOL = [];
+var CURRENT_REROUTE_LOG_ID = null;
+var CURRENT_CHAT_POOL_ID = null;
+
+function apiPost(payload) {
+  return fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
+    .then(function(r){ return r.text(); })
+    .then(function(raw){
+      try { return JSON.parse(raw); }
+      catch(e){ throw new Error("Server error — check deployment. Raw: " + raw.slice(0,150)); }
+    });
+}
+function escapeHtml(s){ var d=document.createElement('div'); d.textContent=(s===undefined||s===null)?'':s; return d.innerHTML; }
+function showToast(msg, isError){ var t=document.getElementById("toast"); t.textContent=msg; t.className="toast"+(isError?" error":""); t.style.display="block"; setTimeout(function(){t.style.display="none";},3000); }
+function showView(id){ document.querySelectorAll("#authScreen .view").forEach(function(v){ v.classList.remove("active"); }); document.getElementById(id).classList.add("active"); document.querySelectorAll("#authScreen .msg-box").forEach(function(b){ b.style.display="none"; }); }
+function closeSheet(sheetId, backdropId){ document.getElementById(sheetId).style.display="none"; document.getElementById(backdropId).style.display="none"; }
+function openSheetById(sheetId, backdropId){ document.getElementById(backdropId).style.display="block"; document.getElementById(sheetId).style.display="block"; }
+
+/* ---------------- AUTH ACTIONS ---------------- */
+
+document.getElementById("requestCodeForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var btn = document.getElementById("reqBtn"); btn.disabled = true; btn.textContent = "Sending...";
+  apiPost({ action:"requestCode", officialEmail:document.getElementById("reqEmail").value, mobileNumber:document.getElementById("reqMobile").value, bankName:document.getElementById("reqBank").value })
+    .then(function(r){
+      var box = document.getElementById("reqResult");
+      box.className = "msg-box " + (r.status==="success" ? "success":"error");
+      box.textContent = r.message;
+      if (r.status==="success") document.getElementById("requestCodeForm").reset();
+    }).catch(function(err){ var box=document.getElementById("reqResult"); box.className="msg-box error"; box.textContent=err.message; })
+    .finally(function(){ btn.disabled=false; btn.textContent="Send Request"; });
+});
+
+document.getElementById("loginForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var btn = document.getElementById("loginBtn"); btn.disabled = true; btn.textContent = "Logging in...";
+  var mobile = document.getElementById("loginMobile").value, pin = document.getElementById("loginPin").value;
+  apiPost({ action:"verifyBanker", mobileNumber:mobile, pin:pin })
+    .then(function(r){
+      btn.disabled = false; btn.textContent = "Login";
+      if (r.status !== "success") {
+        var box = document.getElementById("loginResult"); box.className="msg-box error"; box.textContent = r.message;
+        return;
+      }
+      SESSION = { bankerId:r.bankerId, bankerEmail:r.bankerEmail, mobile:mobile, pin:pin, unlockedCPPool:r.unlockedCPPool, hasSubmittedCode:r.hasSubmittedCode };
+      enterApp();
+    }).catch(function(err){ btn.disabled=false; btn.textContent="Login"; var box=document.getElementById("loginResult"); box.className="msg-box error"; box.textContent=err.message; });
+});
+
+document.getElementById("forgotPinForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var btn = document.getElementById("fpBtn"); btn.disabled = true; btn.textContent = "Sending...";
+  apiPost({ action:"forgotPin", mobileNumber:document.getElementById("fpMobile").value })
+    .then(function(r){ var box=document.getElementById("fpResult"); box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message; })
+    .catch(function(err){ var box=document.getElementById("fpResult"); box.className="msg-box error"; box.textContent=err.message; })
+    .finally(function(){ btn.disabled=false; btn.textContent="Send PIN"; });
+});
+
+document.getElementById("changeJobForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var btn = document.getElementById("cjBtn"); btn.disabled = true; btn.textContent = "Updating...";
+  apiPost({
+    action:"changeJob", mobileNumber:document.getElementById("cjMobile").value, pin:document.getElementById("cjPin").value,
+    newOfficialEmail:document.getElementById("cjEmail").value, newBankName:document.getElementById("cjBank").value
+  }).then(function(r){
+    var box = document.getElementById("cjResult"); box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message;
+    if (r.status==="success") document.getElementById("changeJobForm").reset();
+  }).catch(function(err){ var box=document.getElementById("cjResult"); box.className="msg-box error"; box.textContent=err.message; })
+    .finally(function(){ btn.disabled=false; btn.textContent="Update & Carry Over My Team"; });
+});
+
+/* ---------------- ENTER APP ---------------- */
+
+function enterApp(){
+  document.getElementById("authScreen").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  var badge = document.getElementById("cpPoolStatusBadge");
+  if (SESSION.unlockedCPPool) { badge.style.display="inline-flex"; badge.innerHTML = '<span class="status-dot live"></span> Partner Pool Unlocked'; }
+  else { badge.style.display="inline-flex"; badge.innerHTML = '<span class="status-dot"></span> Partner Pool locks at ₹10L/month'; }
+  document.getElementById("cpPoolCard").style.display = SESSION.unlockedCPPool ? "block" : "none";
+
+  loadCodes();
+  loadBusinessLogs();
+  loadMyTeam();
+  if (SESSION.unlockedCPPool) loadCPPool();
+}
+
+document.getElementById("logoutBtn").addEventListener("click", function(){
+  document.getElementById("app").style.display = "none";
+  document.getElementById("authScreen").style.display = "flex";
+  showView("landingView");
+});
+
+/* ---------------- BOTTOM NAV ---------------- */
+
+document.querySelectorAll(".nav-btn").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    document.querySelectorAll(".nav-btn").forEach(function(b){ b.classList.remove("active"); });
+    btn.classList.add("active");
+    document.querySelectorAll(".tab-pane").forEach(function(p){ p.style.display = "none"; });
+    document.getElementById(btn.dataset.tab).style.display = "block";
+  });
+});
+
+/* ---------------- CODES ---------------- */
+
+function loadCodes(){
+  apiPost({ action:"getBankerCodes", bankerId:SESSION.bankerId }).then(function(r){
+    MY_CODES = r.codes || [];
+    renderCodes();
+    populateLoanCodeDropdown();
+  });
+}
+
+function renderCodes(){
+  var el = document.getElementById("codesList");
+  if (MY_CODES.length === 0) { el.innerHTML = '<div class="empty-state">No DSA code submitted yet. Submit one below to start logging business.</div>'; return; }
+  el.innerHTML = MY_CODES.map(function(c){ return '<span class="code-chip">' + escapeHtml(c.bankName) + ' · ' + escapeHtml(c.loanType) + '</span>'; }).join("");
+}
+
+function openSubmitCodeSheet(){ openSheetById("submitCodeSheet","submitCodeBackdrop"); }
+
+document.getElementById("submitCodeForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var loanTypes = Array.prototype.slice.call(document.querySelectorAll('input[name="scLoanType"]:checked')).map(function(c){ return c.value; });
+  if (loanTypes.length === 0) { showToast("Select at least one loan type", true); return; }
+  var btn = document.getElementById("scBtn"); btn.disabled = true; btn.textContent = "Submitting...";
+  apiPost({
+    action:"submitDSACode", bankerId:SESSION.bankerId, bankerEmail:SESSION.bankerEmail,
+    bankName:document.getElementById("scBank").value, loanTypes:loanTypes, vmwCode:document.getElementById("scCode").value
+  }).then(function(r){
+    var box = document.getElementById("scResult"); box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message;
+    if (r.status === "success") { document.getElementById("submitCodeForm").reset(); loadCodes(); }
+  }).catch(function(err){ var box=document.getElementById("scResult"); box.className="msg-box error"; box.textContent=err.message; })
+    .finally(function(){ btn.disabled=false; btn.textContent="Submit Code"; });
+});
+
+/* ---------------- LOG BUSINESS ---------------- */
+
+function populateLoanCodeDropdown(){
+  var sel = document.getElementById("custLoanCode");
+  sel.innerHTML = '<option value="">Select a code...</option>' + MY_CODES.map(function(c,i){
+    return '<option value="' + i + '">' + escapeHtml(c.bankName) + ' — ' + escapeHtml(c.loanType) + '</option>';
+  }).join("");
+}
+
+document.getElementById("isCPFile").addEventListener("change", function(){
+  document.getElementById("cpPickerGroup").style.display = this.checked ? "block" : "none";
+});
+
+document.getElementById("businessForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var codeIdx = document.getElementById("custLoanCode").value;
+  if (codeIdx === "") { showToast("Select a bank/loan type", true); return; }
+  var code = MY_CODES[codeIdx];
+  var cpName = document.getElementById("isCPFile").checked ? document.getElementById("cpPicker").value : "";
+  var btn = document.getElementById("logBtn"); btn.disabled = true; btn.textContent = "Submitting...";
+
+  apiPost({
+    action:"logBusiness", bankerId:SESSION.bankerId, bankName:code.bankName, loanType:code.loanType, vmwCode:code.vmwCode,
+    customerName:document.getElementById("custName").value, customerMobile:document.getElementById("custMobile").value,
+    notes:document.getElementById("custNotes").value, cpName:cpName
+  }).then(function(r){
+    var box = document.getElementById("logResult"); box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message;
+    if (r.status === "success") { document.getElementById("businessForm").reset(); document.getElementById("cpPickerGroup").style.display="none"; loadBusinessLogs(); }
+  }).catch(function(err){ var box=document.getElementById("logResult"); box.className="msg-box error"; box.textContent=err.message; })
+    .finally(function(){ btn.disabled=false; btn.textContent="Submit Business File"; });
+});
+
+/* ---------------- TRACK / REROUTE ---------------- */
+
+function loadBusinessLogs(){
+  apiPost({ action:"getLogs", bankerId:SESSION.bankerId }).then(function(r){
+    MY_LOGS = r.logs || [];
+    renderBusinessLogs();
+  });
+}
+
+function statusClass(status){ return status==="Disbursed" ? "disbursed" : (status==="Policy Rejected" ? "rejected" : "submitted"); }
+
+function renderBusinessLogs(){
+  var el = document.getElementById("businessLogList");
+  if (MY_LOGS.length === 0) { el.innerHTML = '<div class="empty-state">No business logged yet.</div>'; return; }
+  el.innerHTML = MY_LOGS.map(function(l){
+    var canReroute = l.fileStatus === "Submitted";
+    return '' +
+      '<div class="business-row">' +
+        '<div class="business-row-top">' +
+          '<div><div class="business-name">' + escapeHtml(l.customerName) + '</div>' +
+          '<div class="business-meta">' + escapeHtml(l.bankName) + ' · ' + escapeHtml(l.loanType) + (l.cpName ? (' · CP: ' + escapeHtml(l.cpName)) : '') + '</div></div>' +
+          '<span class="status-chip ' + statusClass(l.fileStatus) + '">' + escapeHtml(l.fileStatus) + '</span>' +
+        '</div>' +
+        (canReroute ? ('<button class="reroute-btn" onclick="openReroute(\'' + l.logId + '\')">Mark Rejected & Reroute</button>') : '') +
+        (l.routingDecision ? ('<div class="reroute-note">Routed to: ' + escapeHtml(l.routingDecision) + '</div>') : '') +
+      '</div>';
+  }).join("");
+}
+
+function openReroute(logId){ CURRENT_REROUTE_LOG_ID = logId; document.getElementById("rerouteForm").reset(); document.getElementById("rrResult").style.display="none"; openSheetById("rerouteSheet","rerouteBackdrop"); }
+
+document.getElementById("rerouteForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var btn = document.getElementById("rrBtn"); btn.disabled = true; btn.textContent = "Submitting...";
+  apiPost({
+    action:"updateRejection", logId:CURRENT_REROUTE_LOG_ID, rejectionReason:document.getElementById("rrReason").value,
+    routeType:document.getElementById("rrRouteType").value, routingTarget:document.getElementById("rrTargetName").value,
+    routedToEmail:document.getElementById("rrTargetEmail").value
+  }).then(function(r){
+    if (r.status === "success") { showToast("File rerouted"); closeSheet("rerouteSheet","rerouteBackdrop"); loadBusinessLogs(); }
+    else { var box=document.getElementById("rrResult"); box.className="msg-box error"; box.textContent=r.message; }
+  }).catch(function(err){ var box=document.getElementById("rrResult"); box.className="msg-box error"; box.textContent=err.message; })
+    .finally(function(){ btn.disabled=false; btn.textContent="Confirm Reroute"; });
+});
+
+/* ---------------- TEAM ---------------- */
+
+function loadMyTeam(){
+  apiPost({ action:"getMyPartners", bankerId:SESSION.bankerId }).then(function(r){
+    MY_TEAM = r.partners || [];
+    renderMyTeam();
+    populateCPPicker();
+  });
+}
+
+function renderMyTeam(){
+  var el = document.getElementById("myTeamList");
+  if (MY_TEAM.length === 0) { el.innerHTML = '<div class="empty-state">No channel partners recruited yet.</div>'; return; }
+  el.innerHTML = MY_TEAM.map(function(p){
+    return '<div class="team-row"><div><div class="team-name">' + escapeHtml(p.partnerName) + '</div>' +
+      '<div class="team-status">' + escapeHtml(p.mappingStatus) + '</div></div></div>';
+  }).join("");
+}
+
+function populateCPPicker(){
+  var sel = document.getElementById("cpPicker");
+  sel.innerHTML = '<option value="">Select...</option>' + MY_TEAM.map(function(p){ return '<option value="' + escapeHtml(p.partnerName) + '">' + escapeHtml(p.partnerName) + '</option>'; }).join("");
+}
+
+document.getElementById("recruitForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var btn = document.getElementById("recruitBtn"); btn.disabled = true; btn.textContent = "Sending...";
+  apiPost({ action:"recruitPartner", parentBankerId:SESSION.bankerId, partnerName:document.getElementById("recruitName").value })
+    .then(function(r){
+      var box = document.getElementById("recruitResult"); box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message;
+      if (r.status === "success") { document.getElementById("recruitForm").reset(); loadMyTeam(); }
+    }).catch(function(err){ var box=document.getElementById("recruitResult"); box.className="msg-box error"; box.textContent=err.message; })
+    .finally(function(){ btn.disabled=false; btn.textContent="Send Onboarding Invitation"; });
+});
+
+/* ---------------- CP POOL + MESSAGING ---------------- */
+
+function loadCPPool(){
+  apiPost({ action:"getCPPool", bankerId:SESSION.bankerId }).then(function(r){
+    CP_POOL = r.pool || [];
+    renderCPPool();
+  });
+}
+
+function renderCPPool(){
+  var el = document.getElementById("cpPoolList");
+  if (CP_POOL.length === 0) { el.innerHTML = '<div class="empty-state">No partners available in the pool right now.</div>'; return; }
+  el.innerHTML = CP_POOL.map(function(c){
+    return '<div class="pool-row"><div class="team-name">' + escapeHtml(c.cpName) + '</div>' +
+      '<div class="pool-actions">' +
+        '<button class="btn-mini-outline" onclick="openChat(\'' + c.poolId + '\', \'' + escapeHtml(c.cpName).replace(/'/g,"\\'") + '\')">Message</button>' +
+        '<button class="btn-mini-gold" onclick="requestCP(\'' + c.poolId + '\')">Request</button>' +
+      '</div></div>';
+  }).join("");
+}
+
+function requestCP(poolId){
+  apiPost({ action:"requestCP", poolId:poolId, bankerId:SESSION.bankerId }).then(function(r){
+    showToast(r.status === "success" ? "Interest sent" : (r.message || "Failed"), r.status !== "success");
+  });
+}
+
+function openChat(poolId, cpName){
+  CURRENT_CHAT_POOL_ID = poolId;
+  document.getElementById("chatHeading").textContent = "Message " + cpName;
+  loadChatThread();
+  openSheetById("chatSheet","chatBackdrop");
+}
+
+function loadChatThread(){
+  apiPost({ action:"getThreadMessages", poolId:CURRENT_CHAT_POOL_ID, bankerId:SESSION.bankerId }).then(function(r){
+    var el = document.getElementById("chatThread");
+    var messages = r.messages || [];
+    if (messages.length === 0) { el.innerHTML = '<div class="empty-state" style="color:#AFC0E8;">No messages yet — say hello.</div>'; return; }
+    el.innerHTML = messages.map(function(m){
+      return '<div class="chat-bubble ' + (m.fromRole === "Banker" ? "banker" : "cp") + '">' + escapeHtml(m.body) + '</div>';
+    }).join("");
+    el.scrollTop = el.scrollHeight;
+  });
+}
+
+document.getElementById("chatForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var input = document.getElementById("chatInput");
+  var body = input.value;
+  if (!body) return;
+  apiPost({ action:"sendPoolMessage", poolId:CURRENT_CHAT_POOL_ID, bankerId:SESSION.bankerId, body:body })
+    .then(function(r){ if (r.status === "success") { input.value = ""; loadChatThread(); } else { showToast(r.message, true); } });
+});
+</script>
+</body>
+</html>
