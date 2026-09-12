@@ -1,1 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VastMyWealth - Loan & Channel Portal</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1d4ed8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="1000550390.png">
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --bg-body: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-main: #334155;
+            --text-muted: #64748b;
+        }
 
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 35px 25px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .logo-img {
+            width: 110px;
+            height: 110px;
+            object-fit: contain;
+            border-radius: 50%;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.2);
+            margin-bottom: 16px;
+            border: 3px solid #fff;
+        }
+
+        .brand-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0 0 4px 0;
+        }
+
+        .brand-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 30px;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .portal-btn {
+            background-color: #ffffff;
+            color: var(--primary);
+            border: 2px solid var(--border-color);
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .portal-btn span {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .portal-btn.primary {
+            background-color: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        .portal-btn.primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .portal-btn:not(.primary):hover {
+            border-color: var(--accent);
+            background-color: #f1f5f9;
+            color: var(--accent);
+        }
+
+        .arrow-icon {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .footer-note {
+            margin-top: 35px;
+            font-size: 11px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        
+        <img src="1000550390.png" alt="VastMyWealth Logo" class="logo-img" onerror="this.style.display='none'">
+        <h1 class="brand-title">VastMyWealth</h1>
+        <div class="brand-subtitle">Institutional Loan & Channel Portal</div>
+
+        <div class="btn-stack">
+            <!-- Button 1: Apply for Loan -->
+            <a href="https://loan.vastmywealth.com/portal-unified-application.html?ref=P592020" class="portal-btn primary">
+                <span>🏦 Apply for Loan</span>
+                <span class="arrow-icon">→</span>
+            </a>
+
+            <!-- Button 2: Register / Login as Partner -->
+            <a href="https://loan.vastmywealth.com/partner-login.html" class="portal-btn">
+                <span>👥 Register / Login as Partner</span>
+                <span class="arrow-icon">→</span>
+            </a>
+
+            <!-- Button 3: Banker Login -->
+            <a href="https://vastmywealth-byte.github.io/Bank-Channel/" class="portal-btn">
+                <span>🔐 Banker Login</span>
+                <span class="arrow-icon">→</span>
+            </a>
+        </div>
+
+        <div class="footer-note">
+            Secure 256-bit Encrypted Portal • VastMyWealth Digital
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
