@@ -3,8 +3,8 @@
   "short_name": "VMW",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#1d4ed8",
+  "background_color": "#F5F6F8",
+  "theme_color": "#0B1E3D",
   "icons": [
     {
       "src": "1000550390.png",
