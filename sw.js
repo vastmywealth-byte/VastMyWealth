@@ -1,10 +1,12 @@
 // Bump this version number whenever you update cached files,
 // so returning users get the fresh version instead of a stale cache.
-const CACHE_NAME = 'vmw-cache-v1';
+const CACHE_NAME = 'vmw-cache-v2';
 
 const urlsToCache = [
   './',
   './index.html',
+  './banker.html',
+  './style.css',
   './manifest.json',
   './1000550390.png'
 ];
