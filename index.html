@@ -12,258 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --navy: #0B1E3D;
-    --navy-deep: #081527;
-    --gold: #C89B3C;
-    --teal: #1F6F78;
-    --teal-soft: rgba(31, 111, 120, 0.09);
-    --plum: #7C3452;
-    --plum-soft: rgba(124, 52, 82, 0.09);
-    --bg: #F5F6F8;
-    --card-bg: #FFFFFF;
-    --border: #E3E6EB;
-    --ink: #1B2430;
-    --muted: #667085;
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--ink);
-    margin: 0;
-    min-height: 100vh;
-  }
-
-  .shell {
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
-  }
-
-  /* ---------- Left: content panel ---------- */
-  .content-panel {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 56px 64px;
-  }
-
-  .brand-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 40px;
-  }
-
-  .brand-mark {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    object-fit: contain;
-    background: var(--navy);
-    padding: 4px;
-  }
-
-  .brand-name {
-    font-family: 'Manrope', sans-serif;
-    font-weight: 800;
-    font-size: 17px;
-    color: var(--navy);
-    letter-spacing: -0.01em;
-  }
-
-  h1 {
-    font-family: 'Manrope', sans-serif;
-    font-weight: 800;
-    font-size: 40px;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    color: var(--navy);
-    margin: 0 0 16px 0;
-    max-width: 15ch;
-  }
-
-  .lede {
-    font-size: 15.5px;
-    line-height: 1.6;
-    color: var(--muted);
-    max-width: 42ch;
-    margin: 0 0 36px 0;
-  }
-
-  /* ---------- Portal cards ---------- */
-  .stack {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    max-width: 460px;
-  }
-
-  .portal-card {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    text-decoration: none;
-    border-radius: 14px;
-    padding: 18px 20px;
-    border: 1px solid var(--border);
-    background: var(--card-bg);
-    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-
-  .portal-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px -8px rgba(11, 30, 61, 0.18);
-  }
-
-  .portal-card.primary {
-    background: var(--navy);
-    border-color: var(--navy);
-  }
-
-  .icon-chip {
-    flex-shrink: 0;
-    width: 44px;
-    height: 44px;
-    border-radius: 11px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .icon-chip svg { width: 22px; height: 22px; }
-
-  .primary .icon-chip { background: rgba(200, 155, 60, 0.18); }
-  .primary .icon-chip svg { stroke: var(--gold); }
-
-  .card-partner .icon-chip { background: var(--teal-soft); }
-  .card-partner .icon-chip svg { stroke: var(--teal); }
-  .card-banker .icon-chip { background: var(--plum-soft); }
-  .card-banker .icon-chip svg { stroke: var(--plum); }
-
-  .card-text { flex: 1; min-width: 0; }
-
-  .card-title {
-    font-family: 'Manrope', sans-serif;
-    font-weight: 700;
-    font-size: 15.5px;
-    color: var(--ink);
-    margin-bottom: 2px;
-  }
-
-  .primary .card-title { color: #ffffff; }
-
-  .card-desc {
-    font-size: 12.5px;
-    color: var(--muted);
-  }
-
-  .primary .card-desc { color: rgba(255,255,255,0.65); }
-
-  .chevron {
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    stroke: var(--muted);
-    transition: transform 0.15s ease;
-  }
-
-  .primary .chevron { stroke: rgba(255,255,255,0.7); }
-  .portal-card:hover .chevron { transform: translateX(3px); }
-
-  .footer-note {
-    margin-top: 40px;
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
-
-  /* ---------- Right: illustration panel ---------- */
-  .visual-panel {
-    background: var(--navy-deep);
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
-
-  .visual-panel::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(rgba(200,155,60,0.14) 1px, transparent 1px);
-    background-size: 26px 26px;
-    opacity: 0.6;
-  }
-
-  .chart-caption {
-    position: absolute;
-    top: 48px;
-    left: 48px;
-    right: 48px;
-  }
-
-  .chart-caption .eyebrow-text {
-    font-family: 'Manrope', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    color: var(--gold);
-    margin-bottom: 6px;
-  }
-
-  .chart-caption p {
-    font-size: 13px;
-    color: rgba(255,255,255,0.55);
-    max-width: 34ch;
-    line-height: 1.6;
-    margin: 0;
-  }
-
-  .growth-line {
-    stroke-dasharray: 900;
-    stroke-dashoffset: 900;
-    animation: draw 1.8s ease-out 0.3s forwards;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .growth-line { animation: none; stroke-dashoffset: 0; }
-  }
-
-  @keyframes draw {
-    to { stroke-dashoffset: 0; }
-  }
-
-  .node {
-    opacity: 0;
-    animation: pop 0.4s ease-out forwards;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .node { opacity: 1; animation: none; }
-  }
-
-  @keyframes pop {
-    to { opacity: 1; }
-  }
-
-  /* ---------- Responsive ---------- */
-  @media (max-width: 900px) {
-    .shell { grid-template-columns: 1fr; grid-template-rows: 240px auto; }
-    .visual-panel { order: -1; }
-    .chart-caption { display: none; }
-    .content-panel { padding: 36px 24px 48px; }
-    h1 { font-size: 30px; max-width: none; }
-  }
-
-  @media (max-width: 420px) {
-    .content-panel { padding: 30px 18px 40px; }
-  }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -284,7 +33,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10"/><path d="M19 21V10"/><path d="M9 21V10"/><path d="M15 21V10"/><path d="M2 10l10-6 10 6"/></svg>
         </span>
         <span class="card-text">
-          <span class="card-title">Apply for a loan</span>
+          <span class="card-title">Apply for Loan</span>
           <span class="card-desc">Start a new application in minutes</span>
         </span>
         <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
@@ -295,18 +44,18 @@
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6"/><rect x="2" y="7" width="8" height="10" rx="4"/><rect x="14" y="7" width="8" height="10" rx="4"/></svg>
         </span>
         <span class="card-text">
-          <span class="card-title">Register or log in as partner</span>
+          <span class="card-title">Partner Login/Register</span>
           <span class="card-desc">Manage your channel and leads</span>
         </span>
         <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
       </a>
 
-      <a href="https://vastmywealth-byte.github.io/Bank-Channel/" class="portal-card card-banker">
+      <a href="banker.html" class="portal-card card-banker">
         <span class="icon-chip">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><circle cx="12" cy="11" r="1.4"/><path d="M12 12.4v2.6"/></svg>
         </span>
         <span class="card-text">
-          <span class="card-title">Banker login</span>
+          <span class="card-title">Banker Module</span>
           <span class="card-desc">Access channel and case tools</span>
         </span>
         <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
@@ -352,14 +101,6 @@
     });
   }
 </script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service Worker registered!'))
-        .catch(err => console.log('Service Worker registration failed: ', err));
-    });
-  }
-</script>
+
 </body>
 </html>
