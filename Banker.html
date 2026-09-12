@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VastMyWealth — Bank Channel CRM</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0E1B3D">
+<link rel="apple-touch-icon" href="1000550390.png">
 <style>
   :root{
     --navy:#0E1B3D; --navy-mid:#122654; --navy-light:#1B3466;
@@ -34,6 +37,8 @@
   .splash-logo{width:72px; height:72px; margin:0 auto 14px; border-radius:50%; background:var(--navy); display:flex; align-items:center; justify-content:center; color:var(--gold); font-weight:800; font-size:24px; box-shadow:0 0 0 6px rgba(212,167,65,.15);}
   .splash-top h1{font-size:24px; margin:0; color:var(--navy); font-weight:800;}
   .splash-top .tagline{color:#2B5FCB; font-size:13px; font-weight:600; margin-top:4px; letter-spacing:.3px;}
+  .back-to-portal{display:inline-block; margin-top:10px; font-size:12px; font-weight:700; color:#2B5FCB; text-decoration:none;}
+  .back-to-portal:hover{text-decoration:underline;}
   .auth-body{flex:1; padding:28px 22px 50px; max-width:420px; width:100%; margin:0 auto; position:relative; z-index:1;}
 
   .view{display:none;}
@@ -176,6 +181,7 @@
     <div class="splash-logo">VMW</div>
     <h1>VastMyWealth</h1>
     <div class="tagline">Bank Channel Partner Portal</div>
+    <a href="index.html" class="back-to-portal">← Back to portal</a>
   </div>
   <div class="auth-body">
 
