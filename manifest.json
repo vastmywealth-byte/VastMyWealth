@@ -1,7 +1,7 @@
 {
   "name": "VastMyWealth Portal",
   "short_name": "VMW",
-  "start_url": "./",
+  "start_url": "/Bank-Channel/",
   "display": "standalone",
   "background_color": "#F5F6F8",
   "theme_color": "#0B1E3D",
