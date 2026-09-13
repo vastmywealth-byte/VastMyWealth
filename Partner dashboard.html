@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partner Dashboard — VastMyWealth</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#081228">
+<link rel="apple-touch-icon" href="1000550390.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-950:#081228;
+  --navy-900:#0d1c3f;
+  --navy-800:#16233F;
+  --gold-500:#D4A24C;
+  --gold-300:#F3CE86;
+  --gold-glow: rgba(212,162,76,0.35);
+  --blue-400:#4E8FF0;
+  --ink-100:#EAF0FC;
+  --ink-300:#C4D0E8;
+  --ink-400:#93A3C4;
+  --danger:#F0665E;
+  --success:#5FD3A0;
+  --radius:16px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  background: radial-gradient(1200px 600px at 15% -10%, rgba(78,143,240,0.15), transparent 60%),
+              linear-gradient(180deg, var(--navy-950), var(--navy-900) 45%, var(--navy-950));
+  color:var(--ink-100);
+  font-family:'Inter', sans-serif;
+  min-height:100vh;
+  display:flex; flex-direction:column; align-items:center;
+  padding:32px 20px 60px;
+}
+h1,h2,h3,.display{ font-family:'Poppins', sans-serif; }
+a{ color:var(--gold-300); }
+.shell{ width:100%; max-width:480px; }
+.shell.wide{ max-width:760px; }
+.brand{ display:flex; align-items:center; gap:12px; justify-content:center; margin-bottom:28px; }
+.brand img{ width:44px; height:44px; border-radius:50%; }
+.brand b{ font-family:'Poppins',sans-serif; font-weight:800; font-size:16px; display:block; }
+.brand em{ font-style:normal; color:var(--gold-300); font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; }
+
+.card{
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.09);
+  border-radius:20px;
+  padding:32px;
+}
+.card h2{ font-size:22px; font-weight:800; color:#fff; }
+.card p.sub{ color:var(--ink-400); font-size:14px; margin-top:8px; margin-bottom:24px; }
+
+label{ display:block; font-size:13px; font-weight:600; color:var(--ink-300); margin:16px 0 6px; }
+label:first-of-type{ margin-top:0; }
+
+.btn{
+  width:100%; padding:14px; border-radius:12px; font-weight:700; font-size:15px;
+  border:none; cursor:pointer; margin-top:24px;
+  background:linear-gradient(135deg, var(--gold-300), var(--gold-500));
+  color:var(--navy-950); transition:opacity .2s ease;
+}
+.btn:hover{ opacity:0.92; }
+
+.linkbox{
+  display:flex; gap:8px; margin-top:10px;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px; padding:10px 12px; align-items:center;
+}
+.linkbox span{ flex:1; font-size:13px; color:var(--ink-300); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.linkbox button{
+  flex:none; background:var(--gold-500); color:var(--navy-950); border:none;
+  border-radius:8px; padding:7px 12px; font-size:12.5px; font-weight:700; cursor:pointer;
+}
+
+.hint{ font-size:12px; color:var(--ink-400); margin-top:5px; }
+
+table{ width:100%; border-collapse:collapse; margin-top:18px; font-size:13.5px; }
+th{ text-align:left; color:var(--ink-400); font-weight:600; padding:10px 8px; border-bottom:1px solid rgba(255,255,255,0.12); font-size:12px; text-transform:uppercase; letter-spacing:0.4px; }
+td{ padding:12px 8px; border-bottom:1px solid rgba(255,255,255,0.06); color:var(--ink-100); }
+.badge{ display:inline-block; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:700; }
+.badge.a{ background:rgba(95,211,160,0.15); color:var(--success); }
+.badge.b{ background:rgba(78,143,240,0.15); color:var(--blue-400); }
+.badge.c{ background:rgba(212,162,76,0.15); color:var(--gold-300); }
+.badge.fallback{ background:rgba(240,102,94,0.15); color:var(--danger); }
+
+.topbar{ width:100%; max-width:760px; display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+.logout{ font-size:13px; color:var(--ink-400); border:1px solid rgba(255,255,255,0.15); padding:7px 14px; border-radius:999px; cursor:pointer; background:none; }
+.logout:hover{ color:var(--ink-100); border-color:var(--gold-500); }
+
+.empty{ text-align:center; padding:40px 10px; color:var(--ink-400); font-size:14px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand" style="margin:0;">
+    <img src="1000550390.png" alt="VastMyWealth" width="44" height="44">
+    <div><b>VastMyWealth</b><em>DSA / Partner</em></div>
+  </div>
+  <button class="logout" id="logoutBtn">Log out</button>
+</div>
+
+<div class="shell wide">
+  <div class="card">
+    <h2 id="welcomeMsg">Welcome</h2>
+    <p class="sub" id="codeMsg"></p>
+
+        <label>Your referral link</label>
+    <div class="linkbox">
+      <span id="refLink"></span>
+      <button id="copyBtn">Copy</button>
+    </div>
+    <div class="hint">Share this with customers — applications they submit through it are automatically logged under your name.</div>
+    <button class="btn" id="openLinkBtn" style="margin-top:10px;">Login New Business</button>
+    <div style="margin-top:32px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+        <label style="margin-bottom:0;">Your applications</label>
+        <button onclick="loadLeads()" style="background:var(--navy-mid); border:1px solid var(--gold-500); color:var(--gold-300); padding:6px 14px; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer;">Refresh</button>
+      </div>
+      <div id="leadsArea">
+        <div class="empty">Loading…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Your local loan application page in this app
+const APPLY_FORM_URL = "apply.html";
+const VL_EL_FORM_URL = "https://loan.vastmywealth.com/vl-el-application.html"; // ⚠️ required, e.g. "vl-el-application.html"
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
+const WA_NUMBER = "919594592020"; // ⚠️ same number as the customer portal
+function buildPartnerWhatsAppLink(l){
+  var text = 'Docs for: ' + (l.customerName || '') + ' | Ref: ' + (l.leadId || '');
+  return 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(text);
+}
+
+const partnerCode = localStorage.getItem('vmw_partner_code');
+const partnerName = localStorage.getItem('vmw_partner_name');
+
+if (!partnerCode) {
+  window.location.href = 'partner.html';
+}
+
+document.getElementById('welcomeMsg').textContent = 'Welcome, ' + (partnerName || 'Partner');
+document.getElementById('codeMsg').textContent = 'Partner code: ' + partnerCode;
+
+const referralLink = window.location.origin + window.location.pathname.replace('partner-dashboard.html', APPLY_FORM_URL) + '?ref=' + partnerCode;
+document.getElementById('refLink').textContent = referralLink;
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(referralLink).then(() => {
+    const btn = document.getElementById('copyBtn');
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  });
+});
+document.getElementById('openLinkBtn').addEventListener('click', () => {
+  window.open(referralLink, '_blank');
+});
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.removeItem('vmw_partner_code');
+  localStorage.removeItem('vmw_partner_name');
+  window.location.href = 'partner.html';
+});
+
+function badgeClass(category) {
+  if (category === 'A') return 'a';
+  if (category === 'B') return 'b';
+  if (category === 'C') return 'c';
+  return 'fallback';
+}
+
+async function loadLeads() {
+  const area = document.getElementById('leadsArea');
+  try {
+    const url = SCRIPT_URL + '?action=getPartnerLeads&partnerCode=' + encodeURIComponent(partnerCode);
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.success) {
+      area.innerHTML = '<div class="empty">Could not load applications: ' + (data.error || 'unknown error') + '</div>';
+      return;
+    }
+
+    if (!data.leads || data.leads.length === 0) {
+      area.innerHTML = '<div class="empty">No applications yet. Share your referral link to get started.</div>';
+      return;
+    }
+
+        let html = '<table><thead><tr><th>Date</th><th>Customer</th><th>Mobile</th><th>Product</th><th>Category</th><th>Status</th><th>Bank</th><th></th></tr></thead><tbody>';
+    data.leads.forEach(l => {
+      const date = new Date(l.timestamp).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            const isVlEl = (l.product === 'VL' || l.product === 'EL');
+      const formUrlForLead = isVlEl ? VL_EL_FORM_URL : APPLY_FORM_URL;
+      const uploadLink = (l.documentStatus === 'Pending' && l.leadId)
+        ? '<a href="' + formUrlForLead + '?leadId=' + encodeURIComponent(l.leadId) + '&product=' + encodeURIComponent(l.product) + '" target="_blank" style="color:var(--gold-300); font-weight:700; font-size:12.5px; white-space:nowrap;">Upload Docs</a>' +
+          '<br><a href="' + buildPartnerWhatsAppLink(l) + '" target="_blank" style="color:#5FD3A0; font-weight:700; font-size:12.5px; white-space:nowrap;">💬 WhatsApp</a>'
+        : '';
+
+            html += '<tr>' +
+        '<td>' + date + '</td>' +
+        '<td>' + (l.customerName || '—') + '</td>' +
+        '<td>' + (l.mobile || '—') + '</td>' +
+        '<td>' + (l.product || '—') + '</td>' +
+        '<td><span class="badge ' + badgeClass(l.category) + '">' + (l.category || '—') + '</span></td>' +
+        '<td>' + (l.status || '—') + '</td>' +
+        '<td>' + (l.processingBank || '—') + '</td>' +
+        '<td>' + uploadLink + '</td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    area.innerHTML = html;
+  } catch (err) {
+    area.innerHTML = '<div class="empty">Network error loading applications. Please refresh.</div>';
+  }
+}
+
+if (partnerCode) loadLeads();
+</script>
+
+</body>
+</html>
