@@ -317,6 +317,12 @@
         <div id="myTeamList"></div>
         <form id="recruitForm" class="light-form" style="margin-top:14px;">
           <div class="form-group"><label>Channel Partner Name</label><input type="text" id="recruitName" required></div>
+          <div class="form-group"><label>Mobile Number</label><input type="tel" id="recruitMobile" required maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
+          <div class="form-group"><label>Email ID</label><input type="email" id="recruitEmail" required placeholder="their email address"></div>
+          <div class="form-group" style="display:flex; align-items:flex-start; gap:8px;">
+            <input type="checkbox" id="recruitConsent" required style="width:auto; margin-top:3px;">
+            <label for="recruitConsent" style="margin:0; font-weight:500;">I have this person's consent to share their name, mobile and email with VastMyWealth to invite them as a channel partner.</label>
+          </div>
           <button type="submit" id="recruitBtn" class="btn-primary">Send Onboarding Invitation</button>
         </form>
         <div id="recruitResult" class="msg-box"></div>
@@ -326,6 +332,12 @@
         <h3>VastMyWealth Partner Pool</h3>
         <p class="desc">Unlocked at ₹10L/month disbursement. Names only — message a partner to introduce yourself; your contact details stay private on both sides.</p>
         <div id="cpPoolList"></div>
+      </div>
+
+      <div class="section-card" id="agreedPoolCard" style="display:none;">
+        <h3>Agreed Partnerships</h3>
+        <p class="desc">These partners have accepted — their mobile and email are now visible to you.</p>
+        <div id="agreedPoolList"></div>
       </div>
     </div>
 
@@ -485,11 +497,12 @@ function enterApp(){
   if (SESSION.unlockedCPPool) { badge.style.display="inline-flex"; badge.innerHTML = '<span class="status-dot live"></span> Partner Pool Unlocked'; }
   else { badge.style.display="inline-flex"; badge.innerHTML = '<span class="status-dot"></span> Partner Pool locks at ₹10L/month'; }
   document.getElementById("cpPoolCard").style.display = SESSION.unlockedCPPool ? "block" : "none";
+  document.getElementById("agreedPoolCard").style.display = SESSION.unlockedCPPool ? "block" : "none";
 
   loadCodes();
   loadBusinessLogs();
   loadMyTeam();
-  if (SESSION.unlockedCPPool) loadCPPool();
+  if (SESSION.unlockedCPPool) { loadCPPool(); loadAgreedPool(); }
 }
 
 document.getElementById("logoutBtn").addEventListener("click", function(){
@@ -645,8 +658,15 @@ function populateCPPicker(){
 
 document.getElementById("recruitForm").addEventListener("submit", function(e){
   e.preventDefault();
+  var mobile = document.getElementById("recruitMobile").value.trim();
+  if (!/^\d{10}$/.test(mobile)) { showToast("Enter a valid 10-digit mobile number", true); return; }
   var btn = document.getElementById("recruitBtn"); btn.disabled = true; btn.textContent = "Sending...";
-  apiPost({ action:"recruitPartner", parentBankerId:SESSION.bankerId, partnerName:document.getElementById("recruitName").value })
+  apiPost({
+    action:"recruitPartner", parentBankerId:SESSION.bankerId,
+    partnerName:document.getElementById("recruitName").value,
+    partnerMobile: mobile,
+    partnerEmail: document.getElementById("recruitEmail").value.trim()
+  })
     .then(function(r){
       var box = document.getElementById("recruitResult"); box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message;
       if (r.status === "success") { document.getElementById("recruitForm").reset(); loadMyTeam(); }
@@ -671,6 +691,28 @@ function renderCPPool(){
       '<div class="pool-actions">' +
         '<button class="btn-mini-outline" onclick="openChat(\'' + c.poolId + '\', \'' + escapeHtml(c.cpName).replace(/'/g,"\\'") + '\')">Message</button>' +
         '<button class="btn-mini-gold" onclick="requestCP(\'' + c.poolId + '\')">Request</button>' +
+      '</div></div>';
+  }).join("");
+}
+
+var AGREED_POOL = [];
+
+function loadAgreedPool(){
+  apiPost({ action:"getMyAgreedPoolCPs", bankerId:SESSION.bankerId }).then(function(r){
+    AGREED_POOL = r.partners || [];
+    renderAgreedPool();
+  });
+}
+
+function renderAgreedPool(){
+  var el = document.getElementById("agreedPoolList");
+  if (AGREED_POOL.length === 0) { el.innerHTML = '<div class="empty-state">No agreed partnerships yet.</div>'; return; }
+  el.innerHTML = AGREED_POOL.map(function(c){
+    return '<div class="pool-row">' +
+      '<div><div class="team-name">' + escapeHtml(c.cpName) + '</div>' +
+      '<div class="business-meta">' + escapeHtml(c.cpMobile || '—') + ' · ' + escapeHtml(c.cpEmail || '—') + '</div></div>' +
+      '<div class="pool-actions">' +
+        '<button class="btn-mini-outline" onclick="openChat(\'' + c.poolId + '\', \'' + escapeHtml(c.cpName).replace(/'/g,"\\'") + '\')">Message</button>' +
       '</div></div>';
   }).join("");
 }
