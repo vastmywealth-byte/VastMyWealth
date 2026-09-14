@@ -1,6 +1,6 @@
 // Bump this version number whenever you update cached files,
 // so returning users get the fresh version instead of a stale cache.
-const CACHE_NAME = 'vmw-cache-v6';
+const CACHE_NAME = 'vmw-cache-v7';
 
 const urlsToCache = [
   './',
