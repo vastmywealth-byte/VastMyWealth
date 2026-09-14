@@ -1,47 +1,73 @@
 :root {
   --navy: #0B1E3D;
-  --navy-deep: #081527;
   --gold: #C89B3C;
-  --teal: #1F6F78;
-  --teal-soft: rgba(31, 111, 120, 0.09);
-  --plum: #7C3452;
-  --plum-soft: rgba(124, 52, 82, 0.09);
-  --bg: #F5F6F8;
+  --bg-top: #EFF5FF;
+  --bg: #F7F9FC;
   --card-bg: #FFFFFF;
-  --border: #E3E6EB;
+  --border: #E7EBF2;
   --ink: #1B2430;
-  --muted: #667085;
+  --muted: #64748B;
+
+  --customer: #2563EB;
+  --customer-soft: #E7EFFE;
+  --banker: #16A34A;
+  --banker-soft: #E8F7EE;
+  --dsa: #7C3AED;
+  --dsa-soft: #F2EBFE;
 }
 
 * { box-sizing: border-box; }
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--bg);
+  background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg) 320px);
   color: var(--ink);
   margin: 0;
   min-height: 100vh;
 }
 
 .shell {
+  max-width: 480px;
+  margin: 0 auto;
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
-}
-
-/* ---------- Left: content panel ---------- */
-.content-panel {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 56px 64px;
+  position: relative;
+  overflow: hidden;
 }
 
+/* ---------- Header / brand ---------- */
 .brand-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 40px;
+  text-align: center;
+  padding: 36px 24px 6px;
+}
+
+.brand-mark {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: contain;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 14px rgba(11, 30, 61, 0.12);
+}
+
+.brand-name {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 21px;
+  color: var(--navy);
+  letter-spacing: -0.01em;
+}
+
+.brand-script {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  color: var(--customer);
+  font-size: 15px;
+  margin-top: -2px;
 }
 
 .back-link {
@@ -52,245 +78,156 @@ body {
   font-weight: 600;
   color: var(--muted);
   text-decoration: none;
-  margin-bottom: 28px;
+  margin: 4px 0 0;
 }
-
 .back-link:hover { color: var(--navy); }
 .back-link svg { width: 16px; height: 16px; }
 
-.brand-mark {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  object-fit: contain;
-  background: var(--navy);
-  padding: 4px;
-}
-
-.brand-name {
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 17px;
-  color: var(--navy);
-  letter-spacing: -0.01em;
+/* ---------- Hero text ---------- */
+.hero-text {
+  text-align: center;
+  padding: 10px 24px 22px;
 }
 
 h1 {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
-  font-size: 40px;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  font-size: 30px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   color: var(--navy);
-  margin: 0 0 16px 0;
-  max-width: 15ch;
+  margin: 0 0 10px 0;
 }
 
 .lede {
-  font-size: 15.5px;
-  line-height: 1.6;
+  font-size: 14.5px;
+  line-height: 1.55;
   color: var(--muted);
-  max-width: 42ch;
-  margin: 0 0 36px 0;
+  margin: 0 auto;
+  max-width: 36ch;
 }
 
-.feature-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 36px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.feature-list li {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 14px;
-  color: var(--ink);
-}
-
-.feature-list svg {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  stroke: var(--gold);
-  margin-top: 1px;
-}
-
-/* ---------- Portal cards ---------- */
+/* ---------- Role cards ---------- */
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  max-width: 460px;
+  gap: 16px;
+  padding: 4px 20px 28px;
 }
 
-.portal-card {
+.role-card {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  align-items: stretch;
+  border-radius: 20px;
+  overflow: hidden;
   text-decoration: none;
-  border-radius: 14px;
-  padding: 18px 20px;
+  box-shadow: 0 8px 22px -10px rgba(11, 30, 61, 0.18);
   border: 1px solid var(--border);
   background: var(--card-bg);
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.portal-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px -8px rgba(11, 30, 61, 0.18);
-}
-
-.portal-card.primary {
-  background: var(--navy);
-  border-color: var(--navy);
-}
-
-.icon-chip {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: 11px;
+.role-visual {
+  flex: 0 0 34%;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.icon-chip svg { width: 22px; height: 22px; }
-
-.primary .icon-chip { background: rgba(200, 155, 60, 0.18); }
-.primary .icon-chip svg { stroke: var(--gold); }
-
-.card-partner .icon-chip { background: var(--teal-soft); }
-.card-partner .icon-chip svg { stroke: var(--teal); }
-.card-banker .icon-chip { background: var(--plum-soft); }
-.card-banker .icon-chip svg { stroke: var(--plum); }
-
-.card-text { flex: 1; min-width: 0; }
-
-.card-title {
-  font-family: 'Manrope', sans-serif;
-  font-weight: 700;
-  font-size: 15.5px;
-  color: var(--ink);
-  margin-bottom: 2px;
-}
-
-.primary .card-title { color: #ffffff; }
-
-.card-desc {
-  font-size: 12.5px;
-  color: var(--muted);
-}
-
-.primary .card-desc { color: rgba(255,255,255,0.65); }
-
-.chevron {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  stroke: var(--muted);
-  transition: transform 0.15s ease;
-}
-
-.primary .chevron { stroke: rgba(255,255,255,0.7); }
-.portal-card:hover .chevron { transform: translateX(3px); }
-
-.footer-note {
-  margin-top: 40px;
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.7;
-}
-
-/* ---------- Right: illustration panel ---------- */
-.visual-panel {
-  background: var(--navy-deep);
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
 }
 
-.visual-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(200,155,60,0.14) 1px, transparent 1px);
-  background-size: 26px 26px;
-  opacity: 0.6;
+.role-visual svg { width: 62%; height: 62%; }
+
+.role-card.customer .role-visual { background: linear-gradient(160deg, var(--customer-soft), #DCE9FF); }
+.role-card.banker .role-visual { background: linear-gradient(160deg, var(--banker-soft), #D9F3E3); }
+.role-card.dsa .role-visual { background: linear-gradient(160deg, var(--dsa-soft), #E8DBFD); }
+
+.role-content {
+  flex: 1;
+  padding: 16px 16px 16px 18px;
+  display: flex;
+  flex-direction: column;
 }
 
-.chart-caption {
-  position: absolute;
-  top: 48px;
-  left: 48px;
-  right: 48px;
-}
-
-.chart-caption .eyebrow-text {
-  font-family: 'Manrope', sans-serif;
+.role-eyebrow {
+  font-size: 11.5px;
   font-weight: 700;
-  font-size: 13px;
-  color: var(--gold);
-  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 1px;
 }
 
-.chart-caption p {
-  font-size: 13px;
-  color: rgba(255,255,255,0.55);
-  max-width: 34ch;
+.role-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.role-checks {
+  list-style: none;
+  margin: 0 0 12px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.role-checks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.role-checks svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
+
+.role-btn {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #fff;
+  transition: transform 0.15s ease;
+}
+
+.role-card:hover .role-btn { transform: translateX(2px); }
+
+.customer .role-checks svg { stroke: var(--customer); }
+.customer .role-btn { background: linear-gradient(135deg, var(--customer), #1D4ED8); }
+
+.banker .role-checks svg { stroke: var(--banker); }
+.banker .role-btn { background: linear-gradient(135deg, var(--banker), #15803D); }
+
+.dsa .role-checks svg { stroke: var(--dsa); }
+.dsa .role-btn { background: linear-gradient(135deg, var(--dsa), #6D28D9); }
+
+.role-btn svg { width: 15px; height: 15px; stroke: #fff; }
+
+/* ---------- Footer ---------- */
+.footer-wave {
+  margin-top: auto;
+  width: 100%;
+  display: block;
+}
+
+.footer-note {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--muted);
+  padding: 0 24px 28px;
   line-height: 1.6;
-  margin: 0;
 }
 
-.growth-line {
-  stroke-dasharray: 900;
-  stroke-dashoffset: 900;
-  animation: draw 1.8s ease-out 0.3s forwards;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .growth-line { animation: none; stroke-dashoffset: 0; }
-}
-
-@keyframes draw {
-  to { stroke-dashoffset: 0; }
-}
-
-.node {
-  opacity: 0;
-  animation: pop 0.4s ease-out forwards;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .node { opacity: 1; animation: none; }
-}
-
-@keyframes pop {
-  to { opacity: 1; }
-}
-
-/* ---------- Single primary CTA (banker page) ---------- */
-.cta-single {
-  max-width: 460px;
-}
-
-.cta-single .portal-card { padding: 22px 24px; }
-
-/* ---------- Responsive ---------- */
-@media (max-width: 900px) {
-  .shell { grid-template-columns: 1fr; grid-template-rows: 240px auto; }
-  .visual-panel { order: -1; }
-  .chart-caption { display: none; }
-  .content-panel { padding: 36px 24px 48px; }
-  h1 { font-size: 30px; max-width: none; }
-}
-
-@media (max-width: 420px) {
-  .content-panel { padding: 30px 18px 40px; }
+@media (max-width: 380px) {
+  h1 { font-size: 26px; }
+  .role-title { font-size: 15.5px; }
 }
