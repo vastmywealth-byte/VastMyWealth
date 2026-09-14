@@ -1,6 +1,6 @@
 {
   "name": "VastMyWealth Portal",
-  "short_name": "VMW",
+  "short_name": "VastMyWealth",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#F5F6F8",
