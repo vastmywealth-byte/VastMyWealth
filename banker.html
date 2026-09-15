@@ -276,7 +276,7 @@
       </div>
     </div>
   </header>
-  <div class="locked-badge" id="cpPoolStatusBadge" style="display:none;"></div>
+  <!-- cpPoolStatusBadge removed — the ₹10L/month gate has been dropped; DSA Leads (partner pool) is open to every banker now -->
 
   <main class="content">
 
@@ -327,18 +327,18 @@
       </div>
     </div>
 
-    <!-- TAB: DSA LEADS -->
+    <!-- TAB: DSA LEADS — now the pool of already-enrolled partner DSAs
+         (same list as the former "CP Pool"), not PL-BL loan-application rows -->
     <div id="tabDsaLeads" class="tab-pane" style="display:none;">
       <div class="section-card">
         <h3>DSA Leads</h3>
-        <p class="desc">Leads sourced via a partner DSA. Claim one to receive full details and the matching DSA code by email.</p>
-        <div id="dsaLeadsGate" class="gate-state" style="display:none;">Submit and get a DSA code verified to view leads.</div>
-        <div id="dsaLeadsSlots" class="slots-note"></div>
-        <div id="dsaLeadsList"></div>
+        <p class="desc">Partners already enrolled with VastMyWealth. Names only — message a partner to introduce yourself; your contact details stay private on both sides.</p>
+        <div id="cpPoolList"></div>
       </div>
       <div class="section-card">
-        <h3>My Claimed DSA Leads</h3>
-        <div id="dsaMyClaimsList"></div>
+        <h3>Agreed Partnerships</h3>
+        <p class="desc">These partners have accepted — their mobile and email are now visible to you.</p>
+        <div id="agreedPoolList"></div>
       </div>
     </div>
 
@@ -359,18 +359,6 @@
           <button type="submit" id="recruitBtn" class="btn-primary">Send Onboarding Invitation</button>
         </form>
         <div id="recruitResult" class="msg-box"></div>
-      </div>
-
-      <div class="section-card" id="cpPoolCard" style="display:none;">
-        <h3>VastMyWealth Partner Pool</h3>
-        <p class="desc">Unlocked at ₹10L/month disbursement. Names only — message a partner to introduce yourself; your contact details stay private on both sides.</p>
-        <div id="cpPoolList"></div>
-      </div>
-
-      <div class="section-card" id="agreedPoolCard" style="display:none;">
-        <h3>Agreed Partnerships</h3>
-        <p class="desc">These partners have accepted — their mobile and email are now visible to you.</p>
-        <div id="agreedPoolList"></div>
       </div>
     </div>
 
@@ -529,26 +517,49 @@ document.getElementById("requestCodeForm").addEventListener("submit", function(e
     .finally(function(){ btn.disabled=false; btn.textContent="Send Request"; });
 });
 
+// NEW — factored out so both the login form AND the auto-login-on-refresh
+// check below can share the same logic. Persists mobile+PIN to localStorage
+// on success (standard browser storage — this is a real deployed site, not
+// a sandboxed preview) so refreshing the page doesn't bounce back to login.
+var AUTH_STORAGE_KEY = "vmw_banker_auth";
+function performLogin(mobile, pin){
+  return apiPost({ action:"verifyBanker", mobileNumber:mobile, pin:pin }).then(function(r){
+    if (r.status !== "success") return r;
+    SESSION = {
+      bankerId:r.bankerId, bankerName:r.bankerName, bankerEmail:r.bankerEmail, mobile:mobile, pin:pin,
+      hasActiveCode:r.hasActiveCode, accountVerified:r.accountVerified,
+      pendingVerification:r.pendingVerification, rmName:r.rmName, rmMobile:r.rmMobile,
+      activeBankNames:r.activeBankNames || [], currentBankName:r.currentBankName, refCode:r.refCode
+    };
+    try { localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ mobile: mobile, pin: pin })); } catch (e) {}
+    enterApp();
+    return r;
+  });
+}
+
 document.getElementById("loginForm").addEventListener("submit", function(e){
   e.preventDefault();
   var btn = document.getElementById("loginBtn"); btn.disabled = true; btn.textContent = "Logging in...";
   var mobile = document.getElementById("loginMobile").value, pin = document.getElementById("loginPin").value;
-  apiPost({ action:"verifyBanker", mobileNumber:mobile, pin:pin })
+  performLogin(mobile, pin)
     .then(function(r){
       btn.disabled = false; btn.textContent = "Login";
       if (r.status !== "success") {
         var box = document.getElementById("loginResult"); box.className="msg-box error"; box.textContent = r.message;
-        return;
       }
-      SESSION = {
-        bankerId:r.bankerId, bankerName:r.bankerName, bankerEmail:r.bankerEmail, mobile:mobile, pin:pin,
-        unlockedCPPool:r.unlockedCPPool, hasActiveCode:r.hasActiveCode, accountVerified:r.accountVerified,
-        pendingVerification:r.pendingVerification, rmName:r.rmName, rmMobile:r.rmMobile,
-        activeBankNames:r.activeBankNames || [], currentBankName:r.currentBankName, refCode:r.refCode
-      };
-      enterApp();
     }).catch(function(err){ btn.disabled=false; btn.textContent="Login"; var box=document.getElementById("loginResult"); box.className="msg-box error"; box.textContent=err.message; });
 });
+
+// NEW — on page load, silently try to restore the session from a previous
+// login rather than always landing on the login screen after a refresh.
+(function attemptAutoLogin(){
+  try {
+    var saved = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || "null");
+    if (saved && saved.mobile && saved.pin) {
+      performLogin(saved.mobile, saved.pin).catch(function(){ /* fall through to normal login screen */ });
+    }
+  } catch (e) { /* ignore malformed storage */ }
+})();
 
 document.getElementById("forgotPinForm").addEventListener("submit", function(e){
   e.preventDefault();
@@ -595,23 +606,19 @@ function enterApp(){
     bankLabelEl.style.display = "none";
   }
 
-  // MODIFIED — badge only appears once unlocked; no "locks at ₹10L" message shown otherwise.
-  var badge = document.getElementById("cpPoolStatusBadge");
-  if (SESSION.unlockedCPPool) { badge.style.display="inline-flex"; badge.innerHTML = '<span class="status-dot live"></span> Partner Pool Unlocked'; }
-  else { badge.style.display="none"; }
-  document.getElementById("cpPoolCard").style.display = SESSION.unlockedCPPool ? "block" : "none";
-  document.getElementById("agreedPoolCard").style.display = SESSION.unlockedCPPool ? "block" : "none";
-
+  // CP Pool / DSA Leads is now open to every banker — no gating, no badge.
   applyGating();
 
   loadCodes();
   loadBusinessLogs();
   loadMyTeam();
   loadLeads();
-  if (SESSION.unlockedCPPool) { loadCPPool(); loadAgreedPool(); }
+  loadCPPool();
+  loadAgreedPool();
 }
 
-// NEW — gates Log Business / Business Leads / DSA Leads behind having a verified (Active) DSA code
+// NEW — gates Log Business / Business Leads behind having a verified (Active) DSA
+// code. DSA Leads (partner pool) is NOT gated — it's open to every banker.
 function applyGating(){
   var gated = !SESSION.hasActiveCode;
   document.getElementById("logGate").style.display = gated ? "block" : "none";
@@ -621,14 +628,12 @@ function applyGating(){
     portalLink.href = "https://loan.vastmywealth.com/portal-unified-application.html?ref=" + encodeURIComponent(SESSION.refCode);
   }
   document.getElementById("bizLeadsGate").style.display = gated ? "block" : "none";
-  document.getElementById("dsaLeadsGate").style.display = gated ? "block" : "none";
   document.getElementById("bizLeadsList").style.display = gated ? "none" : "block";
-  document.getElementById("dsaLeadsList").style.display = gated ? "none" : "block";
   document.getElementById("bizLeadsSlots").style.display = gated ? "none" : "block";
-  document.getElementById("dsaLeadsSlots").style.display = gated ? "none" : "block";
 }
 
 document.getElementById("logoutBtn").addEventListener("click", function(){
+  try { localStorage.removeItem(AUTH_STORAGE_KEY); } catch (e) {}
   document.getElementById("app").style.display = "none";
   document.getElementById("authScreen").style.display = "flex";
   showView("requestCodeView");
@@ -771,11 +776,9 @@ function loadLeads(){
   if (!SESSION.hasActiveCode) return; // gated — nothing to fetch yet
   apiPost({ action:"getLeads", bankerId:SESSION.bankerId }).then(function(r){
     if (r.status !== "success") { return; }
-    renderLeadList("bizLeadsList", r.businessLeads || []);
-    renderLeadList("dsaLeadsList", r.dsaLeads || []);
+    renderLeadList("bizLeadsList", r.businessLeads || []); // MODIFIED — the entire PL-BL feed now
     var slotsText = r.activeClaimCount + " of 3 active leads claimed" + (r.slotsRemaining === 0 ? " — resolve one to claim another" : "");
     document.getElementById("bizLeadsSlots").textContent = slotsText;
-    document.getElementById("dsaLeadsSlots").textContent = slotsText;
   });
   loadMyLeadClaims();
 }
@@ -804,11 +807,10 @@ function claimLead(leadId){
   });
 }
 
+// MODIFIED — no more Business/DSA split on claims; all leads are "Business" now.
 function loadMyLeadClaims(){
   apiPost({ action:"getMyLeadClaims", bankerId:SESSION.bankerId }).then(function(r){
-    var claims = r.claims || [];
-    renderMyClaims("bizMyClaimsList", claims.filter(function(c){ return c.leadType === "Business"; }));
-    renderMyClaims("dsaMyClaimsList", claims.filter(function(c){ return c.leadType === "DSA"; }));
+    renderMyClaims("bizMyClaimsList", r.claims || []);
   });
 }
 
@@ -922,9 +924,10 @@ function renderAgreedPool(){
   var el = document.getElementById("agreedPoolList");
   if (AGREED_POOL.length === 0) { el.innerHTML = '<div class="empty-state">No agreed partnerships yet.</div>'; return; }
   el.innerHTML = AGREED_POOL.map(function(c){
+    var mobileLink = c.cpMobile ? ('<a href="tel:' + escapeHtml(c.cpMobile) + '" style="color:var(--navy); font-weight:700; text-decoration:underline;">' + escapeHtml(c.cpMobile) + '</a>') : '—';
     return '<div class="pool-row">' +
       '<div><div class="team-name">' + escapeHtml(c.cpName) + '</div>' +
-      '<div class="business-meta">' + escapeHtml(c.cpMobile || '—') + ' · ' + escapeHtml(c.cpEmail || '—') + '</div></div>' +
+      '<div class="business-meta">' + mobileLink + ' · ' + escapeHtml(c.cpEmail || '—') + '</div></div>' +
       '<div class="pool-actions">' +
         '<button class="btn-mini-outline" onclick="openChat(\'' + c.poolId + '\', \'' + escapeHtml(c.cpName).replace(/'/g,"\\'") + '\')">Message</button>' +
       '</div></div>';
