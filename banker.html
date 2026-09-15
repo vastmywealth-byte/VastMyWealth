@@ -393,7 +393,10 @@
   <button class="close-x" onclick="closeSheet('submitCodeSheet','submitCodeBackdrop')">✕</button>
   <h3>Submit Your DSA Code</h3>
   <form id="submitCodeForm" class="light-form" style="background:var(--card); border-radius:12px; padding:16px;">
-    <div class="form-group"><label>Bank Name</label><input type="text" id="scBank" required></div>
+    <div class="form-group">
+      <label>Bank</label>
+      <div id="scBankDisplay" style="padding:13px 14px; background:#F8FAFC; border:1px solid var(--line); border-radius:10px; font-weight:700; color:var(--navy);"></div>
+    </div>
     <div class="form-group">
       <label>Applicable Loan Type(s)</label>
       <div class="checkbox-grid">
@@ -401,6 +404,7 @@
         <label><input type="checkbox" name="scLoanType" value="BL"> Business Loan</label>
       </div>
     </div>
+    <div id="scExistingNote" style="display:none; font-size:12px; color:var(--muted); margin:-8px 0 12px 2px; line-height:1.5;"></div>
     <div class="form-group"><label>DSA Code (as issued by your bank)</label><input type="text" id="scCode" required></div>
     <button type="submit" id="scBtn" class="btn-primary">Submit Code</button>
   </form>
@@ -502,6 +506,7 @@ function wireBankAutosuggest(inputId, suggestId){
 }
 wireBankAutosuggest("reqBank", "reqBankSuggest");
 wireBankAutosuggest("cjBank", "cjBankSuggest");
+loadBankListOnce(); // NEW — prefetch immediately on page load rather than waiting for focus, so the list is likely already cached by the time the person starts typing
 
 /* ---------------- AUTH ACTIONS ---------------- */
 
@@ -539,7 +544,7 @@ document.getElementById("loginForm").addEventListener("submit", function(e){
         bankerId:r.bankerId, bankerName:r.bankerName, bankerEmail:r.bankerEmail, mobile:mobile, pin:pin,
         unlockedCPPool:r.unlockedCPPool, hasActiveCode:r.hasActiveCode, accountVerified:r.accountVerified,
         pendingVerification:r.pendingVerification, rmName:r.rmName, rmMobile:r.rmMobile,
-        activeBankNames:r.activeBankNames || [], refCode:r.refCode
+        activeBankNames:r.activeBankNames || [], currentBankName:r.currentBankName, refCode:r.refCode
       };
       enterApp();
     }).catch(function(err){ btn.disabled=false; btn.textContent="Login"; var box=document.getElementById("loginResult"); box.className="msg-box error"; box.textContent=err.message; });
@@ -660,7 +665,41 @@ function renderCodes(pending){
   el.innerHTML = html;
 }
 
-function openSubmitCodeSheet(){ openSheetById("submitCodeSheet","submitCodeBackdrop"); }
+function openSubmitCodeSheet(){
+  document.getElementById("scBankDisplay").textContent = SESSION.currentBankName || "—";
+  document.getElementById("scExistingNote").style.display = "none";
+  document.getElementById("scCode").readOnly = false;
+  document.getElementById("scCode").value = "";
+  openSheetById("submitCodeSheet","submitCodeBackdrop");
+}
+
+// NEW — as the banker checks PL/BL, look up whether their bank already has an
+// Active code for that loan type. If so, autofill + lock the code field so
+// they select/reuse it rather than retyping a possibly-different value.
+function checkExistingBankCodeForSelection(){
+  var loanTypes = Array.prototype.slice.call(document.querySelectorAll('input[name="scLoanType"]:checked')).map(function(c){ return c.value; });
+  var note = document.getElementById("scExistingNote");
+  var codeInput = document.getElementById("scCode");
+  if (loanTypes.length === 0) { note.style.display = "none"; codeInput.readOnly = false; return; }
+  apiPost({ action:"checkBankCode", bankerId:SESSION.bankerId, loanTypes:loanTypes }).then(function(r){
+    if (r.status !== "success") return;
+    var existingTypes = loanTypes.filter(function(lt){ return r.existing[lt]; });
+    if (existingTypes.length > 0) {
+      var firstCode = r.existing[existingTypes[0]];
+      codeInput.value = firstCode;
+      codeInput.readOnly = true;
+      note.style.display = "block";
+      note.textContent = "Code already exists for " + r.bankName + " (" + existingTypes.join(", ") + ") — reusing it automatically, active immediately.";
+    } else {
+      codeInput.readOnly = false;
+      codeInput.value = "";
+      note.style.display = "none";
+    }
+  });
+}
+document.querySelectorAll('input[name="scLoanType"]').forEach(function(cb){
+  cb.addEventListener("change", checkExistingBankCodeForSelection);
+});
 
 document.getElementById("submitCodeForm").addEventListener("submit", function(e){
   e.preventDefault();
@@ -669,7 +708,7 @@ document.getElementById("submitCodeForm").addEventListener("submit", function(e)
   var btn = document.getElementById("scBtn"); btn.disabled = true; btn.textContent = "Submitting...";
   apiPost({
     action:"submitDSACode", bankerId:SESSION.bankerId, bankerEmail:SESSION.bankerEmail,
-    bankName:document.getElementById("scBank").value, loanTypes:loanTypes, vmwCode:document.getElementById("scCode").value
+    loanTypes:loanTypes, vmwCode:document.getElementById("scCode").value
   }).then(function(r){
     var box = document.getElementById("scResult"); box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message;
     if (r.status === "success") { document.getElementById("submitCodeForm").reset(); loadCodes(); }
