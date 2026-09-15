@@ -269,7 +269,7 @@
     </div>
     <div id="bankNameLabel" style="font-size:12px; color:var(--muted); margin-top:2px; display:none;"></div>
     <div class="rm-card">
-      <div class="rm-info">Your Relationship Manager<b id="rmNameLabel">Manoj Prabhu</b></div>
+      <div class="rm-info">Your Relationship Manager<b id="rmNameLabel">Manoj A Prabhu</b></div>
       <div class="rm-actions">
         <a id="rmCallLink" href="tel:9594592020" title="Call">📞</a>
         <a id="rmChatLink" href="https://wa.me/919594592020" target="_blank" title="Chat">💬</a>
@@ -574,7 +574,7 @@ function enterApp(){
   document.getElementById("app").style.display = "block";
 
   document.getElementById("welcomeName").textContent = SESSION.bankerName ? ("Hi, " + SESSION.bankerName) : "Bank Channel CRM";
-  document.getElementById("rmNameLabel").textContent = SESSION.rmName || "Manoj Prabhu";
+  document.getElementById("rmNameLabel").textContent = SESSION.rmName || "Manoj A Prabhu";
   var rmMobile = SESSION.rmMobile || "9594592020";
   document.getElementById("rmCallLink").href = "tel:" + rmMobile;
   document.getElementById("rmChatLink").href = "https://wa.me/91" + rmMobile;
