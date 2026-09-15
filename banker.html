@@ -218,7 +218,7 @@
       <div class="subtext">Login with your registered mobile number and PIN.</div>
       <form id="loginForm">
         <div class="form-group"><label>Mobile Number</label><input type="tel" id="loginMobile" required placeholder="Registered mobile"></div>
-        <div class="form-group"><label>4-Digit PIN</label><input type="password" id="loginPin" required maxlength="4" placeholder="••••"></div>
+        <div class="form-group"><label>4-Digit PIN</label><input type="password" id="loginPin" required maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="••••"></div>
         <button type="submit" id="loginBtn" class="btn-primary">Login</button>
       </form>
       <div id="loginResult" class="msg-box"></div>
@@ -267,6 +267,7 @@
       <h2 id="welcomeName">Bank Channel CRM</h2>
       <button class="icon-pill" id="logoutBtn">Logout</button>
     </div>
+    <div id="bankNameLabel" style="font-size:12px; color:var(--muted); margin-top:2px; display:none;"></div>
     <div class="rm-card">
       <div class="rm-info">Your Relationship Manager<b id="rmNameLabel">Manoj Prabhu</b></div>
       <div class="rm-actions">
@@ -291,24 +292,14 @@
       </div>
     </div>
 
-    <!-- TAB: LOG BUSINESS -->
+    <!-- TAB: LOG BUSINESS — now opens the external application portal with a
+         personalized ref code, instead of an internal form -->
     <div id="tabLog" class="tab-pane" style="display:none;">
       <div class="section-card">
         <h3>Log New Business</h3>
-        <p class="desc">Enter customer details. Documents are shared with us separately via WhatsApp or email — no upload needed here.</p>
+        <p class="desc">Opens the application portal. Anything the customer submits there is captured directly and attributed to you.</p>
         <div id="logGate" class="gate-state" style="display:none;">Submit and get a DSA code verified before logging business.</div>
-        <form id="businessForm" class="light-form">
-          <div class="form-group"><label>Customer Full Name</label><input type="text" id="custName" required></div>
-          <div class="form-group"><label>Customer Mobile</label><input type="tel" id="custMobile" required></div>
-          <div class="form-group"><label>Bank / Loan Type</label><select id="custLoanCode" required><option value="">Select a code...</option></select></div>
-          <div class="form-group">
-            <label><input type="checkbox" id="isCPFile" style="width:auto; margin-right:6px;"> This is my channel partner's file</label>
-          </div>
-          <div class="form-group" id="cpPickerGroup" style="display:none;"><label>Which Channel Partner?</label><select id="cpPicker"><option value="">Select...</option></select></div>
-          <div class="form-group"><label>Notes (optional)</label><textarea id="custNotes" rows="2" placeholder="e.g. docs shared on WhatsApp"></textarea></div>
-          <button type="submit" id="logBtn" class="btn-primary">Submit Business File</button>
-        </form>
-        <div id="logResult" class="msg-box"></div>
+        <a id="portalLink" href="#" target="_blank" class="btn-primary" style="display:block; text-align:center; text-decoration:none;">Open Application Portal</a>
       </div>
     </div>
 
@@ -457,7 +448,7 @@
 // ⚠️ SET THIS to your Bank Channel CRM Apps Script Web App URL
 var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec";
 
-var SESSION = { bankerId: null, bankerEmail: null, mobile: null, pin: null };
+var SESSION = { bankerId: null, bankerEmail: null, mobile: null, pin: null, refCode: null };
 var MY_CODES = [];
 var MY_LOGS = [];
 var MY_TEAM = [];
@@ -547,7 +538,8 @@ document.getElementById("loginForm").addEventListener("submit", function(e){
       SESSION = {
         bankerId:r.bankerId, bankerName:r.bankerName, bankerEmail:r.bankerEmail, mobile:mobile, pin:pin,
         unlockedCPPool:r.unlockedCPPool, hasActiveCode:r.hasActiveCode, accountVerified:r.accountVerified,
-        pendingVerification:r.pendingVerification, rmName:r.rmName, rmMobile:r.rmMobile
+        pendingVerification:r.pendingVerification, rmName:r.rmName, rmMobile:r.rmMobile,
+        activeBankNames:r.activeBankNames || [], refCode:r.refCode
       };
       enterApp();
     }).catch(function(err){ btn.disabled=false; btn.textContent="Login"; var box=document.getElementById("loginResult"); box.className="msg-box error"; box.textContent=err.message; });
@@ -589,9 +581,19 @@ function enterApp(){
 
   document.getElementById("pendingBanner").style.display = (SESSION.pendingVerification && !SESSION.hasActiveCode) ? "block" : "none";
 
+  // NEW — bank name(s) shown under the banker's name, once verified. No DSA code digits ever shown.
+  var bankLabelEl = document.getElementById("bankNameLabel");
+  if (SESSION.activeBankNames && SESSION.activeBankNames.length > 0) {
+    bankLabelEl.textContent = SESSION.activeBankNames.join(", ");
+    bankLabelEl.style.display = "block";
+  } else {
+    bankLabelEl.style.display = "none";
+  }
+
+  // MODIFIED — badge only appears once unlocked; no "locks at ₹10L" message shown otherwise.
   var badge = document.getElementById("cpPoolStatusBadge");
   if (SESSION.unlockedCPPool) { badge.style.display="inline-flex"; badge.innerHTML = '<span class="status-dot live"></span> Partner Pool Unlocked'; }
-  else { badge.style.display="inline-flex"; badge.innerHTML = '<span class="status-dot"></span> Partner Pool locks at ₹10L/month'; }
+  else { badge.style.display="none"; }
   document.getElementById("cpPoolCard").style.display = SESSION.unlockedCPPool ? "block" : "none";
   document.getElementById("agreedPoolCard").style.display = SESSION.unlockedCPPool ? "block" : "none";
 
@@ -608,7 +610,11 @@ function enterApp(){
 function applyGating(){
   var gated = !SESSION.hasActiveCode;
   document.getElementById("logGate").style.display = gated ? "block" : "none";
-  document.getElementById("businessForm").style.display = gated ? "none" : "block";
+  var portalLink = document.getElementById("portalLink");
+  portalLink.style.display = gated ? "none" : "block";
+  if (!gated && SESSION.refCode) {
+    portalLink.href = "https://loan.vastmywealth.com/portal-unified-application.html?ref=" + encodeURIComponent(SESSION.refCode);
+  }
   document.getElementById("bizLeadsGate").style.display = gated ? "block" : "none";
   document.getElementById("dsaLeadsGate").style.display = gated ? "block" : "none";
   document.getElementById("bizLeadsList").style.display = gated ? "none" : "block";
@@ -640,7 +646,6 @@ function loadCodes(){
   apiPost({ action:"getBankerCodes", bankerId:SESSION.bankerId }).then(function(r){
     MY_CODES = r.codes || [];
     renderCodes(r.pending || []);
-    populateLoanCodeDropdown();
   });
 }
 
@@ -672,39 +677,12 @@ document.getElementById("submitCodeForm").addEventListener("submit", function(e)
     .finally(function(){ btn.disabled=false; btn.textContent="Submit Code"; });
 });
 
-/* ---------------- LOG BUSINESS ---------------- */
+/* ---------------- LOG BUSINESS ----------------
+   Internal form removed — see the "Open Application Portal" link/gating in
+   applyGating(). populateLoanCodeDropdown() call from loadCodes() below was
+   also removed since nothing consumes that dropdown anymore. */
 
-function populateLoanCodeDropdown(){
-  var sel = document.getElementById("custLoanCode");
-  sel.innerHTML = '<option value="">Select a code...</option>' + MY_CODES.map(function(c,i){
-    return '<option value="' + i + '">' + escapeHtml(c.bankName) + ' — ' + escapeHtml(c.loanType) + '</option>';
-  }).join("");
-}
-
-document.getElementById("isCPFile").addEventListener("change", function(){
-  document.getElementById("cpPickerGroup").style.display = this.checked ? "block" : "none";
-});
-
-document.getElementById("businessForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  var codeIdx = document.getElementById("custLoanCode").value;
-  if (codeIdx === "") { showToast("Select a bank/loan type", true); return; }
-  var code = MY_CODES[codeIdx];
-  var cpName = document.getElementById("isCPFile").checked ? document.getElementById("cpPicker").value : "";
-  var btn = document.getElementById("logBtn"); btn.disabled = true; btn.textContent = "Submitting...";
-
-  apiPost({
-    action:"logBusiness", bankerId:SESSION.bankerId, bankName:code.bankName, loanType:code.loanType, vmwCode:code.vmwCode,
-    customerName:document.getElementById("custName").value, customerMobile:document.getElementById("custMobile").value,
-    notes:document.getElementById("custNotes").value, cpName:cpName
-  }).then(function(r){
-    var box = document.getElementById("logResult"); box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message;
-    if (r.status === "success") { document.getElementById("businessForm").reset(); document.getElementById("cpPickerGroup").style.display="none"; loadBusinessLogs(); }
-  }).catch(function(err){ var box=document.getElementById("logResult"); box.className="msg-box error"; box.textContent=err.message; })
-    .finally(function(){ btn.disabled=false; btn.textContent="Submit Business File"; });
-});
-
-/* ---------------- TRACK / REROUTE ---------------- */
+/* ---------------- TRACK (status only — no reroute actions) ---------------- */
 
 function loadBusinessLogs(){
   apiPost({ action:"getLogs", bankerId:SESSION.bankerId }).then(function(r){
@@ -715,11 +693,14 @@ function loadBusinessLogs(){
 
 function statusClass(status){ return status==="Disbursed" ? "disbursed" : (status==="Policy Rejected" ? "rejected" : "submitted"); }
 
+// MODIFIED — status only, no reroute action (per instruction). This still reads
+// the internal BusinessLog sheet; once the external portal's master-sheet
+// integration details are provided, this should switch to reading lead status
+// from there instead (flagged in the chat response, not yet wired up).
 function renderBusinessLogs(){
   var el = document.getElementById("businessLogList");
   if (MY_LOGS.length === 0) { el.innerHTML = '<div class="empty-state">No business logged yet.</div>'; return; }
   el.innerHTML = MY_LOGS.map(function(l){
-    var canReroute = l.fileStatus === "Submitted";
     return '' +
       '<div class="business-row">' +
         '<div class="business-row-top">' +
@@ -727,13 +708,9 @@ function renderBusinessLogs(){
           '<div class="business-meta">' + escapeHtml(l.bankName) + ' · ' + escapeHtml(l.loanType) + (l.cpName ? (' · CP: ' + escapeHtml(l.cpName)) : '') + '</div></div>' +
           '<span class="status-chip ' + statusClass(l.fileStatus) + '">' + escapeHtml(l.fileStatus) + '</span>' +
         '</div>' +
-        (canReroute ? ('<button class="reroute-btn" onclick="openReroute(\'' + l.logId + '\')">Mark Rejected & Reroute</button>') : '') +
-        (l.routingDecision ? ('<div class="reroute-note">Routed to: ' + escapeHtml(l.routingDecision) + '</div>') : '') +
       '</div>';
   }).join("");
 }
-
-function openReroute(logId){ CURRENT_REROUTE_LOG_ID = logId; document.getElementById("rerouteForm").reset(); document.getElementById("rrResult").style.display="none"; openSheetById("rerouteSheet","rerouteBackdrop"); }
 
 document.getElementById("rerouteForm").addEventListener("submit", function(e){
   e.preventDefault();
