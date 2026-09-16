@@ -195,8 +195,8 @@
 
     <!-- REQUEST CODE — now the first screen (landing page removed) -->
     <div id="requestCodeView" class="view active">
-      <div class="headline">Create Our <span class="accent">DSA Code</span></div>
-      <div class="subtext">Please share below details, we'll send onboarding documents and your login PIN to your official email.</div>
+      <div class="headline">Get Your <span class="accent">DSA Code</span></div>
+      <div class="subtext">Tell us a bit about you — we'll send onboarding documents and your login PIN to your official email.</div>
       <form id="requestCodeForm">
         <div class="form-group"><label>Full Name</label><input type="text" id="reqName" required placeholder="Your name"></div>
         <div class="form-group"><label>Official Bank Email ID</label><input type="email" id="reqEmail" required placeholder="name@bankdomain.com"></div>
@@ -282,24 +282,24 @@
 
     <div class="pending-banner" id="pendingBanner" style="display:none;">Your DSA code is under verification. You'll be notified once your account is active.</div>
 
-    <!-- TAB: ADD DSA (formerly "Codes") -->
-    <div id="tabCodes" class="tab-pane">
-      <div class="section-card">
-        <h3>Your DSA Codes</h3>
-        <p class="desc">These are the bank + loan-type combinations you can currently log business under.</p>
-        <div id="codesList"></div>
-        <button class="btn-secondary" style="margin-top:10px; color:var(--navy); border-color:var(--navy);" onclick="openSubmitCodeSheet()">+ Submit a DSA Code</button>
-      </div>
-    </div>
-
-    <!-- TAB: LOG BUSINESS — now opens the external application portal with a
-         personalized ref code, instead of an internal form -->
-    <div id="tabLog" class="tab-pane" style="display:none;">
+    <!-- TAB: LOG BUSINESS — default tab on login. Opens the external
+         application portal with a personalized ref code -->
+    <div id="tabLog" class="tab-pane">
       <div class="section-card">
         <h3>Log New Business</h3>
         <p class="desc">Opens the application portal. Anything the customer submits there is captured directly and attributed to you.</p>
         <div id="logGate" class="gate-state" style="display:none;">Submit and get a DSA code verified before logging business.</div>
         <a id="portalLink" href="#" target="_blank" class="btn-primary" style="display:block; text-align:center; text-decoration:none;">Open Application Portal</a>
+      </div>
+    </div>
+
+    <!-- TAB: ADD DSA (formerly "Codes") -->
+    <div id="tabCodes" class="tab-pane" style="display:none;">
+      <div class="section-card">
+        <h3>Your DSA Codes</h3>
+        <p class="desc">These are the bank + loan-type combinations you can currently log business under.</p>
+        <div id="codesList"></div>
+        <button class="btn-secondary" style="margin-top:10px; color:var(--navy); border-color:var(--navy);" onclick="openSubmitCodeSheet()">+ Submit a DSA Code</button>
       </div>
     </div>
 
@@ -312,33 +312,20 @@
       </div>
     </div>
 
-    <!-- TAB: BUSINESS LEADS -->
+    <!-- TAB: BUSINESS LEADS — the only leads tab now; DSA Leads (partner pool)
+         has been dropped from the banker-facing UI -->
     <div id="tabBizLeads" class="tab-pane" style="display:none;">
       <div class="section-card">
         <h3>Business Leads</h3>
-        <p class="desc">Direct customer leads. Claim one to receive full details, we will mail you the details with DSA code.</p>
+        <p class="desc">Customer leads. Claim one to receive full details and the matching DSA code by email.</p>
         <div id="bizLeadsGate" class="gate-state" style="display:none;">Submit and get a DSA code verified to view leads.</div>
+        <div id="bizLeadsBlocked" class="gate-state" style="display:none;">You've reached your rejection limit for this period. Contact your RM to unlock Business Leads.</div>
         <div id="bizLeadsSlots" class="slots-note"></div>
         <div id="bizLeadsList"></div>
       </div>
       <div class="section-card">
         <h3>My Claimed Business Leads</h3>
         <div id="bizMyClaimsList"></div>
-      </div>
-    </div>
-
-    <!-- TAB: DSA LEADS — now the pool of already-enrolled partner DSAs
-         (same list as the former "CP Pool"), not PL-BL loan-application rows -->
-    <div id="tabDsaLeads" class="tab-pane" style="display:none;">
-      <div class="section-card">
-        <h3>DSA Leads</h3>
-        <p class="desc">Partners already enrolled with VastMyWealth. Names only — message a partner to introduce yourself; your contact details stay private on both sides.</p>
-        <div id="cpPoolList"></div>
-      </div>
-      <div class="section-card">
-        <h3>Agreed Partnerships</h3>
-        <p class="desc">These partners have accepted — their mobile and email are now visible to you.</p>
-        <div id="agreedPoolList"></div>
       </div>
     </div>
 
@@ -365,11 +352,10 @@
   </main>
 
   <div class="bottom-nav">
-    <button class="nav-btn active" data-tab="tabCodes"><span class="nav-icon">🔑</span>Add DSA</button>
-    <button class="nav-btn" data-tab="tabLog"><span class="nav-icon">＋</span>Log Business</button>
+    <button class="nav-btn active" data-tab="tabLog"><span class="nav-icon">＋</span>Log Business</button>
+    <button class="nav-btn" data-tab="tabCodes"><span class="nav-icon">🔑</span>Add DSA</button>
     <button class="nav-btn" data-tab="tabTrack"><span class="nav-icon">📊</span>Track</button>
     <button class="nav-btn" data-tab="tabBizLeads"><span class="nav-icon">👤</span>Biz Leads</button>
-    <button class="nav-btn" data-tab="tabDsaLeads"><span class="nav-icon">☰</span>DSA Leads</button>
     <button class="nav-btn" data-tab="tabTeam"><span class="nav-icon">👥</span>Team</button>
   </div>
 </div>
@@ -606,19 +592,16 @@ function enterApp(){
     bankLabelEl.style.display = "none";
   }
 
-  // CP Pool / DSA Leads is now open to every banker — no gating, no badge.
+  // DSA Leads (partner pool) dropped from the banker-facing UI — bankers see Business Leads only.
   applyGating();
 
   loadCodes();
   loadBusinessLogs();
   loadMyTeam();
   loadLeads();
-  loadCPPool();
-  loadAgreedPool();
 }
 
-// NEW — gates Log Business / Business Leads behind having a verified (Active) DSA
-// code. DSA Leads (partner pool) is NOT gated — it's open to every banker.
+// Gates Log Business / Business Leads behind having a verified (Active) DSA code.
 function applyGating(){
   var gated = !SESSION.hasActiveCode;
   document.getElementById("logGate").style.display = gated ? "block" : "none";
@@ -775,8 +758,17 @@ document.getElementById("rerouteForm").addEventListener("submit", function(e){
 function loadLeads(){
   if (!SESSION.hasActiveCode) return; // gated — nothing to fetch yet
   apiPost({ action:"getLeads", bankerId:SESSION.bankerId }).then(function(r){
+    var blockedEl = document.getElementById("bizLeadsBlocked");
+    if (r.status === "blocked") {
+      blockedEl.style.display = "block";
+      blockedEl.textContent = r.message;
+      document.getElementById("bizLeadsList").style.display = "none";
+      document.getElementById("bizLeadsSlots").style.display = "none";
+      return;
+    }
+    blockedEl.style.display = "none";
     if (r.status !== "success") { return; }
-    renderLeadList("bizLeadsList", r.businessLeads || []); // MODIFIED — the entire PL-BL feed now
+    renderLeadList("bizLeadsList", r.businessLeads || []); // the entire PL-BL feed, direct + partner-sourced
     var slotsText = r.activeClaimCount + " of 3 active leads claimed" + (r.slotsRemaining === 0 ? " — resolve one to claim another" : "");
     document.getElementById("bizLeadsSlots").textContent = slotsText;
   });
@@ -824,9 +816,15 @@ function renderMyClaims(elId, claims){
           '<button class="btn-mini-red" onclick="resolveClaim(\'' + c.claimId + '\',\'Rejected\')">Reject</button>' +
         '</div>'
       : '<span class="status-chip ' + statusClass2(c.claimStatus) + '">' + escapeHtml(c.claimStatus) + '</span>';
+    // NEW — customer mobile/email visible and clickable once claimed (same
+    // pattern used for agreed-partner contact info).
+    var mobileLink = c.customerMobile ? ('<a href="tel:' + escapeHtml(c.customerMobile) + '" style="color:var(--navy); font-weight:700; text-decoration:underline;">' + escapeHtml(c.customerMobile) + '</a>') : null;
+    var emailLink = c.customerEmail ? ('<a href="mailto:' + escapeHtml(c.customerEmail) + '" style="color:var(--navy); font-weight:700; text-decoration:underline;">' + escapeHtml(c.customerEmail) + '</a>') : null;
+    var contactLine = (mobileLink || emailLink) ? ('<div class="business-meta">' + [mobileLink, emailLink].filter(Boolean).join(' · ') + '</div>') : '';
     return '<div class="business-row">' +
       '<div class="business-row-top">' +
         '<div><div class="business-name">' + escapeHtml(c.customerName) + '</div>' +
+        contactLine +
         '<div class="business-meta">' + escapeHtml(c.loanType) + ' · ₹' + escapeHtml(c.loanAmount) + ' · Code: ' + escapeHtml(c.dsaCodeUsed) + '</div></div>' +
         actions +
       '</div>' +
