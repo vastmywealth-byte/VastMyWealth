@@ -195,8 +195,8 @@
 
     <!-- REQUEST CODE — now the first screen (landing page removed) -->
     <div id="requestCodeView" class="view active">
-      <div class="headline">Get Your <span class="accent">DSA Code</span></div>
-      <div class="subtext">Tell us a bit about you — we'll send onboarding documents and your login PIN to your official email.</div>
+      <div class="headline">Create Our <span class="accent">DSA Code</span></div>
+      <div class="subtext">Please share below details, we'll send onboarding documents and your login PIN to your official email.</div>
       <form id="requestCodeForm">
         <div class="form-group"><label>Full Name</label><input type="text" id="reqName" required placeholder="Your name"></div>
         <div class="form-group"><label>Official Bank Email ID</label><input type="email" id="reqEmail" required placeholder="name@bankdomain.com"></div>
@@ -206,7 +206,7 @@
           <input type="text" id="reqBank" required placeholder="Start typing your bank name..." autocomplete="off">
           <div class="suggest-list" id="reqBankSuggest"></div>
         </div>
-        <button type="submit" id="reqBtn" class="btn-primary">Send Request</button>
+        <button type="submit" id="reqBtn" class="btn-primary">Send Add</button>
       </form>
       <div id="reqResult" class="msg-box"></div>
       <button class="btn-secondary" onclick="showView('loginView')">Already Registered? Login</button>
@@ -316,7 +316,7 @@
     <div id="tabBizLeads" class="tab-pane" style="display:none;">
       <div class="section-card">
         <h3>Business Leads</h3>
-        <p class="desc">Direct customer leads. Claim one to receive full details and the matching DSA code by email.</p>
+        <p class="desc">Direct customer leads. Claim one to receive full details, we will mail you the details with DSA code.</p>
         <div id="bizLeadsGate" class="gate-state" style="display:none;">Submit and get a DSA code verified to view leads.</div>
         <div id="bizLeadsSlots" class="slots-note"></div>
         <div id="bizLeadsList"></div>
