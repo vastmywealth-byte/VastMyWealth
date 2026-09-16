@@ -718,23 +718,29 @@ function loadBusinessLogs(){
   });
 }
 
-function statusClass(status){ return status==="Disbursed" ? "disbursed" : (status==="Policy Rejected" ? "rejected" : "submitted"); }
+// MODIFIED — now also matches "Rejected" (claimed-lead vocabulary) alongside
+// "Policy Rejected" (direct-log vocabulary), and "Active" (claimed, in-progress)
+// alongside "Submitted" (direct, in-progress) — both fall through to the same
+// default "submitted" (in-progress) style.
+function statusClass(status){ return status==="Disbursed" ? "disbursed" : ((status==="Policy Rejected"||status==="Rejected") ? "rejected" : "submitted"); }
 
-// MODIFIED — status only, no reroute action (per instruction). This still reads
-// the internal BusinessLog sheet; once the external portal's master-sheet
-// integration details are provided, this should switch to reading lead status
-// from there instead (flagged in the chat response, not yet wired up).
+// MODIFIED — now renders BOTH the banker's own directly-logged business AND
+// their claimed Business Leads, merged and sorted newest-first by the backend.
+// A small source tag distinguishes the two since they come from different
+// sheets with different natural fields (see getBankerBusinessLogs).
 function renderBusinessLogs(){
   var el = document.getElementById("businessLogList");
   if (MY_LOGS.length === 0) { el.innerHTML = '<div class="empty-state">No business logged yet.</div>'; return; }
   el.innerHTML = MY_LOGS.map(function(l){
+    var sourceTag = l.source === "claimed" ? "Claimed Lead" : "Direct";
     return '' +
       '<div class="business-row">' +
         '<div class="business-row-top">' +
           '<div><div class="business-name">' + escapeHtml(l.customerName) + '</div>' +
-          '<div class="business-meta">' + escapeHtml(l.bankName) + ' · ' + escapeHtml(l.loanType) + (l.cpName ? (' · CP: ' + escapeHtml(l.cpName)) : '') + '</div></div>' +
+          '<div class="business-meta">' + escapeHtml(l.meta) + ' · ' + sourceTag + '</div></div>' +
           '<span class="status-chip ' + statusClass(l.fileStatus) + '">' + escapeHtml(l.fileStatus) + '</span>' +
         '</div>' +
+        (l.rejectionReason ? ('<div class="reroute-note">Reason: ' + escapeHtml(l.rejectionReason) + '</div>') : '') +
       '</div>';
   }).join("");
 }
@@ -795,7 +801,7 @@ function renderLeadList(elId, leads){
 function claimLead(leadId){
   apiPost({ action:"claimLead", bankerId:SESSION.bankerId, leadId:leadId }).then(function(r){
     showToast(r.status === "success" ? "Lead claimed — details emailed to you" : r.message, r.status !== "success");
-    if (r.status === "success") loadLeads();
+    if (r.status === "success") { loadLeads(); loadBusinessLogs(); }
   });
 }
 
@@ -842,7 +848,7 @@ function resolveClaim(claimId, status){
   }
   apiPost({ action:"updateLeadClaimStatus", claimId:claimId, status:status, rejectionReason:reason }).then(function(r){
     showToast(r.status === "success" ? "Updated" : r.message, r.status !== "success");
-    if (r.status === "success") loadLeads();
+    if (r.status === "success") { loadLeads(); loadBusinessLogs(); }
   });
 }
 
