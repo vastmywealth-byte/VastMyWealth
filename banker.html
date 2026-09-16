@@ -7,6 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0E1B3D">
 <link rel="apple-touch-icon" href="1000550390.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --navy:#0E1B3D; --navy-mid:#122654; --navy-light:#1B3466;
@@ -20,183 +21,124 @@
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
-  body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--navy); color:var(--text); -webkit-font-smoothing:antialiased; }
+  body{ margin:0; font-family:'Inter',sans-serif; background:var(--navy); color:var(--text); -webkit-font-smoothing:antialiased; }
   button{cursor:pointer; border:none; font-family:inherit;}
   input,select,textarea{font-family:inherit;}
 
-  /* ---------- Splash / auth screens ---------- */
   #authScreen{min-height:100vh; display:flex; flex-direction:column; background:var(--navy); position:relative; overflow:hidden;}
-  #authScreen::before{
-    content:""; position:absolute; top:0; left:0; right:0; height:340px; pointer-events:none; z-index:0;
-    background-image:
-      radial-gradient(circle at 18% 30%, rgba(212,167,65,.10) 0, transparent 45%),
-      radial-gradient(circle at 82% 12%, rgba(212,167,65,.08) 0, transparent 40%);
-  }
-  .network-motif{position:absolute; top:0; left:0; right:0; height:300px; z-index:0; opacity:.5; pointer-events:none;}
-  .splash-top{ background:#fff; border-radius:0 0 40px 40px; padding:40px 24px 30px; text-align:center; box-shadow:0 4px 0 var(--gold); position:relative; z-index:1; }
-  .splash-logo{width:72px; height:72px; margin:0 auto 14px; border-radius:50%; background:var(--navy); display:flex; align-items:center; justify-content:center; color:var(--gold); font-weight:800; font-size:24px; box-shadow:0 0 0 6px rgba(212,167,65,.15);}
-  .splash-top h1{font-size:24px; margin:0; color:var(--navy); font-weight:800;}
-  .splash-top .tagline{color:#2B5FCB; font-size:13px; font-weight:600; margin-top:4px; letter-spacing:.3px;}
-  .auth-body{flex:1; padding:28px 22px 50px; max-width:420px; width:100%; margin:0 auto; position:relative; z-index:1;}
+  .splash-top{ background:#fff; border-radius:0 0 40px 40px; padding:30px 24px 20px; text-align:center; box-shadow:0 4px 0 var(--gold); position:relative; z-index:1; }
+  .splash-logo{width:64px; height:64px; margin:0 auto 10px; border-radius:50%; background:var(--navy); display:flex; align-items:center; justify-content:center; color:var(--gold); font-weight:800; font-size:22px;}
+  .splash-top h1{font-size:22px; margin:0; color:var(--navy); font-weight:800;}
+  .splash-top .tagline{color:#2B5FCB; font-size:12.5px; font-weight:600; margin-top:2px;}
+  .auth-body{flex:1; padding:24px 20px 40px; max-width:420px; width:100%; margin:0 auto; position:relative; z-index:1;}
 
   .view{display:none;}
   .view.active{display:block;}
 
-  .headline{color:#fff; font-size:21px; line-height:1.35; font-weight:800; margin:6px 0 4px;}
+  .headline{color:#fff; font-size:20px; line-height:1.3; font-weight:800; margin:6px 0 4px;}
   .headline .accent{color:var(--gold);}
-  .subtext{color:#AFC0E8; font-size:13.5px; margin:0 0 22px; line-height:1.5;}
+  .subtext{color:#AFC0E8; font-size:13px; margin:0 0 20px; line-height:1.4;}
 
-  /* One deliberate entrance moment on the first screen the person sees */
-  @keyframes riseIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-  #requestCodeView.active .headline{animation:riseIn .5s ease-out both;}
-  #requestCodeView.active .subtext{animation:riseIn .5s ease-out .08s both;}
-  #requestCodeView.active form{animation:riseIn .45s ease-out .14s both;}
-  #requestCodeView.active .btn-secondary{animation:riseIn .45s ease-out .2s both;}
-
-  .form-group{margin-bottom:16px; position:relative;}
-  label{display:block; margin-bottom:6px; font-weight:700; color:#DCE4F5; font-size:12.5px;}
+  .form-group{margin-bottom:14px; position:relative;}
+  label{display:block; margin-bottom:6px; font-weight:700; color:#DCE4F5; font-size:12px;}
   input[type=text],input[type=email],input[type=tel],input[type=password],select,textarea{
-    width:100%; padding:13px 14px; border:1px solid var(--navy-light); border-radius:10px;
-    font-size:14.5px; background:var(--navy-mid); color:#fff;
+    width:100%; padding:12px 14px; border:1px solid var(--navy-light); border-radius:10px;
+    font-size:14px; background:var(--navy-mid); color:#fff;
   }
   input::placeholder,textarea::placeholder{color:#7C8AB5;}
   input:focus,select:focus,textarea:focus{outline:2px solid var(--gold); outline-offset:1px;}
   select option{background:var(--navy-mid); color:#fff;}
 
-  .suggest-list{position:absolute; top:100%; left:0; right:0; background:var(--navy-mid); border:1px solid var(--gold); border-radius:10px; margin-top:4px; max-height:180px; overflow-y:auto; z-index:5; display:none;}
-  .suggest-list div{padding:10px 14px; font-size:13.5px; color:#fff; cursor:pointer;}
-  .suggest-list div:hover, .suggest-list div.hi{background:var(--navy-light);}
+  .suggest-list{position:absolute; top:100%; left:0; right:0; background:var(--navy-mid); border:1px solid var(--gold); border-radius:10px; margin-top:4px; max-height:160px; overflow-y:auto; z-index:5; display:none;}
+  .suggest-list div{padding:10px 14px; font-size:13px; color:#fff; cursor:pointer;}
+  .suggest-list div:hover{background:var(--navy-light);}
 
   .checkbox-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;}
   .checkbox-grid label{display:flex; align-items:center; gap:8px; font-weight:500; font-size:13px; background:var(--navy-mid); border:1px solid var(--navy-light); padding:10px; border-radius:8px; margin:0; color:#DCE4F5;}
   .checkbox-grid input{width:auto;}
 
-  .btn-primary{width:100%; background:var(--gold); color:var(--navy); padding:14px; border-radius:10px; font-size:15px; font-weight:800; transition:transform .12s ease, background .12s ease;}
-  .btn-primary:active:not(:disabled){transform:scale(.97); background:var(--gold-light);}
-  .btn-primary:disabled{opacity:.55;}
-  .btn-secondary{width:100%; background:transparent; border:1px solid var(--gold); color:var(--gold-light); padding:13px; border-radius:10px; font-size:14px; font-weight:700; margin-top:10px; transition:transform .12s ease;}
-  .btn-secondary:active{transform:scale(.97);}
-  .link-row{display:flex; justify-content:space-between; margin-top:16px; font-size:12.5px;}
-  .link-btn{background:none; color:var(--gold-light); text-decoration:underline; font-weight:600; padding:0; font-size:12.5px;}
-  .msg-box{margin-top:14px; padding:12px 14px; border-radius:8px; font-size:13px; line-height:1.5; display:none;}
+  .btn-primary{width:100%; background:var(--gold); color:var(--navy); padding:14px; border-radius:10px; font-size:15px; font-weight:800; transition:transform .12s ease;}
+  .btn-primary:active{transform:scale(0.98);}
+  .btn-secondary{width:100%; background:transparent; border:1px solid var(--gold); color:var(--gold-light); padding:12px; border-radius:10px; font-size:13.5px; font-weight:700; margin-top:10px;}
+  .link-row{display:flex; justify-content:space-between; margin-top:14px; font-size:12px;}
+  .link-btn{background:none; color:var(--gold-light); text-decoration:underline; font-weight:600; padding:0; font-size:12px;}
+  .msg-box{margin-top:12px; padding:12px; border-radius:8px; font-size:12.5px; display:none;}
   .msg-box.success{background:rgba(21,128,61,.18); color:#86EFAC; border:1px solid rgba(21,128,61,.4); display:block;}
   .msg-box.error{background:rgba(185,28,28,.18); color:#FCA5A5; border:1px solid rgba(185,28,28,.4); display:block;}
 
-  /* ---------- Main app ---------- */
+  /* Main App */
   #app{display:none; min-height:100vh; background:var(--navy); padding-bottom:70px;}
   header.topbar{background:#fff; padding:14px 16px; position:sticky; top:0; z-index:10; border-radius:0 0 18px 18px; box-shadow:0 4px 0 var(--gold);}
   .topbar-row{display:flex; align-items:center; justify-content:space-between;}
   header.topbar h2{font-size:15px; margin:0; font-weight:800; color:var(--navy);}
-  .icon-pill{background:var(--navy); color:var(--gold-light); padding:8px 12px; border-radius:8px; font-size:12px; font-weight:700;}
+  .icon-pill{background:var(--navy); color:var(--gold-light); padding:6px 10px; border-radius:6px; font-size:11.5px; font-weight:700;}
 
-  .rm-card{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px; padding:10px 12px; background:#F8FAFC; border:1px solid var(--line); border-radius:10px;}
-  .rm-info{font-size:12px; color:var(--muted);}
-  .rm-info b{display:block; font-size:13.5px; color:var(--navy); font-weight:800;}
+  .rm-card{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; padding:8px 12px; background:#F8FAFC; border:1px solid var(--line); border-radius:8px;}
+  .rm-info{font-size:11.5px; color:var(--muted);}
+  .rm-info b{display:block; font-size:13px; color:var(--navy); font-weight:800;}
   .rm-actions{display:flex; gap:6px;}
-  .rm-actions a{display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; background:var(--navy); color:var(--gold-light); font-size:15px; text-decoration:none;}
+  .rm-actions a{display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; background:var(--navy); color:var(--gold-light); font-size:14px; text-decoration:none;}
 
-  .locked-badge{display:inline-flex; align-items:center; gap:8px; margin:14px 16px 0; background:var(--navy-mid); border:1px solid var(--gold); color:var(--gold-light); padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700;}
-  .status-dot{width:7px; height:7px; border-radius:50%; background:var(--gold); flex-shrink:0;}
-  .status-dot.live{animation:dotPulse 1.6s ease-in-out infinite;}
-  @keyframes dotPulse{ 0%,100%{box-shadow:0 0 0 0 rgba(212,167,65,.5);} 50%{box-shadow:0 0 0 5px rgba(212,167,65,0);} }
+  .pending-banner{background:var(--pending-bg); color:var(--pending); border-radius:10px; padding:10px 14px; font-size:12px; font-weight:600; margin-bottom:12px;}
 
   main.content{padding:14px 16px 20px;}
-  .section-card{background:var(--card); border-radius:var(--radius); padding:18px 16px; margin-bottom:14px; box-shadow:0 4px 14px rgba(0,0,0,.18);}
-  .section-card h3{margin:0 0 4px; font-size:15.5px; color:var(--navy); font-weight:800; position:relative; padding-left:12px;}
+  .section-card{background:var(--card); border-radius:var(--radius); padding:18px 16px; margin-bottom:14px; box-shadow:0 4px 14px rgba(0,0,0,.15);}
+  .section-card h3{margin:0 0 4px; font-size:15px; color:var(--navy); font-weight:800; position:relative; padding-left:12px;}
   .section-card h3::before{content:""; position:absolute; left:0; top:2px; bottom:2px; width:3px; border-radius:3px; background:var(--gold);}
-  .section-card .desc{font-size:12.5px; color:var(--muted); margin:0 0 16px 12px; line-height:1.5;}
+  .section-card .desc{font-size:12px; color:var(--muted); margin:0 0 14px 12px; line-height:1.4;}
 
-  .light-form label{color:var(--navy); font-size:12.5px;}
+  .light-form label{color:var(--navy); font-size:12px;}
   .light-form input,.light-form select,.light-form textarea{background:#F8FAFC; border:1px solid var(--line); color:var(--text);}
   .light-form select option{background:#fff; color:var(--text);}
-  .light-form .checkbox-grid label{background:#F8FAFC; border:1px solid var(--line); color:var(--text);}
-  .light-form .suggest-list{background:#fff; border:1px solid var(--line);}
-  .light-form .suggest-list div{color:var(--text);}
-  .light-form .suggest-list div:hover, .light-form .suggest-list div.hi{background:#F1F5F9;}
 
-  .code-chip{display:inline-flex; align-items:center; gap:6px; background:var(--gold-light); color:var(--navy); padding:6px 12px; border-radius:20px; font-size:12.5px; font-weight:700; margin:0 6px 6px 0;}
-  .code-chip::before{content:"●"; font-size:7px; color:var(--navy); opacity:.55;}
+  .code-chip{display:inline-flex; align-items:center; gap:6px; background:var(--gold-light); color:var(--navy); padding:6px 12px; border-radius:20px; font-size:12px; font-weight:700; margin:0 6px 6px 0;}
   .code-chip.pending{background:var(--pending-bg); color:var(--pending);}
 
   .business-row{background:#F8FAFC; border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:8px;}
   .business-row-top{display:flex; justify-content:space-between; align-items:center; gap:10px;}
-  .business-name{font-weight:700; font-size:14px; color:var(--navy);}
-  .business-meta{font-size:11.5px; color:var(--muted); margin-top:3px;}
+  .business-name{font-weight:700; font-size:13.5px; color:var(--navy);}
+  .business-meta{font-size:11.5px; color:var(--muted); margin-top:2px;}
   .status-chip{font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; white-space:nowrap;}
   .status-chip.submitted{background:var(--submitted-bg); color:var(--submitted);}
   .status-chip.rejected{background:var(--rejected-bg); color:var(--rejected);}
   .status-chip.disbursed{background:var(--disbursed-bg); color:var(--disbursed);}
   .status-chip.active{background:var(--disbursed-bg); color:var(--disbursed);}
-  .reroute-btn{font-size:11.5px; color:var(--rejected); background:none; text-decoration:underline; font-weight:700; padding:0; margin-top:8px;}
-  .reroute-note{font-size:11.5px; color:var(--muted); margin-top:6px;}
 
   .team-row{display:flex; justify-content:space-between; align-items:center; background:#F8FAFC; border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:8px;}
-  .team-name{font-weight:700; font-size:14px; color:var(--navy);}
+  .team-name{font-weight:700; font-size:13.5px; color:var(--navy);}
   .team-status{font-size:11px; color:var(--muted); margin-top:2px;}
 
-  .pool-row{background:#F8FAFC; border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:10px;}
-  .pool-actions{display:flex; gap:6px; flex-shrink:0;}
-  .pool-actions button{padding:8px 12px; border-radius:8px; font-size:12px; font-weight:700;}
-  .btn-mini-gold{background:var(--gold); color:var(--navy);}
-  .btn-mini-outline{background:transparent; border:1px solid var(--navy); color:var(--navy);}
-  .btn-mini-red{background:transparent; border:1px solid var(--rejected); color:var(--rejected);}
-
   .bottom-nav{position:fixed; bottom:0; left:0; right:0; background:#fff; display:flex; overflow-x:auto; box-shadow:0 -4px 14px rgba(0,0,0,.15); z-index:15;}
-  .nav-btn{flex:1 0 auto; min-width:64px; padding:11px 4px; text-align:center; font-size:10px; font-weight:700; color:var(--muted); background:none;}
+  .nav-btn{flex:1 0 auto; min-width:64px; padding:10px 4px; text-align:center; font-size:10px; font-weight:700; color:var(--muted); background:none;}
   .nav-btn.active{color:var(--navy);}
-  .nav-btn .nav-icon{display:block; font-size:17px; margin-bottom:2px;}
+  .nav-btn .nav-icon{display:block; font-size:16px; margin-bottom:2px;}
 
-  .empty-state{text-align:center; padding:30px 10px; color:var(--muted); font-size:13px;}
-  .gate-state{text-align:center; padding:26px 16px; color:var(--muted); font-size:13.5px; background:#F8FAFC; border:1px dashed var(--line); border-radius:10px; line-height:1.6;}
-  .pending-banner{background:var(--pending-bg); color:var(--pending); border-radius:10px; padding:10px 14px; font-size:12.5px; font-weight:600; margin-bottom:14px; line-height:1.5;}
-
-  .slots-note{font-size:12px; color:var(--muted); margin:-8px 0 14px 12px;}
+  .empty-state{text-align:center; padding:24px 10px; color:var(--muted); font-size:12.5px;}
+  .gate-state{text-align:center; padding:22px 16px; color:var(--muted); font-size:13px; background:#F8FAFC; border:1px dashed var(--line); border-radius:10px; line-height:1.5;}
+  .slots-note{font-size:11.5px; color:var(--muted); margin:-6px 0 12px 12px;}
 
   .sheet-backdrop{display:none; position:fixed; inset:0; background:rgba(6,12,28,.6); z-index:20;}
-  .sheet{position:fixed; left:0; right:0; bottom:0; background:var(--navy); border-radius:20px 20px 0 0; max-height:88vh; overflow-y:auto; z-index:21; padding:18px 16px 28px; box-shadow:0 -6px 0 var(--gold);}
+  .sheet{position:fixed; left:0; right:0; bottom:0; background:var(--navy); border-radius:20px 20px 0 0; max-height:85vh; overflow-y:auto; z-index:21; padding:18px 16px 28px; box-shadow:0 -6px 0 var(--gold);}
   .sheet-handle{width:36px; height:4px; background:var(--navy-light); border-radius:3px; margin:0 auto 14px;}
-  .sheet h3{margin:0 0 14px; color:#fff; font-size:16px;}
-  .close-x{position:absolute; top:14px; right:14px; background:none; font-size:20px; color:#AFC0E8; padding:4px;}
+  .sheet h3{margin:0 0 14px; color:#fff; font-size:15px;}
+  .close-x{position:absolute; top:14px; right:14px; background:none; font-size:18px; color:#AFC0E8; padding:4px;}
 
-  .chat-thread{max-height:240px; overflow-y:auto; background:var(--navy-mid); border-radius:10px; padding:10px; margin-bottom:12px;}
-  @keyframes bubbleIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
-  .chat-bubble{max-width:80%; padding:8px 12px; border-radius:14px; font-size:13px; margin-bottom:8px; line-height:1.4; animation:bubbleIn .25s ease-out both;}
-  .chat-bubble.banker{background:var(--gold); color:var(--navy); margin-left:auto; border-bottom-right-radius:4px;}
-  .chat-bubble.cp{background:var(--navy-light); color:#fff; margin-right:auto; border-bottom-left-radius:4px;}
-
-  .toast{position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--gold); color:var(--navy); padding:10px 18px; border-radius:24px; font-size:13px; font-weight:700; z-index:30; display:none; max-width:90%; text-align:center;}
+  .toast{position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--gold); color:var(--navy); padding:10px 18px; border-radius:24px; font-size:12.5px; font-weight:700; z-index:30; display:none; max-width:90%; text-align:center;}
   .toast.error{background:var(--rejected); color:#fff;}
 </style>
 </head>
 <body>
 
-<!-- ===================== AUTH SCREENS ===================== -->
 <div id="authScreen">
-  <svg class="network-motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <g stroke="#D4A741" stroke-width="1" opacity="0.35">
-      <line x1="30" y1="60" x2="110" y2="30"/><line x1="110" y1="30" x2="200" y2="55"/>
-      <line x1="200" y1="55" x2="300" y2="25"/><line x1="200" y1="55" x2="250" y2="120"/>
-      <line x1="110" y1="30" x2="60" y2="120"/><line x1="300" y1="25" x2="370" y2="80"/>
-      <line x1="60" y1="120" x2="150" y2="150"/><line x1="150" y1="150" x2="250" y2="120"/>
-    </g>
-    <g fill="#D4A741">
-      <circle cx="30" cy="60" r="3"/><circle cx="110" cy="30" r="3"/><circle cx="200" cy="55" r="4"/>
-      <circle cx="300" cy="25" r="3"/><circle cx="250" cy="120" r="3"/><circle cx="60" cy="120" r="3"/>
-      <circle cx="370" cy="80" r="3"/><circle cx="150" cy="150" r="3"/>
-    </g>
-  </svg>
   <div class="splash-top">
     <div class="splash-logo">VMW</div>
     <h1>VastMyWealth</h1>
-    <div class="tagline">Find Clients & DSAs</div>
+    <div class="tagline">Bank Channel CRM</div>
   </div>
   <div class="auth-body">
-
-    <!-- REQUEST CODE — now the first screen (landing page removed) -->
     <div id="requestCodeView" class="view active">
       <div class="headline">Get Your <span class="accent">DSA Code</span></div>
-      <div class="subtext">Tell us a bit about you — we'll send onboarding documents and your login PIN to your official email.</div>
+      <div class="subtext">Enter your official bank details to request your verified onboarding kit &amp; PIN.</div>
       <form id="requestCodeForm">
         <div class="form-group"><label>Full Name</label><input type="text" id="reqName" required placeholder="Your name"></div>
         <div class="form-group"><label>Official Bank Email ID</label><input type="email" id="reqEmail" required placeholder="name@bankdomain.com"></div>
@@ -212,24 +154,20 @@
       <button class="btn-secondary" onclick="showView('loginView')">Already Registered? Login</button>
     </div>
 
-    <!-- LOGIN -->
     <div id="loginView" class="view">
       <div class="headline">Welcome <span class="accent">Back</span></div>
       <div class="subtext">Login with your registered mobile number and PIN.</div>
       <form id="loginForm">
         <div class="form-group"><label>Mobile Number</label><input type="tel" id="loginMobile" required placeholder="Registered mobile"></div>
-        <div class="form-group"><label>4-Digit PIN</label><input type="password" id="loginPin" required maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="••••"></div>
+        <div class="form-group"><label>4-Digit PIN</label><input type="password" id="loginPin" required maxlength="4" inputmode="numeric" placeholder="••••"></div>
         <button type="submit" id="loginBtn" class="btn-primary">Login</button>
       </form>
       <div id="loginResult" class="msg-box"></div>
       <div class="link-row"><button class="link-btn" onclick="showView('requestCodeView')">← Back</button><button class="link-btn" onclick="showView('forgotPinView')">Forgot PIN?</button></div>
-      <button class="link-btn" style="margin-top:16px;" onclick="showView('changeJobView')">Official email changed? Update it →</button>
     </div>
 
-    <!-- FORGOT PIN -->
     <div id="forgotPinView" class="view">
       <div class="headline">Reset Your <span class="accent">PIN</span></div>
-      <div class="subtext">We'll email your PIN to your registered official email.</div>
       <form id="forgotPinForm">
         <div class="form-group"><label>Registered Mobile Number</label><input type="tel" id="fpMobile" required placeholder="Registered mobile"></div>
         <button type="submit" id="fpBtn" class="btn-primary">Send PIN</button>
@@ -237,37 +175,16 @@
       <div id="fpResult" class="msg-box"></div>
       <div class="link-row"><button class="link-btn" onclick="showView('loginView')">← Back to Login</button></div>
     </div>
-
-    <!-- CHANGE OFFICIAL EMAIL (was "Change Job") -->
-    <div id="changeJobView" class="view">
-      <div class="headline">Update Your <span class="accent">Official Email</span></div>
-      <div class="subtext">Verify your mobile + PIN and your new official email — your team and business history carry over automatically.</div>
-      <form id="changeJobForm">
-        <div class="form-group"><label>Registered Mobile Number</label><input type="tel" id="cjMobile" required placeholder="Registered mobile"></div>
-        <div class="form-group"><label>Current PIN</label><input type="password" id="cjPin" required maxlength="4" placeholder="••••"></div>
-        <div class="form-group"><label>New Official Email</label><input type="email" id="cjEmail" required placeholder="name@newbank.com"></div>
-        <div class="form-group">
-          <label>Bank Name</label>
-          <input type="text" id="cjBank" required placeholder="Start typing your bank name..." autocomplete="off">
-          <div class="suggest-list" id="cjBankSuggest"></div>
-        </div>
-        <button type="submit" id="cjBtn" class="btn-primary">Update Email</button>
-      </form>
-      <div id="cjResult" class="msg-box"></div>
-      <div class="link-row"><button class="link-btn" onclick="showView('loginView')">← Back to Login</button></div>
-    </div>
-
   </div>
 </div>
 
-<!-- ===================== MAIN APP ===================== -->
 <div id="app">
   <header class="topbar">
     <div class="topbar-row">
       <h2 id="welcomeName">Bank Channel CRM</h2>
       <button class="icon-pill" id="logoutBtn">Logout</button>
     </div>
-    <div id="bankNameLabel" style="font-size:12px; color:var(--muted); margin-top:2px; display:none;"></div>
+    <div id="bankNameLabel" style="font-size:11.5px; color:var(--muted); margin-top:2px; display:none;"></div>
     <div class="rm-card">
       <div class="rm-info">Your Relationship Manager<b id="rmNameLabel">Manoj A Prabhu</b></div>
       <div class="rm-actions">
@@ -276,50 +193,42 @@
       </div>
     </div>
   </header>
-  <!-- cpPoolStatusBadge removed — the ₹10L/month gate has been dropped; DSA Leads (partner pool) is open to every banker now -->
 
   <main class="content">
+    <div class="pending-banner" id="pendingBanner" style="display:none;">Your DSA code is under verification. You'll be notified once active.</div>
 
-    <div class="pending-banner" id="pendingBanner" style="display:none;">Your DSA code is under verification. You'll be notified once your account is active.</div>
-
-    <!-- TAB: LOG BUSINESS — default tab on login. Opens the external
-         application portal with a personalized ref code -->
     <div id="tabLog" class="tab-pane">
       <div class="section-card">
         <h3>Log New Business</h3>
-        <p class="desc">Opens the application portal. Anything the customer submits there is captured directly and attributed to you.</p>
+        <p class="desc">Opens the application portal. Submissions here are captured directly and attributed to you.</p>
         <div id="logGate" class="gate-state" style="display:none;">Submit and get a DSA code verified before logging business.</div>
         <a id="portalLink" href="#" target="_blank" class="btn-primary" style="display:block; text-align:center; text-decoration:none;">Open Application Portal</a>
       </div>
     </div>
 
-    <!-- TAB: ADD DSA (formerly "Codes") -->
     <div id="tabCodes" class="tab-pane" style="display:none;">
       <div class="section-card">
         <h3>Your DSA Codes</h3>
-        <p class="desc">These are the bank + loan-type combinations you can currently log business under.</p>
+        <p class="desc">Bank and loan-type combinations you can currently log business under.</p>
         <div id="codesList"></div>
         <button class="btn-secondary" style="margin-top:10px; color:var(--navy); border-color:var(--navy);" onclick="openSubmitCodeSheet()">+ Submit a DSA Code</button>
       </div>
     </div>
 
-    <!-- TAB: TRACK -->
     <div id="tabTrack" class="tab-pane" style="display:none;">
       <div class="section-card">
-        <h3>Track Business & Rejections</h3>
-        <p class="desc">If a bank declines a file on policy grounds, reroute it to an alternative instead of losing it.</p>
+        <h3>Track Business &amp; Files</h3>
+        <p class="desc">Monitor status of your logged files and client applications.</p>
         <div id="businessLogList"></div>
       </div>
     </div>
 
-    <!-- TAB: BUSINESS LEADS — the only leads tab now; DSA Leads (partner pool)
-         has been dropped from the banker-facing UI -->
     <div id="tabBizLeads" class="tab-pane" style="display:none;">
       <div class="section-card">
         <h3>Business Leads</h3>
-        <p class="desc">Customer leads. Claim one to receive full details and the matching DSA code by email.</p>
+        <p class="desc">Customer leads. Claim one to receive full details and matching DSA code.</p>
         <div id="bizLeadsGate" class="gate-state" style="display:none;">Submit and get a DSA code verified to view leads.</div>
-        <div id="bizLeadsBlocked" class="gate-state" style="display:none;">You've reached your rejection limit for this period. Contact your RM to unlock Business Leads.</div>
+        <div id="bizLeadsBlocked" class="gate-state" style="display:none;">You've reached your rejection limit. Contact your RM.</div>
         <div id="bizLeadsSlots" class="slots-note"></div>
         <div id="bizLeadsList"></div>
       </div>
@@ -329,26 +238,20 @@
       </div>
     </div>
 
-    <!-- TAB: TEAM -->
     <div id="tabTeam" class="tab-pane" style="display:none;">
       <div class="section-card">
         <h3>My Channel Partners</h3>
-        <p class="desc">Recruit your own partners directly — their contact details unlock once they submit banking details.</p>
+        <p class="desc">Recruit partners directly — contact details unlock upon confirmation.</p>
         <div id="myTeamList"></div>
-        <form id="recruitForm" class="light-form" style="margin-top:14px;">
-          <div class="form-group"><label>Channel Partner Name</label><input type="text" id="recruitName" required></div>
-          <div class="form-group"><label>Mobile Number</label><input type="tel" id="recruitMobile" required maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
-          <div class="form-group"><label>Email ID</label><input type="email" id="recruitEmail" required placeholder="their email address"></div>
-          <div class="form-group" style="display:flex; align-items:flex-start; gap:8px;">
-            <input type="checkbox" id="recruitConsent" required style="width:auto; margin-top:3px;">
-            <label for="recruitConsent" style="margin:0; font-weight:500;">I have this person's consent to share their name, mobile and email with VastMyWealth to invite them as a channel partner.</label>
-          </div>
+        <form id="recruitForm" class="light-form" style="margin-top:12px;">
+          <div class="form-group"><label>Partner Name</label><input type="text" id="recruitName" required></div>
+          <div class="form-group"><label>Mobile Number</label><input type="tel" id="recruitMobile" required maxlength="10" placeholder="10-digit mobile"></div>
+          <div class="form-group"><label>Email ID</label><input type="email" id="recruitEmail" required placeholder="Email address"></div>
           <button type="submit" id="recruitBtn" class="btn-primary">Send Onboarding Invitation</button>
         </form>
         <div id="recruitResult" class="msg-box"></div>
       </div>
     </div>
-
   </main>
 
   <div class="bottom-nav">
@@ -360,164 +263,92 @@
   </div>
 </div>
 
-<!-- ===================== SUBMIT CODE SHEET ===================== -->
+<!-- Submit Code Sheet -->
 <div class="sheet-backdrop" id="submitCodeBackdrop"></div>
 <div class="sheet" id="submitCodeSheet" style="display:none;">
   <div class="sheet-handle"></div>
   <button class="close-x" onclick="closeSheet('submitCodeSheet','submitCodeBackdrop')">✕</button>
   <h3>Submit Your DSA Code</h3>
   <form id="submitCodeForm" class="light-form" style="background:var(--card); border-radius:12px; padding:16px;">
+    <div class="form-group"><label>Bank</label><div id="scBankDisplay" style="padding:12px; background:#F8FAFC; border:1px solid var(--line); border-radius:8px; font-weight:700; color:var(--navy);"></div></div>
     <div class="form-group">
-      <label>Bank</label>
-      <div id="scBankDisplay" style="padding:13px 14px; background:#F8FAFC; border:1px solid var(--line); border-radius:10px; font-weight:700; color:var(--navy);"></div>
-    </div>
-    <div class="form-group">
-      <label>Applicable Loan Type(s)</label>
+      <label>Loan Type(s)</label>
       <div class="checkbox-grid">
         <label><input type="checkbox" name="scLoanType" value="PL"> Personal Loan</label>
         <label><input type="checkbox" name="scLoanType" value="BL"> Business Loan</label>
       </div>
     </div>
-    <div id="scExistingNote" style="display:none; font-size:12px; color:var(--muted); margin:-8px 0 12px 2px; line-height:1.5;"></div>
-    <div class="form-group"><label>DSA Code (as issued by your bank)</label><input type="text" id="scCode" required></div>
+    <div id="scExistingNote" style="display:none; font-size:11.5px; color:var(--muted); margin-bottom:10px;"></div>
+    <div class="form-group"><label>DSA Code</label><input type="text" id="scCode" required></div>
     <button type="submit" id="scBtn" class="btn-primary">Submit Code</button>
   </form>
   <div id="scResult" class="msg-box"></div>
 </div>
 
-<!-- ===================== REROUTE SHEET ===================== -->
-<div class="sheet-backdrop" id="rerouteBackdrop"></div>
-<div class="sheet" id="rerouteSheet" style="display:none;">
-  <div class="sheet-handle"></div>
-  <button class="close-x" onclick="closeSheet('rerouteSheet','rerouteBackdrop')">✕</button>
-  <h3>Mark Rejected & Reroute</h3>
-  <form id="rerouteForm" class="light-form" style="background:var(--card); border-radius:12px; padding:16px;">
-    <div class="form-group"><label>Rejection Reason</label><input type="text" id="rrReason" required placeholder="e.g. CIBIL drop, income mismatch"></div>
-    <div class="form-group">
-      <label>Route To</label>
-      <select id="rrRouteType">
-        <option value="network">An in-network banker</option>
-        <option value="dsa">An associated DSA</option>
-      </select>
-    </div>
-    <div class="form-group"><label>Target Name</label><input type="text" id="rrTargetName" required placeholder="Bank/DSA name"></div>
-    <div class="form-group"><label>Target Email</label><input type="email" id="rrTargetEmail" required placeholder="Where the referral is sent"></div>
-    <button type="submit" id="rrBtn" class="btn-primary">Confirm Reroute</button>
-  </form>
-  <div id="rrResult" class="msg-box"></div>
-</div>
-
-<!-- ===================== CP CHAT SHEET ===================== -->
-<div class="sheet-backdrop" id="chatBackdrop"></div>
-<div class="sheet" id="chatSheet" style="display:none;">
-  <div class="sheet-handle"></div>
-  <button class="close-x" onclick="closeSheet('chatSheet','chatBackdrop')">✕</button>
-  <h3 id="chatHeading">Message</h3>
-  <div class="chat-thread" id="chatThread"></div>
-  <form id="chatForm" class="light-form" style="display:flex; gap:8px;">
-    <input type="text" id="chatInput" placeholder="Type a message..." style="flex:1;" required>
-    <button type="submit" class="btn-primary" style="width:auto; padding:12px 18px;">Send</button>
-  </form>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-// ⚠️ SET THIS to your Bank Channel CRM Apps Script Web App URL
 var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec";
-
 var SESSION = { bankerId: null, bankerEmail: null, mobile: null, pin: null, refCode: null };
-var MY_CODES = [];
-var MY_LOGS = [];
-var MY_TEAM = [];
-var CP_POOL = [];
-var CURRENT_REROUTE_LOG_ID = null;
-var CURRENT_CHAT_POOL_ID = null;
-var BANK_LIST_CACHE = null; // NEW — fetched once, reused for both bank-name autosuggest fields
+var BANK_LIST_CACHE = null;
+var AUTH_STORAGE_KEY = "vmw_banker_auth";
 
 function apiPost(payload) {
   return fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
-    .then(function(r){ return r.text(); })
-    .then(function(raw){
-      try { return JSON.parse(raw); }
-      catch(e){ throw new Error("Server error — check deployment. Raw: " + raw.slice(0,150)); }
+    .then(r => r.text()).then(raw => {
+      try { return JSON.parse(raw); } catch(e) { throw new Error("Server error."); }
     });
 }
 function escapeHtml(s){ var d=document.createElement('div'); d.textContent=(s===undefined||s===null)?'':s; return d.innerHTML; }
-function showToast(msg, isError){ var t=document.getElementById("toast"); t.textContent=msg; t.className="toast"+(isError?" error":""); t.style.display="block"; setTimeout(function(){t.style.display="none";},3000); }
-function showView(id){ document.querySelectorAll("#authScreen .view").forEach(function(v){ v.classList.remove("active"); }); document.getElementById(id).classList.add("active"); document.querySelectorAll("#authScreen .msg-box").forEach(function(b){ b.style.display="none"; }); }
-function closeSheet(sheetId, backdropId){ document.getElementById(sheetId).style.display="none"; document.getElementById(backdropId).style.display="none"; }
-function openSheetById(sheetId, backdropId){ document.getElementById(backdropId).style.display="block"; document.getElementById(sheetId).style.display="block"; }
+function showToast(msg, isError){ var t=document.getElementById("toast"); t.textContent=msg; t.className="toast"+(isError?" error":""); t.style.display="block"; setTimeout(()=>t.style.display="none",3000); }
+function showView(id){ document.querySelectorAll("#authScreen .view").forEach(v => v.classList.remove("active")); document.getElementById(id).classList.add("active"); }
+function closeSheet(s, b){ document.getElementById(s).style.display="none"; document.getElementById(b).style.display="none"; }
+function openSheet(s, b){ document.getElementById(b).style.display="block"; document.getElementById(s).style.display="block"; }
 
-/* ---------------- BANK NAME AUTOSUGGEST (NEW) ---------------- */
-// Fetches the bank list once (via the existing getBankList action) and wires
-// simple type-to-filter suggestions onto any input+suggestion-box pair.
 function loadBankListOnce(){
   if (BANK_LIST_CACHE) return Promise.resolve(BANK_LIST_CACHE);
-  return apiPost({ action:"getBankList" }).then(function(r){
-    BANK_LIST_CACHE = (r.status === "success") ? r.banks : [];
-    return BANK_LIST_CACHE;
-  });
+  return apiPost({ action:"getBankList" }).then(r => { BANK_LIST_CACHE = (r.status === "success") ? r.banks : []; return BANK_LIST_CACHE; });
 }
 function wireBankAutosuggest(inputId, suggestId){
-  var input = document.getElementById(inputId);
-  var box = document.getElementById(suggestId);
-  input.addEventListener("focus", function(){ loadBankListOnce(); });
-  input.addEventListener("input", function(){
+  var input = document.getElementById(inputId), box = document.getElementById(suggestId);
+  input.addEventListener("focus", () => loadBankListOnce());
+  input.addEventListener("input", () => {
     var q = input.value.trim().toLowerCase();
     if (!q || !BANK_LIST_CACHE) { box.style.display = "none"; return; }
-    var matches = BANK_LIST_CACHE.filter(function(b){ return b.toLowerCase().indexOf(q) !== -1; }).slice(0, 8);
-    if (matches.length === 0) { box.style.display = "none"; return; }
-    box.innerHTML = matches.map(function(b){ return '<div>' + escapeHtml(b) + '</div>'; }).join("");
-    box.style.display = "block";
+    var matches = BANK_LIST_CACHE.filter(b => b.toLowerCase().indexOf(q) !== -1).slice(0, 8);
+    box.innerHTML = matches.map(b => '<div>' + escapeHtml(b) + '</div>').join("");
+    box.style.display = matches.length ? "block" : "none";
   });
-  box.addEventListener("mousedown", function(e){
+  box.addEventListener("mousedown", (e) => {
     if (e.target && e.target.tagName === "DIV") { input.value = e.target.textContent; box.style.display = "none"; }
-  });
-  document.addEventListener("click", function(e){
-    if (e.target !== input) box.style.display = "none";
   });
 }
 wireBankAutosuggest("reqBank", "reqBankSuggest");
-wireBankAutosuggest("cjBank", "cjBankSuggest");
-loadBankListOnce(); // NEW — prefetch immediately on page load rather than waiting for focus, so the list is likely already cached by the time the person starts typing
-
-/* ---------------- AUTH ACTIONS ---------------- */
+loadBankListOnce();
 
 document.getElementById("requestCodeForm").addEventListener("submit", function(e){
   e.preventDefault();
-  var btn = document.getElementById("reqBtn"); btn.disabled = true; btn.textContent = "Sending...";
   apiPost({
-    action:"requestCode",
-    name:document.getElementById("reqName").value,
+    action:"requestCode", name:document.getElementById("reqName").value,
     officialEmail:document.getElementById("reqEmail").value,
     mobileNumber:document.getElementById("reqMobile").value,
     bankName:document.getElementById("reqBank").value
-  })
-    .then(function(r){
-      var box = document.getElementById("reqResult");
-      box.className = "msg-box " + (r.status==="success" ? "success":"error");
-      box.textContent = r.message;
-      if (r.status==="success") document.getElementById("requestCodeForm").reset();
-    }).catch(function(err){ var box=document.getElementById("reqResult"); box.className="msg-box error"; box.textContent=err.message; })
-    .finally(function(){ btn.disabled=false; btn.textContent="Send Request"; });
+  }).then(r => {
+    var box = document.getElementById("reqResult");
+    box.className = "msg-box " + (r.status==="success" ? "success":"error");
+    box.textContent = r.message;
+  });
 });
 
-// NEW — factored out so both the login form AND the auto-login-on-refresh
-// check below can share the same logic. Persists mobile+PIN to localStorage
-// on success (standard browser storage — this is a real deployed site, not
-// a sandboxed preview) so refreshing the page doesn't bounce back to login.
-var AUTH_STORAGE_KEY = "vmw_banker_auth";
 function performLogin(mobile, pin){
-  return apiPost({ action:"verifyBanker", mobileNumber:mobile, pin:pin }).then(function(r){
+  return apiPost({ action:"verifyBanker", mobileNumber:mobile, pin:pin }).then(r => {
     if (r.status !== "success") return r;
     SESSION = {
-      bankerId:r.bankerId, bankerName:r.bankerName, bankerEmail:r.bankerEmail, mobile:mobile, pin:pin,
-      hasActiveCode:r.hasActiveCode, accountVerified:r.accountVerified,
-      pendingVerification:r.pendingVerification, rmName:r.rmName, rmMobile:r.rmMobile,
-      activeBankNames:r.activeBankNames || [], currentBankName:r.currentBankName, refCode:r.refCode
+      bankerId: r.bankerId, bankerName: r.bankerName, bankerEmail: r.bankerEmail, mobile: mobile, pin: pin,
+      hasActiveCode: r.hasActiveCode, accountVerified: r.accountVerified, pendingVerification: r.pendingVerification,
+      rmName: r.rmName, rmMobile: r.rmMobile, activeBankNames: r.activeBankNames || [], currentBankName: r.currentBankName, refCode: r.refCode
     };
-    try { localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ mobile: mobile, pin: pin })); } catch (e) {}
+    try { localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ mobile: mobile, pin: pin })); } catch(e){}
     enterApp();
     return r;
   });
@@ -525,75 +356,44 @@ function performLogin(mobile, pin){
 
 document.getElementById("loginForm").addEventListener("submit", function(e){
   e.preventDefault();
-  var btn = document.getElementById("loginBtn"); btn.disabled = true; btn.textContent = "Logging in...";
-  var mobile = document.getElementById("loginMobile").value, pin = document.getElementById("loginPin").value;
-  performLogin(mobile, pin)
-    .then(function(r){
-      btn.disabled = false; btn.textContent = "Login";
+  performLogin(document.getElementById("loginMobile").value, document.getElementById("loginPin").value)
+    .then(r => {
       if (r.status !== "success") {
         var box = document.getElementById("loginResult"); box.className="msg-box error"; box.textContent = r.message;
       }
-    }).catch(function(err){ btn.disabled=false; btn.textContent="Login"; var box=document.getElementById("loginResult"); box.className="msg-box error"; box.textContent=err.message; });
+    });
 });
 
-// NEW — on page load, silently try to restore the session from a previous
-// login rather than always landing on the login screen after a refresh.
+// Silent auto-login persistence on refresh
 (function attemptAutoLogin(){
   try {
     var saved = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || "null");
     if (saved && saved.mobile && saved.pin) {
-      performLogin(saved.mobile, saved.pin).catch(function(){ /* fall through to normal login screen */ });
+      performLogin(saved.mobile, saved.pin).catch(() => {});
     }
-  } catch (e) { /* ignore malformed storage */ }
+  } catch(e){}
 })();
 
-document.getElementById("forgotPinForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  var btn = document.getElementById("fpBtn"); btn.disabled = true; btn.textContent = "Sending...";
-  apiPost({ action:"forgotPin", mobileNumber:document.getElementById("fpMobile").value })
-    .then(function(r){ var box=document.getElementById("fpResult"); box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message; })
-    .catch(function(err){ var box=document.getElementById("fpResult"); box.className="msg-box error"; box.textContent=err.message; })
-    .finally(function(){ btn.disabled=false; btn.textContent="Send PIN"; });
+document.getElementById("logoutBtn").addEventListener("click", function(){
+  try { localStorage.removeItem(AUTH_STORAGE_KEY); } catch(e){}
+  document.getElementById("app").style.display = "none";
+  document.getElementById("authScreen").style.display = "flex";
+  showView("requestCodeView");
 });
-
-document.getElementById("changeJobForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  var btn = document.getElementById("cjBtn"); btn.disabled = true; btn.textContent = "Updating...";
-  apiPost({
-    action:"changeJob", mobileNumber:document.getElementById("cjMobile").value, pin:document.getElementById("cjPin").value,
-    newOfficialEmail:document.getElementById("cjEmail").value, newBankName:document.getElementById("cjBank").value
-  }).then(function(r){
-    var box = document.getElementById("cjResult"); box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message;
-    if (r.status==="success") document.getElementById("changeJobForm").reset();
-  }).catch(function(err){ var box=document.getElementById("cjResult"); box.className="msg-box error"; box.textContent=err.message; })
-    .finally(function(){ btn.disabled=false; btn.textContent="Update Email"; });
-});
-
-/* ---------------- ENTER APP ---------------- */
 
 function enterApp(){
   document.getElementById("authScreen").style.display = "none";
   document.getElementById("app").style.display = "block";
-
   document.getElementById("welcomeName").textContent = SESSION.bankerName ? ("Hi, " + SESSION.bankerName) : "Bank Channel CRM";
-  document.getElementById("rmNameLabel").textContent = SESSION.rmName || "Manoj A Prabhu";
-  var rmMobile = SESSION.rmMobile || "9594592020";
-  document.getElementById("rmCallLink").href = "tel:" + rmMobile;
-  document.getElementById("rmChatLink").href = "https://wa.me/91" + rmMobile;
-
   document.getElementById("pendingBanner").style.display = (SESSION.pendingVerification && !SESSION.hasActiveCode) ? "block" : "none";
-
-  // NEW — bank name(s) shown under the banker's name, once verified. No DSA code digits ever shown.
-  var bankLabelEl = document.getElementById("bankNameLabel");
-  if (SESSION.activeBankNames && SESSION.activeBankNames.length > 0) {
-    bankLabelEl.textContent = SESSION.activeBankNames.join(", ");
-    bankLabelEl.style.display = "block";
-  } else {
-    bankLabelEl.style.display = "none";
+  
+  var portalLink = document.getElementById("portalLink");
+  var gated = !SESSION.hasActiveCode;
+  document.getElementById("logGate").style.display = gated ? "block" : "none";
+  portalLink.style.display = gated ? "none" : "block";
+  if (!gated && SESSION.refCode) {
+    portalLink.href = "https://loan.vastmywealth.com/portal-unified-application.html?ref=" + encodeURIComponent(SESSION.refCode);
   }
-
-  // DSA Leads (partner pool) dropped from the banker-facing UI — bankers see Business Leads only.
-  applyGating();
 
   loadCodes();
   loadBusinessLogs();
@@ -601,375 +401,94 @@ function enterApp(){
   loadLeads();
 }
 
-// Gates Log Business / Business Leads behind having a verified (Active) DSA code.
-function applyGating(){
-  var gated = !SESSION.hasActiveCode;
-  document.getElementById("logGate").style.display = gated ? "block" : "none";
-  var portalLink = document.getElementById("portalLink");
-  portalLink.style.display = gated ? "none" : "block";
-  if (!gated && SESSION.refCode) {
-    portalLink.href = "https://loan.vastmywealth.com/portal-unified-application.html?ref=" + encodeURIComponent(SESSION.refCode);
-  }
-  document.getElementById("bizLeadsGate").style.display = gated ? "block" : "none";
-  document.getElementById("bizLeadsList").style.display = gated ? "none" : "block";
-  document.getElementById("bizLeadsSlots").style.display = gated ? "none" : "block";
-}
-
-document.getElementById("logoutBtn").addEventListener("click", function(){
-  try { localStorage.removeItem(AUTH_STORAGE_KEY); } catch (e) {}
-  document.getElementById("app").style.display = "none";
-  document.getElementById("authScreen").style.display = "flex";
-  showView("requestCodeView");
-});
-
-/* ---------------- BOTTOM NAV ---------------- */
-
-document.querySelectorAll(".nav-btn").forEach(function(btn){
-  btn.addEventListener("click", function(){
-    document.querySelectorAll(".nav-btn").forEach(function(b){ b.classList.remove("active"); });
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-    document.querySelectorAll(".tab-pane").forEach(function(p){ p.style.display = "none"; });
+    document.querySelectorAll(".tab-pane").forEach(p => p.style.display = "none");
     document.getElementById(btn.dataset.tab).style.display = "block";
   });
 });
 
-/* ---------------- CODES ---------------- */
-
 function loadCodes(){
-  apiPost({ action:"getBankerCodes", bankerId:SESSION.bankerId }).then(function(r){
-    MY_CODES = r.codes || [];
-    renderCodes(r.pending || []);
+  apiPost({ action:"getBankerCodes", bankerId:SESSION.bankerId }).then(r => {
+    var el = document.getElementById("codesList");
+    var codes = r.codes || [], pending = r.pending || [];
+    if (!codes.length && !pending.length) { el.innerHTML = '<div class="empty-state">No DSA code submitted yet.</div>'; return; }
+    el.innerHTML = codes.map(c => '<span class="code-chip">' + escapeHtml(c.bankName) + ' · ' + escapeHtml(c.loanType) + '</span>').join("") +
+                   pending.map(c => '<span class="code-chip pending">' + escapeHtml(c.bankName) + ' · ' + escapeHtml(c.loanType) + ' (Pending)</span>').join("");
   });
-}
-
-function renderCodes(pending){
-  var el = document.getElementById("codesList");
-  var html = "";
-  if (MY_CODES.length === 0 && (!pending || pending.length === 0)) {
-    el.innerHTML = '<div class="empty-state">No DSA code submitted yet. Submit one below to start logging business.</div>'; return;
-  }
-  html += MY_CODES.map(function(c){ return '<span class="code-chip">' + escapeHtml(c.bankName) + ' · ' + escapeHtml(c.loanType) + '</span>'; }).join("");
-  html += (pending || []).map(function(c){ return '<span class="code-chip pending">' + escapeHtml(c.bankName) + ' · ' + escapeHtml(c.loanType) + ' (Pending)</span>'; }).join("");
-  el.innerHTML = html;
 }
 
 function openSubmitCodeSheet(){
   document.getElementById("scBankDisplay").textContent = SESSION.currentBankName || "—";
-  document.getElementById("scExistingNote").style.display = "none";
-  document.getElementById("scCode").readOnly = false;
   document.getElementById("scCode").value = "";
-  openSheetById("submitCodeSheet","submitCodeBackdrop");
+  openSheet("submitCodeSheet", "submitCodeBackdrop");
 }
-
-// NEW — as the banker checks PL/BL, look up whether their bank already has an
-// Active code for that loan type. If so, autofill + lock the code field so
-// they select/reuse it rather than retyping a possibly-different value.
-function checkExistingBankCodeForSelection(){
-  var loanTypes = Array.prototype.slice.call(document.querySelectorAll('input[name="scLoanType"]:checked')).map(function(c){ return c.value; });
-  var note = document.getElementById("scExistingNote");
-  var codeInput = document.getElementById("scCode");
-  if (loanTypes.length === 0) { note.style.display = "none"; codeInput.readOnly = false; return; }
-  apiPost({ action:"checkBankCode", bankerId:SESSION.bankerId, loanTypes:loanTypes }).then(function(r){
-    if (r.status !== "success") return;
-    var existingTypes = loanTypes.filter(function(lt){ return r.existing[lt]; });
-    if (existingTypes.length > 0) {
-      var firstCode = r.existing[existingTypes[0]];
-      codeInput.value = firstCode;
-      codeInput.readOnly = true;
-      note.style.display = "block";
-      note.textContent = "Code already exists for " + r.bankName + " (" + existingTypes.join(", ") + ") — reusing it automatically, active immediately.";
-    } else {
-      codeInput.readOnly = false;
-      codeInput.value = "";
-      note.style.display = "none";
-    }
-  });
-}
-document.querySelectorAll('input[name="scLoanType"]').forEach(function(cb){
-  cb.addEventListener("change", checkExistingBankCodeForSelection);
-});
 
 document.getElementById("submitCodeForm").addEventListener("submit", function(e){
   e.preventDefault();
-  var loanTypes = Array.prototype.slice.call(document.querySelectorAll('input[name="scLoanType"]:checked')).map(function(c){ return c.value; });
-  if (loanTypes.length === 0) { showToast("Select at least one loan type", true); return; }
-  var btn = document.getElementById("scBtn"); btn.disabled = true; btn.textContent = "Submitting...";
+  var loanTypes = Array.from(document.querySelectorAll('input[name="scLoanType"]:checked')).map(c => c.value);
+  if (!loanTypes.length) { showToast("Select at least one loan type", true); return; }
   apiPost({
     action:"submitDSACode", bankerId:SESSION.bankerId, bankerEmail:SESSION.bankerEmail,
     loanTypes:loanTypes, vmwCode:document.getElementById("scCode").value
-  }).then(function(r){
+  }).then(r => {
     var box = document.getElementById("scResult"); box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message;
     if (r.status === "success") { document.getElementById("submitCodeForm").reset(); loadCodes(); }
-  }).catch(function(err){ var box=document.getElementById("scResult"); box.className="msg-box error"; box.textContent=err.message; })
-    .finally(function(){ btn.disabled=false; btn.textContent="Submit Code"; });
+  });
 });
-
-/* ---------------- LOG BUSINESS ----------------
-   Internal form removed — see the "Open Application Portal" link/gating in
-   applyGating(). populateLoanCodeDropdown() call from loadCodes() below was
-   also removed since nothing consumes that dropdown anymore. */
-
-/* ---------------- TRACK (status only — no reroute actions) ---------------- */
 
 function loadBusinessLogs(){
-  apiPost({ action:"getLogs", bankerId:SESSION.bankerId }).then(function(r){
-    MY_LOGS = r.logs || [];
-    renderBusinessLogs();
+  apiPost({ action:"getLogs", bankerId:SESSION.bankerId }).then(r => {
+    var el = document.getElementById("businessLogList");
+    var logs = r.logs || [];
+    if (!logs.length) { el.innerHTML = '<div class="empty-state">No business logged yet.</div>'; return; }
+    el.innerHTML = logs.map(l => '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(l.customerName) + '</div><div class="business-meta">' + escapeHtml(l.meta) + '</div></div><span class="status-chip ' + (l.fileStatus==="Disbursed"?"disbursed":"submitted") + '">' + escapeHtml(l.fileStatus) + '</span></div></div>').join("");
   });
 }
-
-// MODIFIED — now also matches "Rejected" (claimed-lead vocabulary) alongside
-// "Policy Rejected" (direct-log vocabulary), and "Active" (claimed, in-progress)
-// alongside "Submitted" (direct, in-progress) — both fall through to the same
-// default "submitted" (in-progress) style.
-function statusClass(status){ return status==="Disbursed" ? "disbursed" : ((status==="Policy Rejected"||status==="Rejected") ? "rejected" : "submitted"); }
-
-// MODIFIED — now renders BOTH the banker's own directly-logged business AND
-// their claimed Business Leads, merged and sorted newest-first by the backend.
-// A small source tag distinguishes the two since they come from different
-// sheets with different natural fields (see getBankerBusinessLogs).
-function renderBusinessLogs(){
-  var el = document.getElementById("businessLogList");
-  if (MY_LOGS.length === 0) { el.innerHTML = '<div class="empty-state">No business logged yet.</div>'; return; }
-  el.innerHTML = MY_LOGS.map(function(l){
-    var sourceTag = l.source === "claimed" ? "Claimed Lead" : "Direct";
-    return '' +
-      '<div class="business-row">' +
-        '<div class="business-row-top">' +
-          '<div><div class="business-name">' + escapeHtml(l.customerName) + '</div>' +
-          '<div class="business-meta">' + escapeHtml(l.meta) + ' · ' + sourceTag + '</div></div>' +
-          '<span class="status-chip ' + statusClass(l.fileStatus) + '">' + escapeHtml(l.fileStatus) + '</span>' +
-        '</div>' +
-        (l.rejectionReason ? ('<div class="reroute-note">Reason: ' + escapeHtml(l.rejectionReason) + '</div>') : '') +
-      '</div>';
-  }).join("");
-}
-
-document.getElementById("rerouteForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  var btn = document.getElementById("rrBtn"); btn.disabled = true; btn.textContent = "Submitting...";
-  apiPost({
-    action:"updateRejection", logId:CURRENT_REROUTE_LOG_ID, rejectionReason:document.getElementById("rrReason").value,
-    routeType:document.getElementById("rrRouteType").value, routingTarget:document.getElementById("rrTargetName").value,
-    routedToEmail:document.getElementById("rrTargetEmail").value
-  }).then(function(r){
-    if (r.status === "success") { showToast("File rerouted"); closeSheet("rerouteSheet","rerouteBackdrop"); loadBusinessLogs(); }
-    else { var box=document.getElementById("rrResult"); box.className="msg-box error"; box.textContent=r.message; }
-  }).catch(function(err){ var box=document.getElementById("rrResult"); box.className="msg-box error"; box.textContent=err.message; })
-    .finally(function(){ btn.disabled=false; btn.textContent="Confirm Reroute"; });
-});
-
-/* ---------------- BUSINESS LEADS / DSA LEADS (NEW) ---------------- */
 
 function loadLeads(){
-  if (!SESSION.hasActiveCode) return; // gated — nothing to fetch yet
-  apiPost({ action:"getLeads", bankerId:SESSION.bankerId }).then(function(r){
-    var blockedEl = document.getElementById("bizLeadsBlocked");
-    if (r.status === "blocked") {
-      blockedEl.style.display = "block";
-      blockedEl.textContent = r.message;
-      document.getElementById("bizLeadsList").style.display = "none";
-      document.getElementById("bizLeadsSlots").style.display = "none";
-      return;
-    }
-    blockedEl.style.display = "none";
-    if (r.status !== "success") { return; }
-    renderLeadList("bizLeadsList", r.businessLeads || []); // the entire PL-BL feed, direct + partner-sourced
-    var slotsText = r.activeClaimCount + " of 3 active leads claimed" + (r.slotsRemaining === 0 ? " — resolve one to claim another" : "");
-    document.getElementById("bizLeadsSlots").textContent = slotsText;
+  if (!SESSION.hasActiveCode) return;
+  apiPost({ action:"getLeads", bankerId:SESSION.bankerId }).then(r => {
+    var el = document.getElementById("bizLeadsList");
+    if (r.status !== "success") return;
+    var leads = r.businessLeads || [];
+    el.innerHTML = leads.length ? leads.map(l => '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(l.customerName) + '</div><div class="business-meta">' + escapeHtml(l.loanType) + ' · ₹' + escapeHtml(l.loanAmount) + '</div></div><button class="icon-pill" onclick="claimLead(\'' + l.leadId + '\')">Claim</button></div></div>').join("") : '<div class="empty-state">No leads available.</div>';
   });
-  loadMyLeadClaims();
-}
-
-function renderLeadList(elId, leads){
-  var el = document.getElementById(elId);
-  if (leads.length === 0) { el.innerHTML = '<div class="empty-state">No leads available right now.</div>'; return; }
-  el.innerHTML = leads.map(function(l){
-    var claimBtn = l.alreadyClaimedByMe
-      ? '<span class="status-chip active">Claimed</span>'
-      : '<button class="btn-mini-gold" onclick="claimLead(\'' + l.leadId + '\')">Claim</button>';
-    return '<div class="business-row">' +
-      '<div class="business-row-top">' +
-        '<div><div class="business-name">' + escapeHtml(l.customerName) + '</div>' +
-        '<div class="business-meta">' + escapeHtml(l.loanType) + ' · ₹' + escapeHtml(l.loanAmount) + '</div></div>' +
-        claimBtn +
-      '</div>' +
-    '</div>';
-  }).join("");
+  apiPost({ action:"getMyLeadClaims", bankerId:SESSION.bankerId }).then(r => {
+    var el = document.getElementById("bizMyClaimsList");
+    var claims = r.claims || [];
+    el.innerHTML = claims.length ? claims.map(c => '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(c.customerName) + '</div><div class="business-meta">' + escapeHtml(c.customerMobile || "") + ' · ₹' + escapeHtml(c.loanAmount) + '</div></div><span class="status-chip active">' + escapeHtml(c.claimStatus) + '</span></div></div>').join("") : '<div class="empty-state">No claims yet.</div>';
+  });
 }
 
 function claimLead(leadId){
-  apiPost({ action:"claimLead", bankerId:SESSION.bankerId, leadId:leadId }).then(function(r){
-    showToast(r.status === "success" ? "Lead claimed — details emailed to you" : r.message, r.status !== "success");
-    if (r.status === "success") { loadLeads(); loadBusinessLogs(); }
+  apiPost({ action:"claimLead", bankerId:SESSION.bankerId, leadId:leadId }).then(r => {
+    showToast(r.status === "success" ? "Lead claimed!" : r.message, r.status !== "success");
+    if (r.status === "success") loadLeads();
   });
 }
-
-// MODIFIED — no more Business/DSA split on claims; all leads are "Business" now.
-function loadMyLeadClaims(){
-  apiPost({ action:"getMyLeadClaims", bankerId:SESSION.bankerId }).then(function(r){
-    renderMyClaims("bizMyClaimsList", r.claims || []);
-  });
-}
-
-function renderMyClaims(elId, claims){
-  var el = document.getElementById(elId);
-  if (claims.length === 0) { el.innerHTML = '<div class="empty-state">No claims yet.</div>'; return; }
-  el.innerHTML = claims.map(function(c){
-    var actions = c.claimStatus === "Active"
-      ? '<div class="pool-actions">' +
-          '<button class="btn-mini-gold" onclick="resolveClaim(\'' + c.claimId + '\',\'Disbursed\')">Disbursed</button>' +
-          '<button class="btn-mini-red" onclick="resolveClaim(\'' + c.claimId + '\',\'Rejected\')">Reject</button>' +
-        '</div>'
-      : '<span class="status-chip ' + statusClass2(c.claimStatus) + '">' + escapeHtml(c.claimStatus) + '</span>';
-    // NEW — customer mobile/email visible and clickable once claimed (same
-    // pattern used for agreed-partner contact info).
-    var mobileLink = c.customerMobile ? ('<a href="tel:' + escapeHtml(c.customerMobile) + '" style="color:var(--navy); font-weight:700; text-decoration:underline;">' + escapeHtml(c.customerMobile) + '</a>') : null;
-    var emailLink = c.customerEmail ? ('<a href="mailto:' + escapeHtml(c.customerEmail) + '" style="color:var(--navy); font-weight:700; text-decoration:underline;">' + escapeHtml(c.customerEmail) + '</a>') : null;
-    var contactLine = (mobileLink || emailLink) ? ('<div class="business-meta">' + [mobileLink, emailLink].filter(Boolean).join(' · ') + '</div>') : '';
-    return '<div class="business-row">' +
-      '<div class="business-row-top">' +
-        '<div><div class="business-name">' + escapeHtml(c.customerName) + '</div>' +
-        contactLine +
-        '<div class="business-meta">' + escapeHtml(c.loanType) + ' · ₹' + escapeHtml(c.loanAmount) + ' · Code: ' + escapeHtml(c.dsaCodeUsed) + '</div></div>' +
-        actions +
-      '</div>' +
-      (c.rejectionReason ? ('<div class="reroute-note">Reason: ' + escapeHtml(c.rejectionReason) + '</div>') : '') +
-    '</div>';
-  }).join("");
-}
-function statusClass2(status){ return status==="Disbursed" ? "disbursed" : (status==="Rejected" ? "rejected" : "submitted"); }
-
-function resolveClaim(claimId, status){
-  var reason = "";
-  if (status === "Rejected") {
-    reason = prompt("Reason for rejection (e.g. customer not sharing documents):") || "";
-    if (!reason) { showToast("A rejection reason is required", true); return; }
-  }
-  apiPost({ action:"updateLeadClaimStatus", claimId:claimId, status:status, rejectionReason:reason }).then(function(r){
-    showToast(r.status === "success" ? "Updated" : r.message, r.status !== "success");
-    if (r.status === "success") { loadLeads(); loadBusinessLogs(); }
-  });
-}
-
-/* ---------------- TEAM ---------------- */
 
 function loadMyTeam(){
-  apiPost({ action:"getMyPartners", bankerId:SESSION.bankerId }).then(function(r){
-    MY_TEAM = r.partners || [];
-    renderMyTeam();
-    populateCPPicker();
+  apiPost({ action:"getMyPartners", bankerId:SESSION.bankerId }).then(r => {
+    var el = document.getElementById("myTeamList");
+    var team = r.partners || [];
+    el.innerHTML = team.length ? team.map(p => '<div class="team-row"><div><div class="team-name">' + escapeHtml(p.partnerName) + '</div><div class="team-status">' + escapeHtml(p.mappingStatus) + '</div></div></div>').join("") : '<div class="empty-state">No partners recruited yet.</div>';
   });
-}
-
-function renderMyTeam(){
-  var el = document.getElementById("myTeamList");
-  if (MY_TEAM.length === 0) { el.innerHTML = '<div class="empty-state">No channel partners recruited yet.</div>'; return; }
-  el.innerHTML = MY_TEAM.map(function(p){
-    return '<div class="team-row"><div><div class="team-name">' + escapeHtml(p.partnerName) + '</div>' +
-      '<div class="team-status">' + escapeHtml(p.mappingStatus) + '</div></div></div>';
-  }).join("");
-}
-
-function populateCPPicker(){
-  var sel = document.getElementById("cpPicker");
-  sel.innerHTML = '<option value="">Select...</option>' + MY_TEAM.map(function(p){ return '<option value="' + escapeHtml(p.partnerName) + '">' + escapeHtml(p.partnerName) + '</option>'; }).join("");
 }
 
 document.getElementById("recruitForm").addEventListener("submit", function(e){
   e.preventDefault();
-  var mobile = document.getElementById("recruitMobile").value.trim();
-  if (!/^\d{10}$/.test(mobile)) { showToast("Enter a valid 10-digit mobile number", true); return; }
-  var btn = document.getElementById("recruitBtn"); btn.disabled = true; btn.textContent = "Sending...";
   apiPost({
     action:"recruitPartner", parentBankerId:SESSION.bankerId,
     partnerName:document.getElementById("recruitName").value,
-    partnerMobile: mobile,
-    partnerEmail: document.getElementById("recruitEmail").value.trim()
-  })
-    .then(function(r){
-      var box = document.getElementById("recruitResult"); box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message;
-      if (r.status === "success") { document.getElementById("recruitForm").reset(); loadMyTeam(); }
-    }).catch(function(err){ var box=document.getElementById("recruitResult"); box.className="msg-box error"; box.textContent=err.message; })
-    .finally(function(){ btn.disabled=false; btn.textContent="Send Onboarding Invitation"; });
-});
-
-/* ---------------- CP POOL + MESSAGING (unchanged) ---------------- */
-
-function loadCPPool(){
-  apiPost({ action:"getCPPool", bankerId:SESSION.bankerId }).then(function(r){
-    CP_POOL = r.pool || [];
-    renderCPPool();
+    partnerMobile:document.getElementById("recruitMobile").value,
+    partnerEmail:document.getElementById("recruitEmail").value
+  }).then(r => {
+    var box = document.getElementById("recruitResult"); box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message;
+    if (r.status === "success") { document.getElementById("recruitForm").reset(); loadMyTeam(); }
   });
-}
-
-function renderCPPool(){
-  var el = document.getElementById("cpPoolList");
-  if (CP_POOL.length === 0) { el.innerHTML = '<div class="empty-state">No partners available in the pool right now.</div>'; return; }
-  el.innerHTML = CP_POOL.map(function(c){
-    return '<div class="pool-row"><div class="team-name">' + escapeHtml(c.cpName) + '</div>' +
-      '<div class="pool-actions">' +
-        '<button class="btn-mini-outline" onclick="openChat(\'' + c.poolId + '\', \'' + escapeHtml(c.cpName).replace(/'/g,"\\'") + '\')">Message</button>' +
-        '<button class="btn-mini-gold" onclick="requestCP(\'' + c.poolId + '\')">Request</button>' +
-      '</div></div>';
-  }).join("");
-}
-
-var AGREED_POOL = [];
-
-function loadAgreedPool(){
-  apiPost({ action:"getMyAgreedPoolCPs", bankerId:SESSION.bankerId }).then(function(r){
-    AGREED_POOL = r.partners || [];
-    renderAgreedPool();
-  });
-}
-
-function renderAgreedPool(){
-  var el = document.getElementById("agreedPoolList");
-  if (AGREED_POOL.length === 0) { el.innerHTML = '<div class="empty-state">No agreed partnerships yet.</div>'; return; }
-  el.innerHTML = AGREED_POOL.map(function(c){
-    var mobileLink = c.cpMobile ? ('<a href="tel:' + escapeHtml(c.cpMobile) + '" style="color:var(--navy); font-weight:700; text-decoration:underline;">' + escapeHtml(c.cpMobile) + '</a>') : '—';
-    return '<div class="pool-row">' +
-      '<div><div class="team-name">' + escapeHtml(c.cpName) + '</div>' +
-      '<div class="business-meta">' + mobileLink + ' · ' + escapeHtml(c.cpEmail || '—') + '</div></div>' +
-      '<div class="pool-actions">' +
-        '<button class="btn-mini-outline" onclick="openChat(\'' + c.poolId + '\', \'' + escapeHtml(c.cpName).replace(/'/g,"\\'") + '\')">Message</button>' +
-      '</div></div>';
-  }).join("");
-}
-
-function requestCP(poolId){
-  apiPost({ action:"requestCP", poolId:poolId, bankerId:SESSION.bankerId }).then(function(r){
-    showToast(r.status === "success" ? "Interest sent" : (r.message || "Failed"), r.status !== "success");
-  });
-}
-
-function openChat(poolId, cpName){
-  CURRENT_CHAT_POOL_ID = poolId;
-  document.getElementById("chatHeading").textContent = "Message " + cpName;
-  loadChatThread();
-  openSheetById("chatSheet","chatBackdrop");
-}
-
-function loadChatThread(){
-  apiPost({ action:"getThreadMessages", poolId:CURRENT_CHAT_POOL_ID, bankerId:SESSION.bankerId }).then(function(r){
-    var el = document.getElementById("chatThread");
-    var messages = r.messages || [];
-    if (messages.length === 0) { el.innerHTML = '<div class="empty-state" style="color:#AFC0E8;">No messages yet — say hello.</div>'; return; }
-    el.innerHTML = messages.map(function(m){
-      return '<div class="chat-bubble ' + (m.fromRole === "Banker" ? "banker" : "cp") + '">' + escapeHtml(m.body) + '</div>';
-    }).join("");
-    el.scrollTop = el.scrollHeight;
-  });
-}
-
-document.getElementById("chatForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  var input = document.getElementById("chatInput");
-  var body = input.value;
-  if (!body) return;
-  apiPost({ action:"sendPoolMessage", poolId:CURRENT_CHAT_POOL_ID, bankerId:SESSION.bankerId, body:body })
-    .then(function(r){ if (r.status === "success") { input.value = ""; loadChatThread(); } else { showToast(r.message, true); } });
 });
 </script>
 </body>
