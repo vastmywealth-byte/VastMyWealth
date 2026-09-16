@@ -323,25 +323,50 @@ function loadBankListOnce(){
 
 function wireBankAutosuggest(inputId, suggestId){
   var input = document.getElementById(inputId), box = document.getElementById(suggestId);
-  input.addEventListener("focus", () => loadBankListOnce());
+  
+  input.addEventListener("focus", () => {
+    loadBankListOnce().then(banks => {
+      if (banks && banks.length > 0 && input.value.trim()) {
+        triggerSearch(input, box, banks);
+      }
+    });
+  });
+
   input.addEventListener("input", () => {
-    var q = input.value.trim().toLowerCase();
-    if (!q || !BANK_LIST_CACHE) { box.style.display = "none"; return; }
-    var matches = BANK_LIST_CACHE.filter(b => b.toLowerCase().indexOf(q) !== -1).slice(0, 8);
-    box.innerHTML = matches.map(b => '<div>' + escapeHtml(b) + '</div>').join("");
-    box.style.display = matches.length ? "block" : "none";
+    loadBankListOnce().then(banks => {
+      triggerSearch(input, box, banks || BANK_LIST_CACHE);
+    });
   });
+
   box.addEventListener("mousedown", (e) => {
-    if (e.target && e.target.tagName === "DIV") { input.value = e.target.textContent; box.style.display = "none"; }
+    if (e.target && e.target.tagName === "DIV") { 
+      input.value = e.target.textContent; 
+      box.style.display = "none"; 
+    }
   });
+
   input.addEventListener('blur', () => {
     setTimeout(() => { box.style.display = 'none'; }, 200);
   });
 }
 
+function triggerSearch(input, box, list) {
+  var q = input.value.trim().toLowerCase();
+  if (!q || !list) { 
+    box.style.display = "none"; 
+    return; 
+  }
+  var matches = list.filter(b => b.toLowerCase().indexOf(q) !== -1).slice(0, 8);
+  if (matches.length > 0) {
+    box.innerHTML = matches.map(b => '<div style="padding:10px 14px; font-size:13px; color:#fff; cursor:pointer;">' + escapeHtml(b) + '</div>').join("");
+    box.style.display = "block";
+  } else {
+    box.style.display = "none";
+  }
+}
+
 wireBankAutosuggest("reqBank", "reqBankSuggest");
 loadBankListOnce();
-
 // Professional Email Validation (Block Personal Domains)
 const personalDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'rediffmail.com', 'icloud.com', 'aol.com', 'live.com'];
 const emailInput = document.getElementById('reqEmail');
