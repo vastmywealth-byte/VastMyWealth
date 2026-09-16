@@ -143,12 +143,26 @@
         <div class="form-group"><label>Full Name</label><input type="text" id="reqName" required placeholder="Your name"></div>
         <div class="form-group"><label>Official Bank Email ID</label><input type="email" id="reqEmail" required placeholder="name@bankdomain.com"></div>
         <div class="form-group"><label>Mobile Number</label><input type="tel" id="reqMobile" required pattern="[0-9]{10}" placeholder="9876543210"></div>
-        <div class="form-group" style="position: relative;">
-  <label>Bank Name</label>
-  <input type="text" id="reqBank" required placeholder="Start typing your bank or NBFC name..." autocomplete="off">
-  <!-- Dynamic suggestion dropdown container -->
-  <div id="reqBankSuggest" style="position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #D8DCE8; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 100; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></div>
-</div>
+        <!-- Banker Registration Form Section -->
+<form id="bankerForm" style="max-width: 500px; margin: auto; padding: 20px;">
+  
+  <!-- Bank Name Input with Live Suggestions -->
+  <div class="form-group" style="position: relative; margin-bottom: 20px;">
+    <label style="display: block; font-weight: 600; margin-bottom: 6px;">Bank or NBFC Name</label>
+    <input type="text" id="reqBank" required placeholder="Start typing bank name..." autocomplete="off" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+    <!-- Dynamic suggestion dropdown -->
+    <div id="reqBankSuggest" style="position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #D8DCE8; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 100; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></div>
+  </div>
+
+  <!-- Professional Email Input with Personal Email Block -->
+  <div class="form-group" style="margin-bottom: 20px;">
+    <label style="display: block; font-weight: 600; margin-bottom: 6px;">Professional Email Address</label>
+    <input type="email" id="reqEmail" required placeholder="name@companybank.com" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+    <small id="emailError" style="color: #d9534f; font-size: 12px; display: none; margin-top: 4px;">Personal email addresses (Gmail, Yahoo, etc.) are not allowed. Please use your official bank/corporate email.</small>
+  </div>
+
+  <button type="submit" id="submitBtn" style="background: #0A1730; color: #fff; padding: 12px 20px; border: none; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer;">Register Banker</button>
+</form>
 
 <script>
   var BACKEND_URL = "https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec";
@@ -156,22 +170,25 @@
   let liveBankList = [];
   const input = document.getElementById('reqBank');
   const suggestBox = document.getElementById('reqBankSuggest');
+  const emailInput = document.getElementById('reqEmail');
+  const emailError = document.getElementById('emailError');
+  const bankerForm = document.getElementById('bankerForm');
 
-  // 1. Fetch the complete list from Google Sheet on page load
+  // 1. Fetch complete bank list from Sheet1 (Column: bank_nbfc_name) on load
   window.addEventListener('DOMContentLoaded', async () => {
     try {
       const res = await fetch(BACKEND_URL + '?action=getBankList');
       const data = await res.json();
       if (data.success && data.banks && data.banks.length > 0) {
         liveBankList = data.banks;
-        console.log("Loaded " + liveBankList.length + " banks/NBFCs from Sheet1.");
+        console.log("Loaded " + liveBankList.length + " banks successfully.");
       }
     } catch (e) {
-      console.error('Error loading bank list from Google Sheet:', e);
+      console.error('Error loading bank list:', e);
     }
   });
 
-  // 2. Handle typing and filter dynamically
+  // 2. Handle typing and filter suggestions instantly
   input.addEventListener('input', function() {
     const val = this.value.trim().toLowerCase();
     suggestBox.innerHTML = '';
@@ -195,7 +212,7 @@
         div.style.color = '#0F1E3D';
         
         div.addEventListener('mousedown', (e) => {
-          e.preventDefault(); // Prevents blur before click registers
+          e.preventDefault(); 
           input.value = bank;
           suggestBox.style.display = 'none';
         });
@@ -208,6 +225,35 @@
 
   input.addEventListener('blur', () => {
     setTimeout(() => { suggestBox.style.display = 'none'; }, 200);
+  });
+
+  // 3. Enforce Professional Email Rule (Block Personal Domains)
+  const personalDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'rediffmail.com', 'icloud.com', 'aol.com', 'live.com'];
+
+  emailInput.addEventListener('blur', function() {
+    const emailVal = this.value.trim().toLowerCase();
+    const domain = emailVal.split('@')[1];
+    
+    if (domain && personalDomains.includes(domain)) {
+      emailError.style.display = 'block';
+      emailInput.style.borderColor = '#d9534f';
+      emailInput.setCustomValidity("Personal emails are not allowed.");
+    } else {
+      emailError.style.display = 'none';
+      emailInput.style.borderColor = '#ccc';
+      emailInput.setCustomValidity("");
+    }
+  });
+
+  // 4. Form Submit Prevention if Email is Invalid
+  bankerForm.addEventListener('submit', function(e) {
+    const emailVal = emailInput.value.trim().toLowerCase();
+    const domain = emailVal.split('@')[1];
+    if (domain && personalDomains.includes(domain)) {
+      e.preventDefault();
+      emailError.style.display = 'block';
+      emailInput.focus();
+    }
   });
 </script>
         <button type="submit" id="reqBtn" class="btn-primary">Send Request</button>
