@@ -144,10 +144,12 @@
         <div class="form-group"><label>Official Bank Email ID</label><input type="email" id="reqEmail" required placeholder="name@bankdomain.com"></div>
         <div class="form-group"><label>Mobile Number</label><input type="tel" id="reqMobile" required pattern="[0-9]{10}" placeholder="9876543210"></div>
         <div class="form-group">
-          <label>Bank Name</label>
-          <input type="text" id="reqBank" required placeholder="Start typing your bank name..." autocomplete="off">
-          <div class="suggest-list" id="reqBankSuggest"></div>
-        </div>
+  <label>Bank Name</label>
+  <input type="text" id="reqBank" required placeholder="Start typing your bank name..." list="bank-list" autocomplete="off">
+  <datalist id="bank-list">
+    <!-- Populated dynamically from Google Sheet Column A -->
+  </datalist>
+</div>
         <button type="submit" id="reqBtn" class="btn-primary">Send Request</button>
       </form>
       <div id="reqResult" class="msg-box"></div>
@@ -490,6 +492,29 @@ document.getElementById("recruitForm").addEventListener("submit", function(e){
     if (r.status === "success") { document.getElementById("recruitForm").reset(); loadMyTeam(); }
   });
 });
+  <script>
+  var BACKEND_URL = "https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec";
+
+  // Fetch the live bank list from Google Sheet (Sheet1, Column A) on page load
+  window.addEventListener('DOMContentLoaded', async () => {
+    try {
+      var res = await fetch(BACKEND_URL + '?action=getBankList');
+      var data = await res.json();
+      if (data.success && data.banks && data.banks.length > 0) {
+        var datalist = document.getElementById('bank-list');
+        if (datalist) {
+          datalist.innerHTML = '';
+          data.banks.forEach(bank => {
+            var option = document.createElement('option');
+            option.value = bank;
+            datalist.appendChild(option);
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Error loading bank list from Google Sheet:', e);
+    }
+  });
 </script>
 </body>
 </html>
