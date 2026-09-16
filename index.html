@@ -17,7 +17,6 @@
 <body>
 
 <div class="shell">
-
   <div class="brand-row">
     <img src="1000550390.png" alt="" class="brand-mark" onerror="this.style.display='none'">
     <span class="brand-name">VastMyWealth</span>
@@ -28,11 +27,13 @@
     <h1>Loans, Leads &amp; Growth<br>— All in One App.</h1>
     <p class="lede">One platform for Customers, Bankers &amp; DSA Partners.</p>
   </div>
-<button id="install-btn" style="display: none; background: #2563EB; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; margin-top: 15px; cursor: pointer;">
-  📲 Install Loan App
-</button>
-  <div class="stack">
 
+  <!-- PWA Install Prompt Button -->
+  <button id="install-btn" style="display: none; background: #2563EB; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; margin: 0 20px 15px; cursor: pointer; align-items: center; justify-content: center; gap: 8px;">
+    📲 Install Loan App
+  </button>
+
+  <div class="stack">
     <!-- CUSTOMER -->
     <a href="apply.html" class="role-card customer">
       <div class="role-visual">
@@ -106,63 +107,39 @@
         </span>
       </div>
     </a>
-
   </div>
 
   <svg class="footer-wave" viewBox="0 0 480 60" preserveAspectRatio="none">
     <path d="M0,30 C120,60 360,0 480,30 L480,60 L0,60 Z" fill="#0B1E3D"/>
   </svg>
   <p class="footer-note" style="color:#AFC0E8; background:#0B1E3D; margin-top:-1px; padding-top:0;">Secured with 256-bit encryption.<br>A VastMyWealth Digital product.</p>
-
 </div>
 
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service worker registered:', reg.scope))
-        .catch(err => console.error('Service worker registration failed:', err));
-    });
-  }
 <script>
   let deferredPrompt;
   const installBtn = document.getElementById('install-btn');
 
-  // 1. Service Worker Registration
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service worker registered:', reg.scope))
-        .catch(err => console.error('Service worker registration failed:', err));
+      navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW registration failed:', err));
     });
   }
 
-  // 2. Capture the install prompt event
   window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent the default browser mini-infobar from appearing automatically
     e.preventDefault();
-    // Save the event for your button to use later
     deferredPrompt = e;
-    // Reveal your custom install button
-    if (installBtn) {
-      installBtn.style.display = 'inline-block';
-    }
+    if (installBtn) installBtn.style.display = 'flex';
   });
 
-  // 3. Handle click on your custom button
   if (installBtn) {
     installBtn.addEventListener('click', async () => {
       if (!deferredPrompt) return;
-      
-      // Trigger the browser's native installation dialog
       deferredPrompt.prompt();
-      
       const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response to install prompt: ${outcome}`);
-      
-      // Reset the deferred prompt variable (it can only be used once)
+      if (outcome === 'accepted') {
+        installBtn.style.display = 'none';
+      }
       deferredPrompt = null;
-      installBtn.style.display = 'none';
     });
   }
 </script>
