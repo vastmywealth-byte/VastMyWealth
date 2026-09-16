@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vehicle & Education Loans — VastMyWealth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{ --navy-1:#0A1730; --panel:#152B54; --panel-border:rgba(212,165,74,.35); --gold:#D9A94E; --ink:#0F1E3D; --white:#FFFFFF; }
+*{box-sizing:border-box; margin:0; padding:0;}
+body{ font-family:'IBM Plex Sans',sans-serif; background:linear-gradient(180deg, #0A1730, #122a56); color:#EDF1FA; padding:20px; min-height:100vh; }
+.shell{ max-width:680px; margin:0 auto; }
+.section{ background:var(--panel); border:1px solid var(--panel-border); border-radius:14px; padding:20px; margin-bottom:16px; }
+.field{ margin-bottom:14px; }
+label{ display:block; font-size:11.5px; font-weight:700; color:#F2DFB0; text-transform:uppercase; margin-bottom:6px; }
+input, select{ width:100%; padding:12px; border:1px solid #D8DCE8; border-radius:8px; font-size:14px; background:#fff; color:var(--ink); }
+.btn-submit{ width:100%; padding:15px; background:linear-gradient(135deg, var(--gold), #B8863B); color:var(--ink); border:none; border-radius:10px; font-weight:700; font-size:15px; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div style="text-align:center; margin-bottom:20px;"><h2 id="title" style="font-family:'Poppins',sans-serif; color:#fff;">Loan Application</h2></div>
+  <div class="section">
+    <div class="field"><label>Full Name</label><input type="text" id="name" required></div>
+    <div class="field"><label>Mobile Number</label><input type="tel" id="mobile" required maxlength="10"></div>
+    <div class="field"><label>Email ID</label><input type="email" id="email" required></div>
+    <div class="field"><label>Loan Amount Required (₹)</label><input type="tel" id="loanAmount" required></div>
+    <button class="btn-submit" id="submitBtn">Submit Application</button>
+  </div>
+</div>
+<script>
+var params = new URLSearchParams(window.location.search);
+var product = params.get('product') || 'VL';
+document.getElementById('title').textContent = product === 'EL' ? 'Education Loan Application' : 'Vehicle Loan Application';
+
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  var payload = {
+    action: 'submitVlElApplication', product: product,
+    profile: { name: document.getElementById('name').value, mobile: document.getElementById('mobile').value, email: document.getElementById('email').value, loanAmount: document.getElementById('loanAmount').value }
+  };
+  var res = await fetch("https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec", { method: 'POST', body: JSON.stringify(payload) });
+  var data = await res.json();
+  if (data.success) { alert('Submitted successfully! Ref: ' + data.leadId); window.location.href = 'index.html'; }
+  else { alert(data.error || 'Submission failed.'); }
+});
+</script>
+</body>
+</html>
