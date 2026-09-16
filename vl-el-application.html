@@ -3,47 +3,460 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vehicle & Education Loans — VastMyWealth</title>
+<title>Vehicle & Education Loans — VastMyWealth Digital</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{ --navy-1:#0A1730; --panel:#152B54; --panel-border:rgba(212,165,74,.35); --gold:#D9A94E; --ink:#0F1E3D; --white:#FFFFFF; }
+:root{
+  --navy-1:#0A1730; --navy-2:#122a56; --navy-3:#173768;
+  --panel:#152B54; --panel-border:rgba(212,165,74,.35);
+  --gold:#D9A94E; --gold-deep:#B8863B; --gold-light:#F2DFB0;
+  --ink:#0F1E3D; --white:#FFFFFF;
+  --text-onnavy:#EDF1FA; --text-onnavy-muted:#A9B8DA;
+  --input-bg:#FFFFFF; --input-border:#D8DCE8;
+  --forest:#3FBE86;
+  --font-display:'Poppins',sans-serif; --font-body:'IBM Plex Sans',sans-serif;
+  --radius:14px;
+}
 *{box-sizing:border-box; margin:0; padding:0;}
-body{ font-family:'IBM Plex Sans',sans-serif; background:linear-gradient(180deg, #0A1730, #122a56); color:#EDF1FA; padding:20px; min-height:100vh; }
-.shell{ max-width:680px; margin:0 auto; }
-.section{ background:var(--panel); border:1px solid var(--panel-border); border-radius:14px; padding:20px; margin-bottom:16px; }
-.field{ margin-bottom:14px; }
-label{ display:block; font-size:11.5px; font-weight:700; color:#F2DFB0; text-transform:uppercase; margin-bottom:6px; }
-input, select{ width:100%; padding:12px; border:1px solid #D8DCE8; border-radius:8px; font-size:14px; background:#fff; color:var(--ink); }
-.btn-submit{ width:100%; padding:15px; background:linear-gradient(135deg, var(--gold), #B8863B); color:var(--ink); border:none; border-radius:10px; font-weight:700; font-size:15px; cursor:pointer; }
+body{
+  font-family:var(--font-body);
+  background:linear-gradient(180deg, var(--navy-1) 0%, var(--navy-2) 45%, var(--navy-3) 100%);
+  color:var(--text-onnavy); line-height:1.5; padding-bottom:60px; min-height:100vh;
+}
+header{ background:rgba(10,23,48,.85); backdrop-filter:blur(6px); border-bottom:1px solid var(--panel-border); position:sticky; top:0; z-index:50; }
+.header-inner{ max-width:680px; margin:0 auto; padding:14px 20px; }
+.logo-text{ font-family:var(--font-display); font-weight:800; font-size:16px; color:#fff; }
+main{ max-width:680px; margin:0 auto; padding:24px 20px 0; }
+
+.product-badge{ text-align:center; margin-bottom:20px; }
+.product-badge span{ display:inline-block; padding:8px 20px; border-radius:20px; background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); font-weight:700; font-size:14px; }
+
+.section{ background:var(--panel); border:1px solid var(--panel-border); border-radius:var(--radius); padding:22px 20px; margin-bottom:16px; box-shadow:0 8px 24px rgba(0,0,0,.2); }
+.section-title{ font-family:var(--font-display); font-size:15px; font-weight:700; margin-bottom:16px; color:#fff; }
+
+.field{ margin-bottom:16px; }
+.field:last-child{ margin-bottom:0; }
+.field label{ display:block; font-size:11.5px; font-weight:700; color:var(--gold-light); text-transform:uppercase; letter-spacing:.04em; margin-bottom:7px; }
+.field label .req{ color:#E4776B; margin-left:2px; }
+.field input, .field select{ width:100%; padding:12px 13px; border:1.5px solid var(--input-border); border-radius:9px; font-size:14.5px; color:var(--ink); background:var(--input-bg); }
+.field input:focus, .field select:focus{ outline:none; border-color:var(--gold); }
+.field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media (max-width:480px){ .field-row{ grid-template-columns:1fr; } }
+.select-wrap{ position:relative; }
+.select-wrap select{ appearance:none; -webkit-appearance:none; cursor:pointer; width:100%; padding:12px 13px; border:1.5px solid var(--input-border); border-radius:9px; font-size:14.5px; color:var(--ink); background:var(--input-bg); }
+
+.toggle-row{ display:flex; gap:8px; flex-wrap:wrap; }
+.toggle-btn{ padding:10px 16px; border:1.5px solid var(--panel-border); border-radius:20px; background:rgba(255,255,255,.04); font-size:13px; font-weight:700; color:var(--text-onnavy-muted); cursor:pointer; }
+.toggle-btn.active{ border-color:var(--gold); background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); }
+
+.upload-box{ border:1.5px dashed var(--panel-border); border-radius:10px; padding:16px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative; margin-bottom:10px; background:rgba(255,255,255,.02); }
+.upload-box.filled{ border-style:solid; border-color:var(--forest); background:rgba(63,190,134,.08); }
+.upload-icon{ width:36px; height:36px; border-radius:8px; background:rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:15px; }
+.upload-box.filled .upload-icon{ background:var(--forest); color:#fff; }
+.upload-text{ flex:1; min-width:0; }
+.upload-title{ font-size:13px; font-weight:700; color:#fff; }
+.upload-sub{ font-size:11.5px; color:var(--text-onnavy-muted); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.upload-box input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+
+.btn-submit{ width:100%; padding:16px; background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; }
+.btn-submit:disabled{ background:#4a5578; color:#9aa5c4; cursor:not-allowed; }
+.trust-note{ text-align:center; font-size:11.5px; color:var(--text-onnavy-muted); margin-top:10px; }
+.hidden{ display:none !important; }
+.loading{ text-align:center; padding:60px 20px; color:var(--text-onnavy-muted); font-size:14px; }
+.results-intro{ text-align:center; padding:8px 0 20px; }
+.results-intro h1{ font-family:var(--font-display); font-size:22px; font-weight:800; margin-bottom:8px; color:#fff; }
+.results-intro p{ font-size:13.5px; color:var(--text-onnavy-muted); max-width:480px; margin:0 auto; }
+.btn-new-application{ width:100%; padding:15px; margin-top:18px; background:transparent; color:var(--gold-light); border:1.5px solid var(--panel-border); border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; }
 </style>
 </head>
 <body>
-<div class="shell">
-  <div style="text-align:center; margin-bottom:20px;"><h2 id="title" style="font-family:'Poppins',sans-serif; color:#fff;">Loan Application</h2></div>
-  <div class="section">
-    <div class="field"><label>Full Name</label><input type="text" id="name" required></div>
-    <div class="field"><label>Mobile Number</label><input type="tel" id="mobile" required maxlength="10"></div>
-    <div class="field"><label>Email ID</label><input type="email" id="email" required></div>
-    <div class="field"><label>Loan Amount Required (₹)</label><input type="tel" id="loanAmount" required></div>
-    <button class="btn-submit" id="submitBtn">Submit Application</button>
-  </div>
-</div>
-<script>
-var params = new URLSearchParams(window.location.search);
-var product = params.get('product') || 'VL';
-document.getElementById('title').textContent = product === 'EL' ? 'Education Loan Application' : 'Vehicle Loan Application';
+<header><div class="header-inner"><span class="logo-text">VastMyWealth Digital</span></div></header>
 
-document.getElementById('submitBtn').addEventListener('click', async () => {
-  var payload = {
-    action: 'submitVlElApplication', product: product,
-    profile: { name: document.getElementById('name').value, mobile: document.getElementById('mobile').value, email: document.getElementById('email').value, loanAmount: document.getElementById('loanAmount').value }
-  };
-  var res = await fetch("https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec", { method: 'POST', body: JSON.stringify(payload) });
-  var data = await res.json();
-  if (data.success) { alert('Submitted successfully! Ref: ' + data.leadId); window.location.href = 'index.html'; }
-  else { alert(data.error || 'Submission failed.'); }
+<main>
+  <div class="product-badge"><span id="productBadgeText">🚗 Vehicle Loan</span></div>
+
+  <div id="formWrap">
+    <!-- VL-ONLY SECTIONS -->
+    <div class="section" id="vlBasicSection">
+      <div class="section-title">Vehicle &amp; Basic Details</div>
+      <div class="field">
+        <label>Vehicle Condition<span class="req">*</span></label>
+        <div class="toggle-row" id="vehicleConditionToggle">
+          <button type="button" class="toggle-btn" data-val="New">New</button>
+          <button type="button" class="toggle-btn" data-val="Used">Used</button>
+        </div>
+      </div>
+      <div class="field"><label>Full Name<span class="req">*</span></label><input type="text" id="vl_name"></div>
+      <div class="field-row">
+        <div class="field"><label>Mobile Number<span class="req">*</span></label><input type="text" id="vl_mobile" maxlength="10" inputmode="numeric"></div>
+        <div class="field"><label>Email ID<span class="req">*</span></label><input type="email" id="vl_email"></div>
+      </div>
+      <div class="field">
+        <label>Employment Type<span class="req">*</span></label>
+        <div class="toggle-row" id="vlEmpToggle">
+          <button type="button" class="toggle-btn" data-val="Salaried">Salaried</button>
+          <button type="button" class="toggle-btn" data-val="Self-Employed">Self-Employed</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Monthly Income (₹)<span class="req">*</span></label><input type="text" id="vl_income" inputmode="numeric"></div>
+        <div class="field"><label>Existing EMI (₹/month)</label><input type="text" id="vl_emi" placeholder="0 if none" inputmode="numeric"></div>
+      </div>
+      <div class="field"><label>Loan Amount Required (₹)<span class="req">*</span></label><input type="text" id="vl_loanAmount" inputmode="numeric"></div>
+      <div class="field">
+        <label>Approximate CIBIL Score<span class="req">*</span></label>
+        <div class="select-wrap"><select id="vl_cibil">
+          <option value="">Select</option><option value="Above 750">750+</option><option value="700-749">700–749</option>
+          <option value="650-699">650–699</option><option value="Below 650">Below 650</option>
+        </select></div>
+      </div>
+      <div class="field"><label>Bounces (last 6 months)<span class="req">*</span></label>
+        <div class="select-wrap"><select id="vl_bounces"><option value="">Select</option><option value="No">No</option><option value="1-2">1–2</option></select></div>
+      </div>
+    </div>
+
+    <!-- EL-ONLY SECTIONS -->
+    <div class="section hidden" id="elStudentSection">
+      <div class="section-title">Student &amp; Course Details</div>
+      <div class="field"><label>Student Full Name<span class="req">*</span></label><input type="text" id="el_studentName"></div>
+      <div class="field-row">
+        <div class="field"><label>Student Mobile Number<span class="req">*</span></label><input type="text" id="el_studentMobile" maxlength="10" inputmode="numeric"></div>
+        <div class="field"><label>Student Email ID<span class="req">*</span></label><input type="email" id="el_studentEmail"></div>
+      </div>
+      <div class="field"><label>Course Name<span class="req">*</span></label><input type="text" id="el_courseName"></div>
+      <div class="field-row">
+        <div class="field"><label>University / Institution<span class="req">*</span></label><input type="text" id="el_universityName"></div>
+        <div class="field"><label>Course Duration</label><input type="text" id="el_courseDuration" placeholder="e.g. 2 Years"></div>
+      </div>
+      <div class="field">
+        <label>Admission Status</label>
+        <div class="select-wrap"><select id="el_admissionStatus">
+          <option value="">Select</option><option value="Admission Confirmed">Admission Confirmed</option>
+          <option value="Awaiting Confirmation">Awaiting Confirmation</option>
+        </select></div>
+      </div>
+      <div class="field"><label>Loan Amount Required (₹)<span class="req">*</span></label><input type="text" id="el_loanAmount" inputmode="numeric"></div>
+    </div>
+
+    <div class="section hidden" id="elCoApplicantSection">
+      <div class="section-title">Co-Applicant Details</div>
+      <div class="field"><label>Co-Applicant Full Name<span class="req">*</span></label><input type="text" id="el_coName"></div>
+      <div class="field">
+        <label>Co-Applicant Employment Type<span class="req">*</span></label>
+        <div class="toggle-row" id="elEmpToggle">
+          <button type="button" class="toggle-btn" data-val="Salaried">Salaried</button>
+          <button type="button" class="toggle-btn" data-val="Self-Employed">Self-Employed</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Co-Applicant Monthly Income (₹)<span class="req">*</span></label><input type="text" id="el_coIncome" inputmode="numeric"></div>
+        <div class="field"><label>Co-Applicant Existing EMI (₹)</label><input type="text" id="el_coEmi" placeholder="0 if none" inputmode="numeric"></div>
+      </div>
+      <div class="field">
+        <label>Co-Applicant CIBIL Score<span class="req">*</span></label>
+        <div class="select-wrap"><select id="el_coCibil">
+          <option value="">Select</option><option value="Above 750">750+</option><option value="700-749">700–749</option>
+          <option value="650-699">650–699</option><option value="Below 650">Below 650</option>
+        </select></div>
+      </div>
+      <div class="field"><label>Co-Applicant Bounces (last 6 months)<span class="req">*</span></label>
+        <div class="select-wrap"><select id="el_coBounces"><option value="">Select</option><option value="No">No</option><option value="1-2">1–2</option></select></div>
+      </div>
+    </div>
+
+    <!-- DOCUMENTS CONTAINER -->
+    <div class="section">
+      <div class="section-title">Documents</div>
+      <div id="docContainer"></div>
+    </div>
+
+    <div style="padding-top:8px;">
+      <button class="btn-submit" id="submitBtn">Submit Application</button>
+      <div class="trust-note">🔒 Your details and documents are confidential and reviewed only by our team.</div>
+    </div>
+  </div>
+
+  <div class="loading" id="loadingState" style="display:none;">Submitting your application…</div>
+
+  <div class="hidden" id="docWrap">
+    <div class="results-intro"><h1>Upload Your Documents</h1><p>Almost done — upload these to complete your application.</p></div>
+    <div class="section"><div id="docContainer2"></div>
+      <div style="padding-top:8px;">
+        <button class="btn-submit" id="docSubmitBtn">Submit Documents</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hidden" id="doneWrap">
+    <div class="results-intro"><h1>✅ Application Received</h1><p>Thank you! Our team will review your application and get in touch with you shortly.</p></div>
+    <button class="btn-new-application" onclick="window.location.reload()">Close</button>
+  </div>
+</main>
+
+<script>
+var BACKEND_URL = "https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec";
+var params = new URLSearchParams(window.location.search);
+var product = params.get('product') === 'EL' ? 'EL' : 'VL'; 
+var partnerCode = params.get('ref') || '';
+
+var state = { vehicleCondition:null, employmentType:null, coEmploymentType:null, uploadedFiles:{}, leadId:null };
+
+document.getElementById('productBadgeText').textContent = product === 'EL' ? '🎓 Education Loan' : '🚗 Vehicle Loan';
+document.getElementById('vlBasicSection').classList.toggle('hidden', product !== 'VL');
+document.getElementById('elStudentSection').classList.toggle('hidden', product !== 'EL');
+document.getElementById('elCoApplicantSection').classList.toggle('hidden', product !== 'EL');
+
+function wireSimpleToggle(container, onSelect){
+  if (!container) return;
+  container.querySelectorAll('.toggle-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      container.querySelectorAll('.toggle-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      onSelect(btn.dataset.val);
+    });
+  });
+}
+wireSimpleToggle(document.getElementById('vehicleConditionToggle'), function(val){ state.vehicleCondition = val; renderDocuments(); });
+wireSimpleToggle(document.getElementById('vlEmpToggle'), function(val){ state.employmentType = val; renderDocuments(); });
+wireSimpleToggle(document.getElementById('elEmpToggle'), function(val){ state.coEmploymentType = val; renderDocuments(); });
+
+function uploadBoxHtml(key, title, sub, accept, multiple){
+  return '<div class="upload-box" id="box_'+key+'">' +
+    '<div class="upload-icon">📄</div>' +
+    '<div class="upload-text"><div class="upload-title">'+title+'</div><div class="upload-sub">'+sub+'</div></div>' +
+    '<input type="file" accept="'+accept+'" '+(multiple?'multiple':'')+' data-key="'+key+'">' +
+  '</div>';
+}
+
+function renderDocuments(){
+  var c = document.getElementById('docContainer');
+  var html = '';
+  if (product === 'VL') {
+    html += uploadBoxHtml('pan','PAN Card','JPG, PNG or PDF','image/*,.pdf',false);
+    html += uploadBoxHtml('aadhar','Aadhaar Card','JPG, PNG or PDF','image/*,.pdf',false);
+    html += uploadBoxHtml('selfie','Selfie / Photo','Clear face photo','image/*',false);
+    html += uploadBoxHtml('bankStatement','Bank Statement — last 6 months','Single PDF','application/pdf',false);
+    html += '<div class="field"><label>Bank Statement PDF Password (if any)</label><input type="password" id="docStmtPassword" placeholder="Leave blank if not password-protected"></div>';
+    if (state.vehicleCondition === 'New') {
+      html += uploadBoxHtml('vehicleQuotation','Vehicle Quotation / Proforma Invoice','JPG, PNG or PDF','image/*,.pdf',false);
+    } else if (state.vehicleCondition === 'Used') {
+      html += uploadBoxHtml('vehicleRc','Vehicle RC (Registration Certificate)','JPG, PNG or PDF','image/*,.pdf',false);
+    }
+  } else {
+    html += uploadBoxHtml('studentPan','Student PAN / ID Proof','JPG, PNG or PDF','image/*,.pdf',false);
+    html += uploadBoxHtml('studentAadhar','Student Aadhaar Card','JPG, PNG or PDF','image/*,.pdf',false);
+    html += uploadBoxHtml('admissionLetter','Admission Letter','JPG, PNG or PDF','image/*,.pdf',false);
+    html += uploadBoxHtml('feeStructure','Fee Structure','JPG, PNG or PDF','image/*,.pdf',false);
+    html += uploadBoxHtml('coPan','Co-Applicant PAN Card','JPG, PNG or PDF','image/*,.pdf',false);
+    html += uploadBoxHtml('coAadhar','Co-Applicant Aadhaar Card','JPG, PNG or PDF','image/*,.pdf',false);
+    html += uploadBoxHtml('coBankStatement','Co-Applicant Bank Statement — last 6 months','Single PDF','application/pdf',false);
+  }
+  c.innerHTML = html;
+  wireUploadBoxes();
+}
+
+function wireUploadBoxes(){
+  document.querySelectorAll('.upload-box input[type=file]').forEach(function(input){
+    input.addEventListener('change', function(){
+      var key = this.dataset.key;
+      var box = document.getElementById('box_'+key);
+      if (!this.files || !this.files.length) return;
+      var file = this.files[0];
+      box.classList.add('filled');
+      box.querySelector('.upload-sub').textContent = file.name;
+      box.querySelector('.upload-icon').textContent = '✓';
+      state.uploadedFiles[key] = file;
+    });
+  });
+}
+renderDocuments();
+
+function fileToBase64(file){
+  return new Promise(function(resolve, reject){
+    var reader = new FileReader();
+    reader.onload = function(){ resolve(reader.result.split(',')[1]); };
+    reader.onerror = function(){ reject(new Error('Could not read file: ' + file.name)); };
+    reader.readAsDataURL(file);
+  });
+}
+
+document.getElementById('submitBtn').addEventListener('click', function(){
+  var profile = {};
+  if (product === 'VL') {
+    var required = ['vl_name','vl_mobile','vl_email','vl_income','vl_loanAmount','vl_cibil','vl_bounces'];
+    if (!state.vehicleCondition) { alert('Please select vehicle condition.'); return; }
+    if (!state.employmentType) { alert('Please select employment type.'); return; }
+    var missing = required.filter(function(id){ var el = document.getElementById(id); return el && !el.value.trim(); });
+    if (missing.length) { alert('Please complete all required fields.'); return; }
+
+    profile = {
+      name: document.getElementById('vl_name').value,
+      mobile: document.getElementById('vl_mobile').value,
+      email: document.getElementById('vl_email').value,
+      vehicleCondition: state.vehicleCondition,
+      employmentType: state.employmentType,
+      monthlyIncome: document.getElementById('vl_income').value.replace(/[^0-9.]/g,''),
+      existingEmi: (document.getElementById('vl_emi').value || '0').replace(/[^0-9.]/g,''),
+      loanAmount: document.getElementById('vl_loanAmount').value,
+      cibilBracket: document.getElementById('vl_cibil').value,
+      bounces: document.getElementById('vl_bounces').value,
+      partnerCode: partnerCode
+    };
+  } else {
+    var requiredEl = ['el_studentName','el_studentMobile','el_studentEmail','el_courseName','el_universityName','el_loanAmount','el_coName','el_coIncome','el_coCibil','el_coBounces'];
+    if (!state.coEmploymentType) { alert('Please select co-applicant employment type.'); return; }
+    var missingEl = requiredEl.filter(function(id){ var el = document.getElementById(id); return el && !el.value.trim(); });
+    if (missingEl.length) { alert('Please complete all required fields.'); return; }
+
+    profile = {
+      name: document.getElementById('el_studentName').value,
+      mobile: document.getElementById('el_studentMobile').value,
+      email: document.getElementById('el_studentEmail').value,
+      courseName: document.getElementById('el_courseName').value,
+      universityName: document.getElementById('el_universityName').value,
+      courseDuration: document.getElementById('el_courseDuration').value,
+      admissionStatus: document.getElementById('el_admissionStatus').value,
+      loanAmount: document.getElementById('el_loanAmount').value,
+      coApplicantName: document.getElementById('el_coName').value,
+      coApplicantEmploymentType: state.coEmploymentType,
+      coApplicantMonthlyIncome: document.getElementById('el_coIncome').value.replace(/[^0-9.]/g,''),
+      coApplicantExistingEmi: (document.getElementById('el_coEmi').value || '0').replace(/[^0-9.]/g,''),
+      coApplicantCibilBracket: document.getElementById('el_coCibil').value,
+      coApplicantBounces: document.getElementById('el_coBounces').value,
+      partnerCode: partnerCode
+    };
+  }
+
+  var btn = this;
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  document.getElementById('formWrap').classList.add('hidden');
+  document.getElementById('loadingState').style.display = 'block';
+
+  fetch(BACKEND_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action:'submitVlElApplication', product: product, profile: profile })
+  })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      document.getElementById('loadingState').style.display = 'none';
+      if (!data.success) {
+        alert('Error: ' + (data.error || 'Unknown error') + ' — please try again.');
+        btn.disabled = false; btn.textContent = 'Submit Application';
+        document.getElementById('formWrap').classList.remove('hidden');
+        return;
+      }
+      state.leadId = data.leadId;
+      goToDocumentUpload();
+    })
+    .catch(function(err){
+      document.getElementById('loadingState').textContent = 'Connection error: ' + err.message;
+      btn.disabled = false; btn.textContent = 'Submit Application';
+      document.getElementById('formWrap').classList.remove('hidden');
+    });
 });
+
+function goToDocumentUpload(){
+  document.getElementById('docWrap').classList.remove('hidden');
+  var c2 = document.getElementById('docContainer2');
+  c2.innerHTML = document.getElementById('docContainer').innerHTML;
+  wireUploadBoxesIn(c2);
+}
+
+function wireUploadBoxesIn(container){
+  container.querySelectorAll('.upload-box input[type=file]').forEach(function(input){
+    input.addEventListener('change', function(){
+      var key = this.dataset.key;
+      if (!this.files || !this.files.length) return;
+      state.uploadedFiles[key] = this.files[0];
+      this.closest('.upload-box').classList.add('filled');
+      this.closest('.upload-box').querySelector('.upload-sub').textContent = this.files[0].name;
+    });
+  });
+}
+
+document.getElementById('docSubmitBtn').addEventListener('click', async function(){
+  var missingDocs = Array.from(document.querySelectorAll('#docContainer2 .upload-box')).filter(function(box){
+    return !box.classList.contains('filled');
+  });
+  if (missingDocs.length) { alert('Please upload all required documents before submitting.'); return; }
+
+  var btn = this;
+  btn.disabled = true;
+  var keys = Object.keys(state.uploadedFiles);
+  var failedKeys = [];
+
+  for (var i = 0; i < keys.length; i++) {
+    btn.textContent = 'Uploading ' + (i+1) + ' of ' + keys.length + '…';
+    var file = state.uploadedFiles[keys[i]];
+    try {
+      var base64 = await fileToBase64(file);
+      var res = await fetch(BACKEND_URL, {
+        method:'POST',
+        body: JSON.stringify({
+          action:'vlElUploadSingleDocument', leadId: state.leadId, product: product,
+          fileKey: keys[i], file: { name:file.name, mimeType:file.type, base64: base64 }
+        })
+      });
+      var data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Upload failed');
+    } catch (err) {
+      failedKeys.push(keys[i]);
+    }
+  }
+
+  if (failedKeys.length > 0) {
+    btn.disabled = false;
+    btn.textContent = 'Retry Failed Uploads';
+    alert('These files could not be uploaded, please try again: ' + failedKeys.join(', '));
+    return;
+  }
+
+  btn.textContent = 'Finishing up…';
+  var pwEl = document.getElementById('docContainer2').querySelector('input[type=password]');
+  var stmtPassword = pwEl ? pwEl.value : '';
+
+  fetch(BACKEND_URL, {
+    method:'POST',
+    body: JSON.stringify({ action:'vlElFinalizeDocumentUpload', leadId: state.leadId, product: product, stmtPassword: stmtPassword })
+  }).then(function(){
+    document.getElementById('docWrap').classList.add('hidden');
+    document.getElementById('doneWrap').classList.remove('hidden');
+  }).catch(function(){
+    alert('Connection error while finishing up — please try again.');
+    btn.disabled = false; btn.textContent = 'Submit Documents';
+  });
+});
+
+(function initVlElEntry(){
+  var urlLeadId = params.get('leadId');
+  if (!urlLeadId) return;
+  document.getElementById('formWrap').classList.add('hidden');
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('loadingState').textContent = 'Resuming your application…';
+  
+  fetch(BACKEND_URL + '?action=resumeVlElApplication&leadId=' + encodeURIComponent(urlLeadId) + '&product=' + encodeURIComponent(product))
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      document.getElementById('loadingState').style.display = 'none';
+      if (data.success && data.found) {
+        state.leadId = data.leadId;
+        if (data.vehicleCondition) state.vehicleCondition = data.vehicleCondition;
+        renderDocuments();
+        if (String(data.documentStatus).toUpperCase() === 'SUBMITTED') {
+          document.getElementById('doneWrap').classList.remove('hidden');
+        } else {
+          goToDocumentUpload();
+        }
+      } else {
+        document.getElementById('formWrap').classList.remove('hidden');
+      }
+    })
+    .catch(function(){
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('formWrap').classList.remove('hidden');
+    });
+})();
 </script>
 </body>
 </html>
