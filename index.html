@@ -4,18 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VastMyWealth — Connecting Customers, DSAs & Bankers</title>
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#EFF5FF">
+<meta name="mobile-web-app-capable" content="yes"> <!-- Added to fix deprecation warning -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="apple-touch-icon" href="1000550390.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="apple-touch-icon" href="./1000550390.png">
+<link rel="stylesheet" href="./style.css">
 </head>
-<body>
-
 <div class="shell">
   <div class="brand-row">
     <img src="1000550390.png" alt="" class="brand-mark" onerror="this.style.display='none'">
@@ -119,26 +115,39 @@
   let deferredPrompt;
   const installBtn = document.getElementById('install-btn');
 
+  // 1. Service Worker Registration
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW registration failed:', err));
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Service worker registered successfully:', reg.scope))
+        .catch(err => console.error('Service worker registration failed. Ensure sw.js is in the root directory:', err));
     });
   }
 
+  // 2. Capture the install prompt event
   window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevents the browser's automatic mini-infobar
     deferredPrompt = e;
-    if (installBtn) installBtn.style.display = 'flex';
+    if (installBtn) {
+      installBtn.style.display = 'flex'; // Shows your custom install button
+    }
   });
 
+  // 3. Handle click on your custom install button
   if (installBtn) {
     installBtn.addEventListener('click', async () => {
       if (!deferredPrompt) return;
+      
+      // Trigger the browser's native installation dialog
       deferredPrompt.prompt();
+      
       const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response to install prompt: ${outcome}`);
+      
       if (outcome === 'accepted') {
         installBtn.style.display = 'none';
       }
+      
       deferredPrompt = null;
     });
   }
