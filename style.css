@@ -36,7 +36,6 @@ body {
   overflow: hidden;
 }
 
-/* ---------- Header / brand ---------- */
 .brand-row {
   display: flex;
   flex-direction: column;
@@ -83,7 +82,6 @@ body {
 .back-link:hover { color: var(--navy); }
 .back-link svg { width: 16px; height: 16px; }
 
-/* ---------- Hero text ---------- */
 .hero-text {
   text-align: center;
   padding: 10px 24px 22px;
@@ -107,7 +105,6 @@ h1 {
   max-width: 36ch;
 }
 
-/* ---------- Role cards ---------- */
 .stack {
   display: flex;
   flex-direction: column;
@@ -212,7 +209,6 @@ h1 {
 
 .role-btn svg { width: 15px; height: 15px; stroke: #fff; }
 
-/* ---------- Footer ---------- */
 .footer-wave {
   margin-top: auto;
   width: 100%;
