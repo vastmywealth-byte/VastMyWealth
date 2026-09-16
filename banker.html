@@ -321,7 +321,6 @@ function loadBankDropdown() {
   
   apiPost({ action: "getBankList" }).then(r => {
     if (r.status === "success" && r.banks && r.banks.length > 0) {
-      // Keep the default placeholder option, then append sheet options
       selectEl.innerHTML = '<option value="" disabled selected>Select your bank or NBFC...</option>';
       r.banks.forEach(bank => {
         var opt = document.createElement('option');
@@ -330,13 +329,15 @@ function loadBankDropdown() {
         selectEl.appendChild(opt);
       });
     } else {
-      showToast("Could not load bank list from sheet.", true);
+      console.warn("Bank list returned empty or error:", r.message);
     }
   }).catch(err => {
-    console.error("Bank list fetch error:", err);
+    console.error("Failed to load bank list:", err);
   });
 }
 
+// Call this immediately when the script loads
+loadBankDropdown();
 // Load dropdown options immediately on startup
 loadBankDropdown();
 function triggerSearch(input, box, list) {
