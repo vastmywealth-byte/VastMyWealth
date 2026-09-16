@@ -355,8 +355,6 @@ function triggerSearch(input, box, list) {
   }
 }
 
-wireBankAutosuggest("reqBank", "reqBankSuggest");
-loadBankListOnce();
 // Professional Email Validation (Block Personal Domains)
 const personalDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'rediffmail.com', 'icloud.com', 'aol.com', 'live.com'];
 const emailInput = document.getElementById('reqEmail');
@@ -426,7 +424,15 @@ document.getElementById("loginForm").addEventListener("submit", function(e){
       }
     });
 });
-
+document.getElementById("forgotPinForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  apiPost({ action:"forgotPin", mobileNumber: document.getElementById("fpMobile").value })
+    .then(r => {
+      var box = document.getElementById("fpResult");
+      box.className = "msg-box " + (r.status==="success" ? "success":"error");
+      box.textContent = r.message;
+    });
+});
 // Silent auto-login persistence on refresh
 (function attemptAutoLogin(){
   try {
