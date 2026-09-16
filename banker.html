@@ -143,12 +143,12 @@
       <form id="requestCodeForm">
         <div class="form-group"><label>Full Name</label><input type="text" id="reqName" required placeholder="Your name"></div>
         
-        <!-- Bank Name Input with Live Suggestions -->
-        <div class="form-group" style="position: relative;">
-          <label>Bank or NBFC Name</label>
-          <input type="text" id="reqBank" required placeholder="Start typing bank name..." autocomplete="off">
-          <div id="reqBankSuggest" class="suggest-list"></div>
-        </div>
+        <div class="form-group">
+  <label>Bank or NBFC Name</label>
+  <select id="reqBank" required style="width: 100%; padding: 12px 14px; border: 1px solid var(--navy-light); border-radius: 10px; font-size: 14px; background: var(--navy-mid); color: #fff;">
+    <option value="" disabled selected>Select your bank or NBFC...</option>
+  </select>
+</div>
 
         <div class="form-group">
           <label>Official Bank Email ID</label>
@@ -316,40 +316,29 @@ function showView(id){ document.querySelectorAll("#authScreen .view").forEach(v 
 function closeSheet(s, b){ document.getElementById(s).style.display="none"; document.getElementById(b).style.display="none"; }
 function openSheet(s, b){ document.getElementById(b).style.display="block"; document.getElementById(s).style.display="block"; }
 
-function loadBankListOnce(){
-  if (BANK_LIST_CACHE) return Promise.resolve(BANK_LIST_CACHE);
-  return apiPost({ action:"getBankList" }).then(r => { BANK_LIST_CACHE = (r.status === "success") ? r.banks : []; return BANK_LIST_CACHE; });
-}
-
-function wireBankAutosuggest(inputId, suggestId){
-  var input = document.getElementById(inputId), box = document.getElementById(suggestId);
+function loadBankDropdown() {
+  var selectEl = document.getElementById('reqBank');
   
-  input.addEventListener("focus", () => {
-    loadBankListOnce().then(banks => {
-      if (banks && banks.length > 0 && input.value.trim()) {
-        triggerSearch(input, box, banks);
-      }
-    });
-  });
-
-  input.addEventListener("input", () => {
-    loadBankListOnce().then(banks => {
-      triggerSearch(input, box, banks || BANK_LIST_CACHE);
-    });
-  });
-
-  box.addEventListener("mousedown", (e) => {
-    if (e.target && e.target.tagName === "DIV") { 
-      input.value = e.target.textContent; 
-      box.style.display = "none"; 
+  apiPost({ action: "getBankList" }).then(r => {
+    if (r.status === "success" && r.banks && r.banks.length > 0) {
+      // Keep the default placeholder option, then append sheet options
+      selectEl.innerHTML = '<option value="" disabled selected>Select your bank or NBFC...</option>';
+      r.banks.forEach(bank => {
+        var opt = document.createElement('option');
+        opt.value = bank;
+        opt.textContent = bank;
+        selectEl.appendChild(opt);
+      });
+    } else {
+      showToast("Could not load bank list from sheet.", true);
     }
-  });
-
-  input.addEventListener('blur', () => {
-    setTimeout(() => { box.style.display = 'none'; }, 200);
+  }).catch(err => {
+    console.error("Bank list fetch error:", err);
   });
 }
 
+// Load dropdown options immediately on startup
+loadBankDropdown();
 function triggerSearch(input, box, list) {
   var q = input.value.trim().toLowerCase();
   if (!q || !list) { 
