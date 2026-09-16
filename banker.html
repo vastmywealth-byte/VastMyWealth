@@ -143,13 +143,73 @@
         <div class="form-group"><label>Full Name</label><input type="text" id="reqName" required placeholder="Your name"></div>
         <div class="form-group"><label>Official Bank Email ID</label><input type="email" id="reqEmail" required placeholder="name@bankdomain.com"></div>
         <div class="form-group"><label>Mobile Number</label><input type="tel" id="reqMobile" required pattern="[0-9]{10}" placeholder="9876543210"></div>
-        <div class="form-group">
+        <div class="form-group" style="position: relative;">
   <label>Bank Name</label>
-  <input type="text" id="reqBank" required placeholder="Start typing your bank name..." list="bank-list" autocomplete="off">
-  <datalist id="bank-list">
-    <!-- Populated dynamically from Google Sheet Column A -->
-  </datalist>
+  <input type="text" id="reqBank" required placeholder="Start typing your bank or NBFC name..." autocomplete="off">
+  <!-- Dynamic suggestion dropdown container -->
+  <div id="reqBankSuggest" style="position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #D8DCE8; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 100; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></div>
 </div>
+
+<script>
+  var BACKEND_URL = "https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec";
+  
+  let liveBankList = [];
+  const input = document.getElementById('reqBank');
+  const suggestBox = document.getElementById('reqBankSuggest');
+
+  // 1. Fetch the complete list from Google Sheet on page load
+  window.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const res = await fetch(BACKEND_URL + '?action=getBankList');
+      const data = await res.json();
+      if (data.success && data.banks && data.banks.length > 0) {
+        liveBankList = data.banks;
+        console.log("Loaded " + liveBankList.length + " banks/NBFCs from Sheet1.");
+      }
+    } catch (e) {
+      console.error('Error loading bank list from Google Sheet:', e);
+    }
+  });
+
+  // 2. Handle typing and filter dynamically
+  input.addEventListener('input', function() {
+    const val = this.value.trim().toLowerCase();
+    suggestBox.innerHTML = '';
+    
+    if (!val || liveBankList.length === 0) {
+      suggestBox.style.display = 'none';
+      return;
+    }
+
+    const filtered = liveBankList.filter(bank => bank.toLowerCase().includes(val));
+
+    if (filtered.length > 0) {
+      suggestBox.style.display = 'block';
+      filtered.forEach(bank => {
+        const div = document.createElement('div');
+        div.textContent = bank;
+        div.style.padding = '10px 14px';
+        div.style.cursor = 'pointer';
+        div.style.borderBottom = '1px solid #f0f0f0';
+        div.style.fontSize = '14px';
+        div.style.color = '#0F1E3D';
+        
+        div.addEventListener('mousedown', (e) => {
+          e.preventDefault(); // Prevents blur before click registers
+          input.value = bank;
+          suggestBox.style.display = 'none';
+        });
+        suggestBox.appendChild(div);
+      });
+    } else {
+      suggestBox.style.display = 'none';
+    }
+  });
+
+  input.addEventListener('blur', () => {
+    setTimeout(() => { suggestBox.style.display = 'none'; }, 200);
+  });
+</script>
         <button type="submit" id="reqBtn" class="btn-primary">Send Request</button>
       </form>
       <div id="reqResult" class="msg-box"></div>
