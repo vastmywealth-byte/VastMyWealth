@@ -3,257 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Become a DSA / Partner — VastMyWealth</title>
+<title>Register as Partner — VastMyWealth</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#081228">
 <link rel="apple-touch-icon" href="1000550390.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --navy-950:#081228;
-  --navy-900:#0d1c3f;
-  --navy-800:#16233F;
-  --gold-500:#D4A24C;
-  --gold-300:#F3CE86;
-  --gold-glow: rgba(212,162,76,0.35);
-  --blue-400:#4E8FF0;
-  --ink-100:#EAF0FC;
-  --ink-300:#C4D0E8;
-  --ink-400:#93A3C4;
-  --danger:#F0665E;
-  --success:#5FD3A0;
-  --radius:16px;
-}
+:root{ --navy-950:#081228; --navy-900:#0d1c3f; --gold-500:#D4A24C; --gold-300:#F3CE86; --ink-100:#EAF0FC; --ink-300:#C4D0E8; --ink-400:#93A3C4; }
 *{box-sizing:border-box; margin:0; padding:0;}
-body{
-  background: radial-gradient(1200px 600px at 15% -10%, rgba(78,143,240,0.15), transparent 60%),
-              linear-gradient(180deg, var(--navy-950), var(--navy-900) 45%, var(--navy-950));
-  color:var(--ink-100);
-  font-family:'Inter', sans-serif;
-  min-height:100vh;
-  display:flex; flex-direction:column; align-items:center;
-  padding:32px 20px 60px;
-}
-h1,h2,h3,.display{ font-family:'Poppins', sans-serif; }
-a{ color:var(--gold-300); }
+body{ background:linear-gradient(180deg, var(--navy-950), var(--navy-900)); color:var(--ink-100); font-family:'Inter',sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:32px 20px; }
 .shell{ width:100%; max-width:480px; }
-.back-to-portal{ display:block; text-align:center; font-size:12px; color:var(--ink-400); text-decoration:none; margin-bottom:16px; }
-.back-to-portal:hover{ color:var(--ink-100); text-decoration:underline; }
 .brand{ display:flex; align-items:center; gap:12px; justify-content:center; margin-bottom:28px; }
 .brand img{ width:44px; height:44px; border-radius:50%; }
-.brand b{ font-family:'Poppins',sans-serif; font-weight:800; font-size:16px; display:block; }
-.brand em{ font-style:normal; color:var(--gold-300); font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; }
-
-.invite-banner{
-  background:rgba(212,162,76,0.1); border:1px solid var(--gold-glow); border-radius:12px;
-  padding:14px 16px; margin-bottom:20px; font-size:13px; color:var(--gold-300); text-align:center; display:none;
-}
-.invite-banner.show{ display:block; }
-
-.card{
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.09);
-  border-radius:20px;
-  padding:32px;
-}
-.card h2{ font-size:22px; font-weight:800; color:#fff; }
-.card p.sub{ color:var(--ink-400); font-size:14px; margin-top:8px; margin-bottom:24px; }
-
-label{ display:block; font-size:13px; font-weight:600; color:var(--ink-300); margin:16px 0 6px; }
-label:first-of-type{ margin-top:0; }
-input[type=text], input[type=email], input[type=tel], input[type=password], input[type=file]{
-  width:100%; padding:12px 14px; border-radius:10px;
-  border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.04);
-  color:#fff; font-size:14.5px; font-family:'Inter',sans-serif;
-}
-input:focus{ outline:none; border-color:var(--gold-500); box-shadow:0 0 0 3px rgba(212,162,76,0.15); }
-input[type=file]{ padding:10px; font-size:13px; color:var(--ink-300); }
-input.locked-field{ background:rgba(255,255,255,0.02); color:var(--ink-400); cursor:not-allowed; }
-.hint{ font-size:12px; color:var(--ink-400); margin-top:5px; }
-.consent-row{ display:flex; align-items:flex-start; gap:10px; margin-top:20px; }
-.consent-row input{ width:auto; margin-top:3px; }
-.consent-row label{ margin:0; font-size:13px; font-weight:400; color:var(--ink-300); }
-
-.btn{
-  width:100%; padding:14px; border-radius:12px; font-weight:700; font-size:15px;
-  border:none; cursor:pointer; margin-top:24px;
-  background:linear-gradient(135deg, var(--gold-300), var(--gold-500));
-  color:var(--navy-950); transition:opacity .2s ease;
-}
-.btn:hover{ opacity:0.92; }
-.btn:disabled{ opacity:0.5; cursor:not-allowed; }
-.footlink{ text-align:center; margin-top:20px; font-size:13.5px; color:var(--ink-400); }
-
-.msg{ padding:12px 14px; border-radius:10px; font-size:13.5px; margin-top:18px; display:none; }
-.msg.show{ display:block; }
-.msg.error{ background:rgba(240,102,94,0.1); border:1px solid rgba(240,102,94,0.35); color:#FFC5C1; }
-.msg.success{ background:rgba(95,211,160,0.1); border:1px solid rgba(95,211,160,0.35); color:#B7F0D8; }
-
-.spinner{ display:inline-block; width:14px; height:14px; border:2px solid rgba(0,0,0,0.2); border-top-color:var(--navy-950); border-radius:50%; animation:spin .7s linear infinite; vertical-align:-2px; margin-right:8px; }
-@keyframes spin{ to{ transform:rotate(360deg); } }
-.pin-mask{ -webkit-text-security: disc; text-security: disc; }
+.card{ background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:20px; padding:32px; }
+label{ display:block; font-size:13px; font-weight:600; color:var(--ink-300); margin:14px 0 6px; }
+input{ width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.04); color:#fff; font-size:14px; }
+.btn{ width:100%; padding:14px; border-radius:12px; font-weight:700; font-size:15px; border:none; cursor:pointer; margin-top:24px; background:linear-gradient(135deg, var(--gold-300), var(--gold-500)); color:var(--navy-950); }
+.msg{ padding:12px; border-radius:10px; font-size:13px; margin-top:14px; display:none; }
+.msg.success{ background:rgba(95,211,160,0.1); border:1px solid rgba(95,211,160,0.35); color:#B7F0D8; display:block; }
+.msg.error{ background:rgba(240,102,94,0.1); border:1px solid rgba(240,102,94,0.35); color:#FFC5C1; display:block; }
 </style>
 </head>
 <body>
-
 <div class="shell">
-  <a href="index.html" class="back-to-portal">← Back to portal</a>
-  <div class="brand"><img src="1000550390.png" alt="VastMyWealth"><div><b>VastMyWealth</b><em>DSA / Partner</em></div></div>
-
-  <div class="invite-banner" id="inviteBanner"></div>
-
+  <div class="brand"><img src="1000550390.png" alt=""><div><b>VastMyWealth</b><em style="font-style:normal; color:var(--gold-300); font-size:11px;">Partner Program</em></div></div>
   <div class="card">
-    <h2>Partner nahi, Owner baniye</h2>
-    <p class="sub">Takes about 2 minutes. Your referral link is ready as soon as you're registered.</p>
-
+    <h2>Register as Partner</h2>
     <form id="regForm">
-      <label for="name">Full name</label>
-      <input type="text" id="name" required placeholder="e.g. Rohit Sharma">
-
-      <label for="mobile">Mobile number</label>
-      <input type="tel" id="mobile" required placeholder="10-digit mobile number" maxlength="10" inputmode="numeric">
-
-      <label for="email">Email address</label>
-      <input type="email" id="email" required placeholder="you@example.com">
-
-      <label for="bankName">Bank name</label>
-      <input type="text" id="bankName" required placeholder="e.g. HDFC Bank">
-
-      <label for="accountNo">Account number</label>
-      <input type="text" id="accountNo" required placeholder="Account number" inputmode="numeric">
-
-      <label for="ifsc">IFSC code</label>
-      <input type="text" id="ifsc" required placeholder="e.g. HDFC0001234" style="text-transform:uppercase;">
-
-      <label for="cheque">Cancelled cheque (photo or PDF)</label>
-      <input type="file" id="cheque" required accept="image/*,application/pdf">
-      <div class="hint">Used to verify your payout account. Max 5MB.</div>
-
-      <label for="pin">Set a 4-digit login PIN</label>
-      <input type="tel" class="pin-mask" pattern="[0-9]*" id="pin" required maxlength="4" inputmode="numeric" placeholder="4-digit PIN">
-
-      <div class="consent-row">
-        <input type="checkbox" id="consent" required>
-       <label for="consent">I agree to the <a href="partner-terms.pdf" target="_blank">Terms &amp; Conditions</a> of the VastMyWealth Partner Program.</label>
-      </div>
-
-      <button type="submit" class="btn" id="submitBtn">Register as Partner</button>
+      <label>Full name</label><input type="text" id="name" required placeholder="Your name">
+      <label>Mobile number</label><input type="tel" id="mobile" required maxlength="10" placeholder="10-digit mobile">
+      <label>Email address</label><input type="email" id="email" required placeholder="Email">
+      <label>Bank name</label><input type="text" id="bankName" required placeholder="Bank name">
+      <label>Account number</label><input type="text" id="accountNo" required placeholder="Account number">
+      <label>IFSC code</label><input type="text" id="ifsc" required placeholder="IFSC">
+      <label>Cancelled Cheque</label><input type="file" id="cheque" required accept="image/*,application/pdf">
+      <label>4-digit PIN</label><input type="password" id="pin" required maxlength="4" placeholder="••••">
+      <button type="submit" class="btn" id="submitBtn">Register</button>
       <div class="msg" id="msgBox"></div>
     </form>
-
-    <div class="footlink">Already a partner? <a href="partner.html">Log in</a></div>
   </div>
 </div>
-
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
-
-/* ===== PREFILL FROM INVITE LINK (?name=&mobile=&email=&referredBy=) ===== */
-const inviteParams = new URLSearchParams(window.location.search);
-const invitedName = inviteParams.get('name') || '';
-const invitedMobile = inviteParams.get('mobile') || '';
-const invitedEmail = inviteParams.get('email') || '';
-const referredBy = inviteParams.get('referredBy') || '';
-
-function prefillAndLock(id, value){
-  if (!value) return;
-  const el = document.getElementById(id);
-  el.value = value;
-  el.readOnly = true;
-  el.classList.add('locked-field');
-}
-if (invitedName || invitedMobile || invitedEmail) {
-  prefillAndLock('name', invitedName);
-  prefillAndLock('mobile', invitedMobile);
-  prefillAndLock('email', invitedEmail);
-  const banner = document.getElementById('inviteBanner');
-  banner.textContent = "You've been invited to join as a VastMyWealth partner — just complete your bank details below.";
-  banner.classList.add('show');
-}
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(",")[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-function showMsg(text, type) {
-  const box = document.getElementById('msgBox');
-  box.textContent = text;
-  box.className = 'msg show ' + type;
-}
-
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec";
 document.getElementById('regForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const btn = document.getElementById('submitBtn');
-  const mobile = document.getElementById('mobile').value.trim();
-  const ifsc = document.getElementById('ifsc').value.trim().toUpperCase();
-  const pin = document.getElementById('pin').value.trim();
-  const chequeFile = document.getElementById('cheque').files[0];
-
-  if (!/^\d{10}$/.test(mobile)) { showMsg('Enter a valid 10-digit mobile number.', 'error'); return; }
-  if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) { showMsg('Enter a valid IFSC code (e.g. HDFC0001234).', 'error'); return; }
-  if (!/^\d{4}$/.test(pin)) { showMsg('PIN must be exactly 4 digits.', 'error'); return; }
-  if (!chequeFile) { showMsg('Please upload a cancelled cheque.', 'error'); return; }
-  if (chequeFile.size > 5 * 1024 * 1024) { showMsg('File is too large — max 5MB.', 'error'); return; }
-
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Registering…';
-
-  try {
-    const chequeBase64 = await fileToBase64(chequeFile);
-    const payload = {
-      action: "registerPartner",
-      name: document.getElementById('name').value.trim(),
-      mobile: mobile,
-      email: document.getElementById('email').value.trim(),
-      bankName: document.getElementById('bankName').value.trim(),
-      accountNo: document.getElementById('accountNo').value.trim(),
-      ifsc: ifsc,
-      pin: pin,
-      consentGiven: document.getElementById('consent').checked,
-      referredBy: referredBy,
-      cancelledCheque: { name: chequeFile.name, mimeType: chequeFile.type, base64: chequeBase64 }
+  var file = document.getElementById('cheque').files[0];
+  var reader = new FileReader();
+  reader.onload = async function(){
+    var payload = {
+      action: "registerPartner", name: document.getElementById('name').value, mobile: document.getElementById('mobile').value,
+      email: document.getElementById('email').value, bankName: document.getElementById('bankName').value,
+      accountNo: document.getElementById('accountNo').value, ifsc: document.getElementById('ifsc').value,
+      pin: document.getElementById('pin').value, consentGiven: true,
+      cancelledCheque: { name: file.name, mimeType: file.type, base64: reader.result.split(',')[1] }
     };
-
-    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-    const data = await res.json();
-
+    var res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+    var data = await res.json();
+    var box = document.getElementById('msgBox');
     if (data.success) {
-      showMsg('Registered! Your partner code is ' + data.partnerCode + '. Redirecting to login…', 'success');
-      setTimeout(() => { window.location.href = 'partner.html'; }, 2000);
+      box.textContent = 'Registered! Partner Code: ' + data.partnerCode; box.className = 'msg success';
+      setTimeout(() => window.location.href = 'partner.html', 2000);
     } else {
-      showMsg(data.error || 'Registration failed. Please try again.', 'error');
-      btn.disabled = false;
-      btn.textContent = 'Register as Partner';
+      box.textContent = data.error || 'Failed.'; box.className = 'msg error';
     }
-  } catch (err) {
-    // The request may have actually succeeded server-side even though the
-    // browser reports a network error — Apps Script keeps running after a
-    // slow response or dropped connection. Verify before alarming the user.
-    btn.innerHTML = '<span class="spinner"></span>Checking status…';
-    try {
-      const checkUrl = SCRIPT_URL + '?action=loginPartner&mobile=' + encodeURIComponent(mobile) + '&pin=' + encodeURIComponent(pin);
-      const checkRes = await fetch(checkUrl);
-      const checkData = await checkRes.json();
-      if (checkData.success) {
-        showMsg('Registered! Your partner code is ' + checkData.partnerCode + '. Redirecting to login…', 'success');
-        setTimeout(() => { window.location.href = 'partner.html'; }, 2000);
-        return;
-      }
-    } catch (verifyErr) { /* fall through to the error message below */ }
-
-    showMsg('Connection was slow or dropped. If you already received a confirmation email, your account was created — try logging in instead. Otherwise, please try again. (' + err.message + ')', 'error');
-    btn.disabled = false;
-    btn.textContent = 'Register as Partner';
-  }
+  };
+  reader.readAsDataURL(file);
 });
 </script>
-
 </body>
 </html>
