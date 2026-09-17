@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DSA / Partner Login — VastMyWealth</title>
+<title>Partner Portal — VastMyWealth</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#081228">
 <link rel="apple-touch-icon" href="1000550390.png">
@@ -12,53 +12,225 @@
 :root{ --navy-950:#081228; --navy-900:#0d1c3f; --gold-500:#D4A24C; --gold-300:#F3CE86; --ink-100:#EAF0FC; --ink-300:#C4D0E8; --ink-400:#93A3C4; }
 *{box-sizing:border-box; margin:0; padding:0;}
 body{ background:linear-gradient(180deg, var(--navy-950), var(--navy-900)); color:var(--ink-100); font-family:'Inter',sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:32px 20px; }
-.shell{ width:100%; max-width:480px; }
-.back-portal{ display:block; text-align:center; font-size:12px; color:var(--ink-400); text-decoration:none; margin-bottom:16px; }
-.brand{ display:flex; align-items:center; gap:12px; justify-content:center; margin-bottom:28px; }
-.brand img{ width:44px; height:44px; border-radius:50%; }
-.brand b{ font-family:'Poppins',sans-serif; font-weight:800; font-size:16px; display:block; }
-.card{ background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:20px; padding:32px; }
-.card h2{ font-size:22px; font-weight:800; color:#fff; }
-.card p.sub{ color:var(--ink-400); font-size:14px; margin-top:8px; margin-bottom:24px; }
+
+/* Common Layout Elements */
+.shell{ width:100%; max-width:760px; }
+.shell-narrow{ width:100%; max-width:480px; }
+.brand{ display:flex; align-items:center; gap:12px; }
+.brand img{ width:40px; height:40px; border-radius:50%; }
+.card{ background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:20px; padding:24px; margin-top:20px; }
+.card-wide{ padding:32px; }
 label{ display:block; font-size:13px; font-weight:600; color:var(--ink-300); margin:16px 0 6px; }
 input{ width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.04); color:#fff; font-size:14.5px; }
 .btn{ width:100%; padding:14px; border-radius:12px; font-weight:700; font-size:15px; border:none; cursor:pointer; margin-top:24px; background:linear-gradient(135deg, var(--gold-300), var(--gold-500)); color:var(--navy-950); }
+
+/* Dashboard Specific Styles */
+.topbar{ width:100%; max-width:760px; display:flex; justify-content:space-between; align-items:center; }
+.logout{ font-size:13px; color:var(--ink-400); border:1px solid rgba(255,255,255,0.15); padding:7px 14px; border-radius:999px; cursor:pointer; background:none; }
+.linkbox{ display:flex; gap:8px; margin-top:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:10px 12px; align-items:center; }
+.linkbox span{ flex:1; font-size:13px; color:var(--ink-300); overflow:hidden; text-overflow:ellipsis; }
+.linkbox button{ background:var(--gold-500); color:var(--navy-950); border:none; border-radius:8px; padding:7px 12px; font-weight:700; cursor:pointer; }
+table{ width:100%; border-collapse:collapse; margin-top:18px; font-size:13px; }
+th{ text-align:left; color:var(--ink-400); padding:10px 8px; border-bottom:1px solid rgba(255,255,255,0.12); }
+td{ padding:12px 8px; border-bottom:1px solid rgba(255,255,255,0.06); }
+
+/* Register / Login Specific Styles */
+.back-portal{ display:block; text-align:center; font-size:12px; color:var(--ink-400); text-decoration:none; margin-bottom:16px; }
+.brand-center{ justify-content:center; margin-bottom:28px; }
+.brand-center img{ width:44px; height:44px; }
+.card h2{ font-size:22px; font-weight:800; color:#fff; }
+.card p.sub{ color:var(--ink-400); font-size:14px; margin-top:8px; margin-bottom:24px; }
 .footlink{ text-align:center; margin-top:20px; font-size:13.5px; color:var(--ink-400); }
+.footlink a, .back-portal { cursor: pointer; }
 .msg{ padding:12px; border-radius:10px; font-size:13px; margin-top:14px; display:none; }
+.msg.success{ background:rgba(95,211,160,0.1); border:1px solid rgba(95,211,160,0.35); color:#B7F0D8; display:block; }
 .msg.error{ background:rgba(240,102,94,0.1); border:1px solid rgba(240,102,94,0.35); color:#FFC5C1; display:block; }
+
+/* View Control Container Display Logic */
+.view-section { display: none; width: 100%; justify-content: center; flex-direction: column; align-items: center; }
+.view-section.active { display: flex; }
 </style>
 </head>
 <body>
-<div class="shell">
-  <a href="index.html" class="back-portal">← Back to portal</a>
-  <div class="brand"><img src="1000550390.png" alt=""><div><b>VastMyWealth</b><em>DSA / Partner</em></div></div>
-  <div class="card">
-    <h2>DSA / Partner Login</h2>
-    <p class="sub">Log in to track referrals and commission updates.</p>
-    <form id="loginForm">
-      <label>Mobile number</label><input type="tel" id="mobile" required maxlength="10" inputmode="numeric" placeholder="10-digit mobile">
-      <label>4-digit PIN</label><input type="password" id="pin" required maxlength="4" inputmode="numeric" placeholder="••••">
-      <button type="submit" class="btn" id="submitBtn">Log In</button>
-      <div class="msg" id="msgBox"></div>
-    </form>
-    <div class="footlink">New Partner? <a href="partner-register.html">Register here</a></div>
+
+<!-- VIEW 1: LOGIN -->
+<div id="loginView" class="view-section active">
+  <div class="shell-narrow">
+    <a href="index.html" class="back-portal">← Back to portal</a>
+    <div class="brand brand-center"><img src="1000550390.png" alt=""><div><b>VastMyWealth</b><em style="font-style:normal; color:var(--gold-300); font-size:11px; display:block;">DSA / Partner</em></div></div>
+    <div class="card card-wide">
+      <h2>DSA / Partner Login</h2>
+      <p class="sub">Log in to track referrals and commission updates.</p>
+      <form id="loginForm">
+        <label>Mobile number</label><input type="tel" id="loginMobile" required maxlength="10" inputmode="numeric" placeholder="10-digit mobile">
+        <label>4-digit PIN</label><input type="password" id="loginPin" required maxlength="4" inputmode="numeric" placeholder="••••">
+        <button type="submit" class="btn" id="loginSubmitBtn">Log In</button>
+        <div class="msg" id="loginMsgBox"></div>
+      </form>
+      <div class="footlink">New Partner? <a id="gotoRegister">Register here</a></div>
+    </div>
   </div>
 </div>
+
+<!-- VIEW 2: REGISTER -->
+<div id="registerView" class="view-section">
+  <div class="shell-narrow">
+    <div class="brand brand-center"><img src="1000550390.png" alt=""><div><b>VastMyWealth</b><em style="font-style:normal; color:var(--gold-300); font-size:11px; display:block;">Partner Program</em></div></div>
+    <div class="card card-wide">
+      <h2>Register as Partner</h2>
+      <form id="regForm">
+        <label>Full name</label><input type="text" id="name" required placeholder="Your name">
+        <label>Mobile number</label><input type="tel" id="mobile" required maxlength="10" placeholder="10-digit mobile">
+        <label>Email address</label><input type="email" id="email" required placeholder="Email">
+        <label>Bank name</label><input type="text" id="bankName" required placeholder="Bank name">
+        <label>Account number</label><input type="text" id="accountNo" required placeholder="Account number">
+        <label>IFSC code</label><input type="text" id="ifsc" required placeholder="IFSC">
+        <label>Cancelled Cheque</label><input type="file" id="cheque" required accept="image/*,application/pdf">
+        <label>4-digit PIN</label><input type="password" id="pin" required maxlength="4" placeholder="••••">
+        <button type="submit" class="btn" id="submitBtn">Register</button>
+        <div class="msg" id="msgBox"></div>
+      </form>
+      <div class="footlink">Already a partner? <a id="gotoLogin">Log in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW 3: DASHBOARD -->
+<div id="dashboardView" class="view-section">
+  <div class="topbar">
+    <div class="brand"><img src="1000550390.png" alt=""><div><b>VastMyWealth</b><em style="font-style:normal; color:var(--gold-300); font-size:11px;">DSA Partner</em></div></div>
+    <button class="logout" id="logoutBtn">Log out</button>
+  </div>
+  <div class="shell">
+    <div class="card">
+      <h2 id="welcomeMsg" style="font-family:'Poppins',sans-serif;">Welcome</h2>
+      <p style="color:var(--ink-400); font-size:13.5px; margin-top:4px;" id="codeMsg"></p>
+      <label style="display:block; font-size:12.5px; font-weight:600; color:var(--ink-300); margin:20px 0 6px;">Your referral link</label>
+      <div class="linkbox"><span id="refLink"></span><button id="copyBtn">Copy</button></div>
+      <div style="margin-top:28px;">
+        <h3 style="font-family:'Poppins',sans-serif; font-size:16px; margin-bottom:10px;">Your Applications</h3>
+        <div id="leadsArea"><div style="color:var(--ink-400);">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec";
+
+// View Navigation Helpers (replaces page reloads/redirections between independent files)
+function switchView(viewId) {
+  document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+  document.getElementById(viewId).classList.add('active');
+  if(viewId === 'dashboardView') {
+    initDashboard();
+  }
+}
+
+document.getElementById('gotoRegister').addEventListener('click', (e) => {
+  e.preventDefault();
+  switchView('registerView');
+});
+
+document.getElementById('gotoLogin').addEventListener('click', (e) => {
+  e.preventDefault();
+  switchView('loginView');
+});
+
+// Check initial state on load
+function checkInitialAuthState() {
+  const partnerCode = localStorage.getItem('vmw_partner_code');
+  if (partnerCode) {
+    switchView('dashboardView');
+  } else {
+    switchView('loginView');
+  }
+}
+
+// 1. Login Logic
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  var mobile = document.getElementById('mobile').value, pin = document.getElementById('pin').value;
+  var mobile = document.getElementById('loginMobile').value, pin = document.getElementById('loginPin').value;
   var res = await fetch(SCRIPT_URL + '?action=loginPartner&mobile=' + encodeURIComponent(mobile) + '&pin=' + encodeURIComponent(pin));
   var data = await res.json();
   if (data.success) {
     localStorage.setItem('vmw_partner_code', data.partnerCode);
     localStorage.setItem('vmw_partner_name', data.name);
-    window.location.href = 'partner-dashboard.html';
+    switchView('dashboardView');
   } else {
-    var box = document.getElementById('msgBox'); box.textContent = data.error || 'Login failed.'; box.className = 'msg error';
+    var box = document.getElementById('loginMsgBox'); 
+    box.textContent = data.error || 'Login failed.'; 
+    box.className = 'msg error';
   }
 });
+
+// 2. Register Logic
+document.getElementById('regForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  var file = document.getElementById('cheque').files[0];
+  var reader = new FileReader();
+  reader.onload = async function(){
+    var payload = {
+      action: "registerPartner", name: document.getElementById('name').value, mobile: document.getElementById('mobile').value,
+      email: document.getElementById('email').value, bankName: document.getElementById('bankName').value,
+      accountNo: document.getElementById('accountNo').value, ifsc: document.getElementById('ifsc').value,
+      pin: document.getElementById('pin').value, consentGiven: true,
+      cancelledCheque: { name: file.name, mimeType: file.type, base64: reader.result.split(',')[1] }
+    };
+    var res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+    var data = await res.json();
+    var box = document.getElementById('msgBox');
+    if (data.success) {
+      box.textContent = 'Registered! Partner Code: ' + data.partnerCode; box.className = 'msg success';
+      setTimeout(() => switchView('loginView'), 2000);
+    } else {
+      box.textContent = data.error || 'Failed.'; box.className = 'msg error';
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+// 3. Dashboard Logic
+function initDashboard() {
+  const partnerCode = localStorage.getItem('vmw_partner_code');
+  const partnerName = localStorage.getItem('vmw_partner_name');
+  if (!partnerCode) {
+    switchView('loginView');
+    return;
+  }
+
+  document.getElementById('welcomeMsg').textContent = 'Welcome, ' + (partnerName || 'Partner');
+  document.getElementById('codeMsg').textContent = 'Partner Code: ' + partnerCode;
+  const refLink = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'apply.html?ref=' + partnerCode;
+  document.getElementById('refLink').textContent = refLink;
+
+  document.getElementById('copyBtn').onclick = () => {
+    navigator.clipboard.writeText(refLink).then(() => { alert('Copied!'); });
+  };
+  
+  document.getElementById('logoutBtn').onclick = () => {
+    localStorage.clear(); 
+    switchView('loginView');
+  };
+
+  loadLeads(partnerCode);
+}
+
+async function loadLeads(partnerCode) {
+  var res = await fetch(SCRIPT_URL + '?action=getPartnerLeads&partnerCode=' + encodeURIComponent(partnerCode));
+  var data = await res.json();
+  var area = document.getElementById('leadsArea');
+  if (!data.success || !data.leads || data.leads.length === 0) {
+    area.innerHTML = '<div style="color:var(--ink-400); padding:20px 0;">No applications yet. Share your link to start.</div>';
+    return;
+  }
+  area.innerHTML = '<table><thead><tr><th>Date</th><th>Customer</th><th>Product</th><th>Status</th></tr></thead><tbody>' +
+    data.leads.map(l => '<tr><td>' + new Date(l.timestamp).toLocaleDateString() + '</td><td>' + (l.customerName||'—') + '</td><td>' + l.product + '</td><td>' + l.status + '</td></tr>').join('') +
+    '</tbody></table>';
+}
+
+// Run auth check on initial load
+checkInitialAuthState();
 </script>
 </body>
 </html>
