@@ -116,9 +116,10 @@ td{ padding:12px 8px; border-bottom:1px solid rgba(255,255,255,0.06); }
 </div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec";
+// Updated with your active Apps Script Web App URL
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
 
-// View Navigation Helpers (replaces page reloads/redirections between independent files)
+// View Navigation Helpers
 function switchView(viewId) {
   document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
   document.getElementById(viewId).classList.add('active');
