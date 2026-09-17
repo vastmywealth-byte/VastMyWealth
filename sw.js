@@ -6,8 +6,6 @@ const urlsToCache = [
   './banker.html',
   './apply.html',
   './partner.html',
-  './partner-register.html',
-  './partner-dashboard.html',
   './style.css',
   './manifest.json',
   './1000550390.png'
