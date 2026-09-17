@@ -279,7 +279,38 @@ function buildWhatsAppLink(){
 }
 
 var HOME_PAGE = "index.html";
-var BACKEND_URL = "https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec";
+var BACKEND_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
+  // Auto-resume application if leadId is present in URL (Magic Link)
+window.addEventListener('DOMContentLoaded', async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const leadId = urlParams.get('leadId');
+  const product = urlParams.get('product');
+
+  if (leadId) {
+    try {
+      const res = await fetch(SCRIPT_URL + '?action=resumeApplication&leadId=' + encodeURIComponent(leadId) + '&product=' + encodeURIComponent(product));
+      const data = await res.json();
+
+      if (data.success && data.found) {
+        window.activeLeadId = data.leadId;
+        window.activeProduct = data.product;
+        localStorage.setItem('vmw_active_lead_id', data.leadId);
+        localStorage.setItem('vmw_active_product', data.product);
+
+        if(document.getElementById('name')) document.getElementById('name').value = data.name || '';
+        if(document.getElementById('mobile')) document.getElementById('mobile').value = data.mobile || '';
+        if(document.getElementById('email')) document.getElementById('email').value = data.email || '';
+
+        // If your form has a function to skip to the document upload screen, call it here:
+        // e.g., showUploadScreen();
+      } else if (data.allocated) {
+        alert(data.error);
+      }
+    } catch (err) {
+      console.error("Failed to resume application:", err);
+    }
+  }
+});
 var state = { loanType:"PL", employmentType:null, companyType:null, house:null, uploadedFiles:{} };
 var partnerCode = new URLSearchParams(window.location.search).get('ref') || '';
 
