@@ -228,7 +228,7 @@ async function loadLeads(partnerCode) {
   }
 
   // 1. Base URL for customer application/upload resumption
-  var portalBaseUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'portal-unified-application.html';
+  var portalBaseUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'apply.html';
 
   area.innerHTML = '<table><thead><tr><th>Date</th><th>Customer</th><th>Product</th><th>Status</th><th>Upload Link</th></tr></thead><tbody>' +
     data.leads.map(l => {
