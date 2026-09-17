@@ -150,6 +150,13 @@
   .sheet{position:fixed; left:0; right:0; bottom:0; background:var(--navy); border-radius:20px 20px 0 0; max-height:85vh; overflow-y:auto; z-index:21; padding:18px 16px 28px; box-shadow:0 -6px 0 var(--gold);}
   .sheet-handle{width:36px; height:4px; background:var(--navy-light); border-radius:3px; margin:0 auto 14px;}
   .sheet h3{margin:0 0 14px; color:#fff; font-size:15px;}
+  <div class="sheet-backdrop" id="docViewerBackdrop"></div>
+<div class="sheet" id="docViewerSheet" style="display:none;">
+  <div class="sheet-handle"></div>
+  <button class="close-x" onclick="closeSheet('docViewerSheet','docViewerBackdrop')">✕</button>
+  <h3>Documents</h3>
+  <div id="docViewerBody" style="background:var(--card); border-radius:12px; padding:16px;"></div>
+</div>
   .close-x{position:absolute; top:14px; right:14px; background:none; font-size:18px; color:#EAF0FF; padding:4px;}
 
   .toast{position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--gold); color:var(--navy); padding:10px 18px; border-radius:24px; font-size:12.5px; font-weight:700; z-index:30; display:none; max-width:90%; text-align:center;}
@@ -376,11 +383,21 @@
 
 <script>
 var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec";
+  var LOAN_PORTAL_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec"; // the Loan Portal project's own Web App URL, not the Banker CRM's
 var SESSION = { bankerId: null, bankerEmail: null, mobile: null, pin: null, refCode: null };
 var BANK_LIST = [];
 var AUTH_STORAGE_KEY = "vmw_banker_auth";
 var PORTAL_APPLICATION_URL = "https://loan.vastmywealth.com/portal-unified-application.html";
-
+function openDocLinks(leadId, loanType){
+  showToast("Loading documents...");
+  fetch(LOAN_PORTAL_SCRIPT_URL + "?action=getLeadDocumentLinks&leadId=" + encodeURIComponent(leadId) + "&product=" + encodeURIComponent(loanType))
+    .then(r => r.json()).then(r => {
+      if (!r.success || !r.files || !r.files.length) { showToast("No documents uploaded yet", true); return; }
+      var html = r.files.map(f => '<a href="' + f.url + '" target="_blank" style="display:block; padding:8px 0; color:var(--gold-light); text-decoration:underline;">📄 ' + escapeHtml(f.name) + '</a>').join("");
+      document.getElementById("docViewerBody").innerHTML = html;
+      openSheet("docViewerSheet", "docViewerBackdrop");
+    }).catch(() => showToast("Could not load documents", true));
+}
 function apiPost(payload) {
   return fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
     .then(r => r.text()).then(raw => {
@@ -683,10 +700,17 @@ function loadBusinessLogs(){
   apiPost({ action:"getLogs", bankerId:SESSION.bankerId }).then(r => {
     var logs = r.logs || [];
     if (!logs.length) { el.innerHTML = '<div class="empty-state">No business logged yet.</div>'; return; }
-    el.innerHTML = logs.map(l => '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(l.customerName) + '</div><div class="business-meta">' + escapeHtml(l.meta) + '</div></div><span class="status-chip ' + (l.fileStatus==="Disbursed"?"disbursed":"submitted") + '">' + escapeHtml(l.fileStatus) + '</span></div></div>').join("");
+    el.innerHTML = logs.map(l => {
+      var actions = "";
+      if (l.magicLink) {
+        actions = '<div class="row-actions"><a class="btn-link-out" href="' + escapeHtml(l.magicLink) + '" target="_blank">🔗 Upload Docs Link</a></div>';
+      } else if (l.leadId && l.loanType) {
+        actions = '<div class="row-actions"><button class="btn-link-out" onclick="openDocLinks(\'' + escapeHtml(l.leadId) + '\',\'' + escapeHtml(l.loanType) + '\')">📁 Docs</button></div>';
+      }
+      return '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(l.customerName) + '</div><div class="business-meta">' + escapeHtml(l.meta) + '</div></div><span class="status-chip ' + (l.fileStatus==="Disbursed"?"disbursed":l.fileStatus==="Pending"?"submitted":"submitted") + '">' + escapeHtml(l.fileStatus) + '</span></div>' + actions + '</div>';
+    }).join("");
   }).catch(() => { el.innerHTML = '<div class="empty-state">Could not load — check your connection.</div>'; });
 }
-
 // #9,#14 — leads list shows Name / Loan Type / Amount / Pincode;
 // claimed leads get Disburse + Reject action buttons
 function loadLeads(){
@@ -734,7 +758,7 @@ function loadMyClaims(){
         actions = '<div class="row-actions">'
           + '<button class="btn-disburse" data-claim="' + escapeHtml(c.claimId) + '">✅ Disbursed</button>'
           + '<button class="btn-reject" data-claim="' + escapeHtml(c.claimId) + '">❌ Reject</button>'
-          + (c.docFolder ? ('<a class="btn-link-out" href="' + escapeHtml(c.docFolder) + '" target="_blank">📁 Docs</a>') : '')
+          + '<button class="btn-link-out" onclick="openDocLinks(\'' + escapeHtml(c.leadId) + '\',\'' + escapeHtml(c.loanType) + '\')">📁 Docs</button>'
           + '</div>';
       } else if (c.claimStatus === "Disbursed") {
         actions = '<div class="business-meta">Disbursed amount: ₹' + escapeHtml(c.disbursedAmount || "—") + '</div>';
