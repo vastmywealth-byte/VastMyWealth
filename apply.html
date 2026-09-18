@@ -526,6 +526,11 @@ function renderTrackingDashboard(data){
   document.getElementById('returningCustomerSection').classList.add('hidden');
   document.getElementById('formWrap').classList.add('hidden');
   var container = document.getElementById('lenderCards'); container.innerHTML = '';
+    if (data.hasMatching === false) {
+    container.innerHTML = '<div class="retry-note">Your ' +
+      (data.product === 'VL' ? 'Vehicle' : 'Education') +
+      ' Loan application is with our team. We will contact you shortly.</div>';
+  }
   if (data.processingBank) {
     var note = document.createElement('div'); note.className = 'retry-note';
     note.textContent = '🏦 Your application is currently being processed by a banker at ' + data.processingBank + '.';
