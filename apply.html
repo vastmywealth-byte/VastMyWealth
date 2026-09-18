@@ -469,8 +469,8 @@ for (var i=0;i<required.length;i++){
     document.getElementById('formWrap').classList.remove('hidden');
     document.getElementById('loadingState').style.display='none'; return; }
 }
-    fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action:'submitProfileOnly', product: state.loanType, profile: profile, forceNew: !!state.forceNew }) })
-    .then(r => r.json()).then(data => {
+      fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(mobile))
+    .then(data => {
       document.getElementById('loadingState').style.display = 'none';
       if (!data.success) {
         if (data.error === 'duplicate_customer') {
@@ -512,8 +512,8 @@ document.getElementById('trackBtn').addEventListener('click', function(){
   if (!mobile) { alert('Enter your mobile number'); return; }
   var btn = this, original = btn.textContent;
   btn.disabled = true; btn.textContent = 'Checking...';
-  fetch(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(mobile))
-    .then(r => r.json()).then(data => {
+    fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(mobile))
+    .then(data => {
       btn.disabled = false; btn.textContent = original;
       if (!data.success || !data.found) { alert('No application found for this number. You can start a new one below.'); return; }
       state.profile = { name: data.name, email: data.email, mobile: mobile };
