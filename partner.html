@@ -271,11 +271,12 @@ async function loadLeads(partnerCode) {
       area.innerHTML = '<div style="color:var(--ink-400); padding:20px 0;">No applications yet. Share your link to start.</div>';
       return;
     }
-    var portalBaseUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'apply.html';
+        var PORTAL_PAGE = "https://loan.vastmywealth.com/portal-unified-application.html";
+    var VL_EL_PAGE  = "https://loan.vastmywealth.com/vl-el-application.html";
     area.innerHTML = '<table><thead><tr><th>Date</th><th>Customer</th><th>Product</th><th>Status</th><th>Bank</th><th>Action</th></tr></thead><tbody>' +
       data.leads.map(l => {
-        var uploadLink = PORTAL_PAGE + '?leadId=' + encodeURIComponent(l.leadId)
-  + '&product=' + encodeURIComponent(l.product) + '&ref=' + encodeURIComponent(partnerCode);
+        var basePage = (l.product === 'VL' || l.product === 'EL') ? VL_EL_PAGE : PORTAL_PAGE;
+        var uploadLink = l.leadId ? (basePage + '?leadId=' + encodeURIComponent(l.leadId) + '&product=' + encodeURIComponent(l.product)) : '#'; + '&ref=' + encodeURIComponent(partnerCode);
         var actionHtml;
         if (l.documentStatus === 'Pending' && l.leadId) {
           actionHtml = '<a href="' + uploadLink + '" target="_blank" style="color:var(--gold-300); font-weight:600; text-decoration:underline; font-size:12px;">Upload Docs</a>';
