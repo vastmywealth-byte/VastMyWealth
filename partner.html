@@ -108,10 +108,33 @@ td{ padding:12px 8px; border-bottom:1px solid rgba(255,255,255,0.06); }
       <label style="display:block; font-size:12.5px; font-weight:600; color:var(--ink-300); margin:20px 0 6px;">Your referral link</label>
       <div class="linkbox"><span id="refLink"></span><button id="copyBtn">Copy</button></div>
       <div style="margin-top:28px;">
-        <h3 style="font-family:'Poppins',sans-serif; font-size:16px; margin-bottom:10px;">Your Applications</h3>
-        <div id="leadsArea"><div style="color:var(--ink-400);">Loading…</div></div>
-      </div>
-    </div>
+        <div class="card">
+  <h3 style="font-family:'Poppins',sans-serif;font-size:16px;">Partner Referral Link</h3>
+  <p style="color:var(--ink-400);font-size:13px;margin-top:4px;">
+    Start a new customer application — automatically attributed to your code.
+  </p>
+  <a id="newAppBtn" class="btn" style="display:block;text-align:center;text-decoration:none;margin-top:12px;">
+    ＋ New Application
+  </a>
+  <button class="btn" id="shareLinkBtn2" style="background:none;border:1.5px solid var(--gold-500);color:var(--gold-300);margin-top:8px;width:100%;">
+    🔗 Copy My Application Link
+  </button>
+</div>
+
+<div class="card" style="margin-top:16px;">
+  <h3 style="font-family:'Poppins',sans-serif;font-size:16px;">Business Tool</h3>
+  <p style="color:var(--ink-400);font-size:13px;margin-top:4px;">
+    Run your own campaigns and keep those leads exclusive to you.
+  </p>
+  <div style="margin-top:12px;padding:16px;border:1px dashed rgba(255,255,255,.15);border-radius:10px;color:var(--ink-400);font-size:13px;text-align:center;">
+    🚧 Coming soon.
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px;">
+  <h3 style="font-family:'Poppins',sans-serif; font-size:16px; margin-bottom:10px;">Your Applications</h3>
+  <div id="leadsArea">
+    <div style="color:var(--ink-400);">Loading…</div>
   </div>
 </div>
 <script>
@@ -185,14 +208,18 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
 function initDashboard() {
   const partnerCode = localStorage.getItem('vmw_partner_code');
   const partnerName = localStorage.getItem('vmw_partner_name');
+  const PORTAL_PAGE = window.location.origin
+  + window.location.pathname.replace(/[^/]*$/, '') + 'portal-unified-application.html';
   if (!partnerCode) { switchView('loginView'); return; }
 
   document.getElementById('welcomeMsg').textContent = 'Welcome, ' + (partnerName || 'Partner');
   document.getElementById('codeMsg').textContent = 'Partner Code: ' + partnerCode;
-  const refLink = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'apply.html?ref=' + partnerCode;
+  const refLink = PORTAL_PAGE + '?ref=' + partnerCode;
   document.getElementById('refLink').textContent = refLink;
   document.getElementById('copyBtn').onclick = () => { navigator.clipboard.writeText(refLink).then(() => alert('Copied!')); };
   document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); switchView('loginView'); };
+  document.getElementById('newAppBtn').href = PORTAL_PAGE + '?ref=' + partnerCode + '&new=1';
+document.getElementById('shareLinkBtn2').onclick = document.getElementById('copyBtn').onclick;
 
   loadLeads(partnerCode);
   loadAnnouncement();
@@ -212,7 +239,8 @@ async function loadLeads(partnerCode) {
     var portalBaseUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'apply.html';
     area.innerHTML = '<table><thead><tr><th>Date</th><th>Customer</th><th>Product</th><th>Status</th><th>Bank</th><th>Action</th></tr></thead><tbody>' +
       data.leads.map(l => {
-        var uploadLink = l.leadId ? (portalBaseUrl + '?leadId=' + l.leadId + '&product=' + encodeURIComponent(l.product)) : '#';
+        var uploadLink = PORTAL_PAGE + '?leadId=' + encodeURIComponent(l.leadId)
+  + '&product=' + encodeURIComponent(l.product) + '&ref=' + encodeURIComponent(partnerCode);
         var actionHtml;
         if (l.documentStatus === 'Pending' && l.leadId) {
           actionHtml = '<a href="' + uploadLink + '" target="_blank" style="color:var(--gold-300); font-weight:600; text-decoration:underline; font-size:12px;">Upload Docs</a>';
