@@ -114,63 +114,49 @@ td{ padding:12px 8px; border-bottom:1px solid rgba(255,255,255,0.06); }
     </div>
   </div>
 </div>
-
 <script>
-// Updated with your active Apps Script Web App URL
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
 
-// View Navigation Helpers
 function switchView(viewId) {
   document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
   document.getElementById(viewId).classList.add('active');
-  if(viewId === 'dashboardView') {
-    initDashboard();
-  }
+  if (viewId === 'dashboardView') initDashboard();
 }
+document.getElementById('gotoRegister').addEventListener('click', e => { e.preventDefault(); switchView('registerView'); });
+document.getElementById('gotoLogin').addEventListener('click', e => { e.preventDefault(); switchView('loginView'); });
 
-document.getElementById('gotoRegister').addEventListener('click', (e) => {
-  e.preventDefault();
-  switchView('registerView');
-});
-
-document.getElementById('gotoLogin').addEventListener('click', (e) => {
-  e.preventDefault();
-  switchView('loginView');
-});
-
-// Check initial state on load
 function checkInitialAuthState() {
-  const partnerCode = localStorage.getItem('vmw_partner_code');
-  if (partnerCode) {
-    switchView('dashboardView');
-  } else {
-    switchView('loginView');
-  }
+  switchView(localStorage.getItem('vmw_partner_code') ? 'dashboardView' : 'loginView');
 }
 
-// 1. Login Logic
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  var btn = document.getElementById('loginSubmitBtn'), original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Logging in...';
   var mobile = document.getElementById('loginMobile').value, pin = document.getElementById('loginPin').value;
-  var res = await fetch(SCRIPT_URL + '?action=loginPartner&mobile=' + encodeURIComponent(mobile) + '&pin=' + encodeURIComponent(pin));
-  var data = await res.json();
-  if (data.success) {
-    localStorage.setItem('vmw_partner_code', data.partnerCode);
-    localStorage.setItem('vmw_partner_name', data.name);
-    switchView('dashboardView');
-  } else {
-    var box = document.getElementById('loginMsgBox'); 
-    box.textContent = data.error || 'Login failed.'; 
-    box.className = 'msg error';
+  try {
+    var res = await fetch(SCRIPT_URL + '?action=loginPartner&mobile=' + encodeURIComponent(mobile) + '&pin=' + encodeURIComponent(pin));
+    var data = await res.json();
+    if (data.success) {
+      localStorage.setItem('vmw_partner_code', data.partnerCode);
+      localStorage.setItem('vmw_partner_name', data.name);
+      switchView('dashboardView');
+    } else {
+      var box = document.getElementById('loginMsgBox'); box.textContent = data.error || 'Login failed.'; box.className = 'msg error';
+    }
+  } catch (err) {
+    var box2 = document.getElementById('loginMsgBox'); box2.textContent = 'Connection error.'; box2.className = 'msg error';
   }
+  btn.disabled = false; btn.textContent = original;
 });
 
-// 2. Register Logic
 document.getElementById('regForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  var btn = document.getElementById('submitBtn'), original = btn.textContent;
   var file = document.getElementById('cheque').files[0];
   var reader = new FileReader();
-  reader.onload = async function(){
+  reader.onload = async function () {
+    btn.disabled = true; btn.textContent = 'Registering...';
     var payload = {
       action: "registerPartner", name: document.getElementById('name').value, mobile: document.getElementById('mobile').value,
       email: document.getElementById('email').value, bankName: document.getElementById('bankName').value,
@@ -178,75 +164,99 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
       pin: document.getElementById('pin').value, consentGiven: true,
       cancelledCheque: { name: file.name, mimeType: file.type, base64: reader.result.split(',')[1] }
     };
-    var res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-    var data = await res.json();
-    var box = document.getElementById('msgBox');
-    if (data.success) {
-      box.textContent = 'Registered! Partner Code: ' + data.partnerCode; box.className = 'msg success';
-      setTimeout(() => switchView('loginView'), 2000);
-    } else {
-      box.textContent = data.error || 'Failed.'; box.className = 'msg error';
+    try {
+      var res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+      var data = await res.json();
+      var box = document.getElementById('msgBox');
+      if (data.success) {
+        box.textContent = 'Registered! Partner Code: ' + data.partnerCode; box.className = 'msg success';
+        setTimeout(() => switchView('loginView'), 2000);
+      } else {
+        box.textContent = data.error || 'Failed.'; box.className = 'msg error';
+      }
+    } catch (err) {
+      var box2 = document.getElementById('msgBox'); box2.textContent = 'Connection error.'; box2.className = 'msg error';
     }
+    btn.disabled = false; btn.textContent = original;
   };
   reader.readAsDataURL(file);
 });
 
-// 3. Dashboard Logic
 function initDashboard() {
   const partnerCode = localStorage.getItem('vmw_partner_code');
   const partnerName = localStorage.getItem('vmw_partner_name');
-  if (!partnerCode) {
-    switchView('loginView');
-    return;
-  }
+  if (!partnerCode) { switchView('loginView'); return; }
 
   document.getElementById('welcomeMsg').textContent = 'Welcome, ' + (partnerName || 'Partner');
   document.getElementById('codeMsg').textContent = 'Partner Code: ' + partnerCode;
   const refLink = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'apply.html?ref=' + partnerCode;
   document.getElementById('refLink').textContent = refLink;
-
-  document.getElementById('copyBtn').onclick = () => {
-    navigator.clipboard.writeText(refLink).then(() => { alert('Copied!'); });
-  };
-  
-  document.getElementById('logoutBtn').onclick = () => {
-    localStorage.clear(); 
-    switchView('loginView');
-  };
+  document.getElementById('copyBtn').onclick = () => { navigator.clipboard.writeText(refLink).then(() => alert('Copied!')); };
+  document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); switchView('loginView'); };
 
   loadLeads(partnerCode);
+  loadAnnouncement();
 }
 
+// #5 — speed: show a skeleton immediately, don't block on the fetch
 async function loadLeads(partnerCode) {
-  var res = await fetch(SCRIPT_URL + '?action=getPartnerLeads&partnerCode=' + encodeURIComponent(partnerCode));
-  var data = await res.json();
   var area = document.getElementById('leadsArea');
-  
-  if (!data.success || !data.leads || data.leads.length === 0) {
-    area.innerHTML = '<div style="color:var(--ink-400); padding:20px 0;">No applications yet. Share your link to start.</div>';
-    return;
+  area.innerHTML = '<div style="color:var(--ink-400);">Loading your applications...</div>';
+  try {
+    var res = await fetch(SCRIPT_URL + '?action=getPartnerLeads&partnerCode=' + encodeURIComponent(partnerCode));
+    var data = await res.json();
+    if (!data.success || !data.leads || data.leads.length === 0) {
+      area.innerHTML = '<div style="color:var(--ink-400); padding:20px 0;">No applications yet. Share your link to start.</div>';
+      return;
+    }
+    var portalBaseUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'apply.html';
+    area.innerHTML = '<table><thead><tr><th>Date</th><th>Customer</th><th>Product</th><th>Status</th><th>Bank</th><th>Action</th></tr></thead><tbody>' +
+      data.leads.map(l => {
+        var uploadLink = l.leadId ? (portalBaseUrl + '?leadId=' + l.leadId + '&product=' + encodeURIComponent(l.product)) : '#';
+        var actionHtml;
+        if (l.documentStatus === 'Pending' && l.leadId) {
+          actionHtml = '<a href="' + uploadLink + '" target="_blank" style="color:var(--gold-300); font-weight:600; text-decoration:underline; font-size:12px;">Upload Docs</a>';
+        } else if (l.leadId) {
+          actionHtml = '<button onclick="openDocLinks(\'' + l.leadId + '\',\'' + l.product + '\')" style="background:var(--navy-900); color:var(--gold-300); border:1px solid rgba(255,255,255,.15); border-radius:6px; padding:6px 10px; font-size:12px; cursor:pointer;">📁 Docs</button>';
+        } else { actionHtml = '—'; }
+        return '<tr><td>' + new Date(l.timestamp).toLocaleDateString() + '</td><td>' + (l.customerName || '—') + '</td><td>' + l.product + '</td>' +
+          '<td>' + l.status + '</td><td>' + (l.processingBank || '—') + '</td><td>' + actionHtml + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  } catch (err) {
+    area.innerHTML = '<div style="color:#FFC5C1;">Could not load applications — check your connection.</div>';
   }
-
-  // 1. Base URL for customer application/upload resumption
-  var portalBaseUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'apply.html';
-
-  area.innerHTML = '<table><thead><tr><th>Date</th><th>Customer</th><th>Product</th><th>Status</th><th>Upload Link</th></tr></thead><tbody>' +
-    data.leads.map(l => {
-      // Build magic link for document upload using the leadId and product
-      var uploadLink = l.leadId ? (portalBaseUrl + '?leadId=' + l.leadId + '&product=' + encodeURIComponent(l.product)) : '#';
-      var actionHtml = l.leadId ? '<a href="' + uploadLink + '" target="_blank" style="color:var(--gold-300); font-weight:600; text-decoration:underline; font-size:12px;">Upload Docs</a>' : '—';
-
-      return '<tr>' +
-        '<td>' + new Date(l.timestamp).toLocaleDateString() + '</td>' +
-        '<td>' + (l.customerName || '—') + '</td>' +
-        '<td>' + l.product + '</td>' +
-        '<td>' + l.status + '</td>' +
-        '<td>' + actionHtml + '</td>' +
-      '</tr>';
-    }).join('') +
-    '</tbody></table>';
 }
-// Run auth check on initial load
+
+// #2 — safe per-file Docs viewer, same endpoint the Banker CRM uses
+function openDocLinks(leadId, product) {
+  fetch(SCRIPT_URL + '?action=getLeadDocumentLinks&leadId=' + encodeURIComponent(leadId) + '&product=' + encodeURIComponent(product))
+    .then(r => r.json()).then(r => {
+      if (!r.success || !r.files || !r.files.length) { alert('No documents uploaded yet.'); return; }
+      var html = r.files.map(f => '<a href="' + f.url + '" target="_blank" style="display:block;padding:8px 0;color:var(--gold-300);text-decoration:underline;">📄 ' + f.name + '</a>').join("");
+      var overlay = document.createElement('div');
+      overlay.style = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;display:flex;align-items:center;justify-content:center;";
+      overlay.innerHTML = '<div style="background:var(--navy-900);border:1px solid var(--gold-500);border-radius:14px;padding:20px;max-width:340px;width:90%;"><h3 style="margin-bottom:12px;">Documents</h3>' + html + '<button onclick="this.closest(\'div\').parentElement.remove()" style="margin-top:14px;width:100%;padding:10px;border:none;border-radius:8px;background:var(--gold-500);color:var(--navy-950);font-weight:700;">Close</button></div>';
+      overlay.onclick = function (e) { if (e.target === overlay) overlay.remove(); };
+      document.body.appendChild(overlay);
+    }).catch(() => alert('Could not load documents.'));
+}
+
+// #9 — announcement popup
+function loadAnnouncement() {
+  fetch(SCRIPT_URL + '?action=getAnnouncement&audience=Partner').then(r => r.json()).then(r => {
+    if (!r.success || !r.announcement) return;
+    var a = r.announcement, overlay = document.createElement('div');
+    overlay.style = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:95;display:flex;align-items:center;justify-content:center;";
+    overlay.innerHTML = '<div style="background:var(--navy-900);border:1px solid var(--gold-500);border-radius:14px;padding:20px;max-width:340px;width:90%;text-align:center;">' +
+      (a.imageUrl ? '<img src="' + a.imageUrl + '" style="max-width:100%;border-radius:10px;margin-bottom:12px;">' : '') +
+      '<h3 style="margin-bottom:8px;">' + (a.title || '') + '</h3><p style="color:var(--ink-400);font-size:13px;margin-bottom:16px;">' + (a.body || '') + '</p>' +
+      (a.buttonText && a.buttonUrl ? '<a href="' + a.buttonUrl + '" target="_blank" style="text-decoration:none;"><button class="btn">' + a.buttonText + '</button></a>' : '') +
+      '<button onclick="this.closest(\'div\').parentElement.remove()" style="margin-top:10px;background:none;border:none;color:var(--ink-400);font-size:12px;cursor:pointer;">Dismiss</button></div>';
+    overlay.onclick = function (e) { if (e.target === overlay) overlay.remove(); };
+    document.body.appendChild(overlay);
+  }).catch(() => {});
+}
+
 checkInitialAuthState();
 </script>
 </body>
