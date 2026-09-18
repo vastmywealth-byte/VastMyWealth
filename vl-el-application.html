@@ -50,13 +50,18 @@ main{ max-width:680px; margin:0 auto; padding:24px 20px 0; }
 .toggle-btn{ padding:10px 16px; border:1.5px solid var(--panel-border); border-radius:20px; background:rgba(255,255,255,.04); font-size:13px; font-weight:700; color:var(--text-onnavy-muted); cursor:pointer; }
 .toggle-btn.active{ border-color:var(--gold); background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); }
 
-.upload-box{ border:1.5px dashed var(--panel-border); border-radius:10px; padding:16px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative; margin-bottom:10px; background:rgba(255,255,255,.02); }
-.upload-box.filled{ border-style:solid; border-color:var(--forest); background:rgba(63,190,134,.08); }
-.upload-icon{ width:36px; height:36px; border-radius:8px; background:rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:15px; }
+/* ---------- Upload button — redesigned (#1) ---------- */
+.upload-box{ border:1.5px dashed var(--panel-border); border-radius:12px; padding:16px; display:flex; align-items:center; gap:14px; cursor:pointer; position:relative; margin-bottom:10px; background:rgba(255,255,255,.02); transition:border-color .15s, background .15s; }
+.upload-box:hover{ border-color:var(--gold); background:rgba(217,169,78,.06); }
+.upload-box.filled{ border-style:solid; border-color:var(--forest); background:rgba(63,190,134,.1); }
+.upload-icon{ width:42px; height:42px; border-radius:10px; background:rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:18px; transition:background .15s, transform .15s; }
+.upload-box:hover .upload-icon{ transform:scale(1.05); }
 .upload-box.filled .upload-icon{ background:var(--forest); color:#fff; }
 .upload-text{ flex:1; min-width:0; }
-.upload-title{ font-size:13px; font-weight:700; color:#fff; }
-.upload-sub{ font-size:11.5px; color:var(--text-onnavy-muted); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.upload-title{ font-size:13.5px; font-weight:700; color:#fff; }
+.upload-sub{ font-size:11.5px; color:var(--text-onnavy-muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.upload-cta{ font-size:11px; font-weight:700; color:var(--gold-light); flex-shrink:0; padding:6px 10px; border:1px solid var(--panel-border); border-radius:20px; }
+.upload-box.filled .upload-cta{ display:none; }
 .upload-box input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer; }
 
 .btn-submit{ width:100%; padding:16px; background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; }
@@ -171,6 +176,16 @@ main{ max-width:680px; margin:0 auto; padding:24px 20px 0; }
       <div id="docContainer"></div>
     </div>
 
+    <!-- CONSENT (#7) -->
+    <div class="section">
+      <div class="field" style="display:flex; gap:10px; align-items:flex-start; margin-bottom:0;">
+        <input type="checkbox" id="f_consent" style="width:auto; margin-top:3px;">
+        <label for="f_consent" style="text-transform:none; font-weight:500; font-size:12.5px; color:var(--text-onnavy-muted);">
+          I authorise VastWealth Advisors Pvt Ltd to share my details with partner banks, NBFCs, and their representatives/agencies for processing this loan application.<span class="req">*</span>
+        </label>
+      </div>
+    </div>
+
     <div style="padding-top:8px;">
       <button class="btn-submit" id="submitBtn">Submit Application</button>
       <div class="trust-note">🔒 Your details and documents are confidential and reviewed only by our team.</div>
@@ -225,6 +240,7 @@ function uploadBoxHtml(key, title, sub, accept, multiple){
   return '<div class="upload-box" id="box_'+key+'">' +
     '<div class="upload-icon">📄</div>' +
     '<div class="upload-text"><div class="upload-title">'+title+'</div><div class="upload-sub">'+sub+'</div></div>' +
+    '<span class="upload-cta">Tap to upload</span>' +
     '<input type="file" accept="'+accept+'" '+(multiple?'multiple':'')+' data-key="'+key+'">' +
   '</div>';
 }
@@ -282,6 +298,8 @@ function fileToBase64(file){
 }
 
 document.getElementById('submitBtn').addEventListener('click', function(){
+  if (!document.getElementById('f_consent').checked) { alert('Please provide consent to proceed.'); return; }
+
   var profile = {};
   if (product === 'VL') {
     var required = ['vl_name','vl_mobile','vl_email','vl_income','vl_loanAmount','vl_cibil','vl_bounces'];
@@ -301,7 +319,8 @@ document.getElementById('submitBtn').addEventListener('click', function(){
       loanAmount: document.getElementById('vl_loanAmount').value,
       cibilBracket: document.getElementById('vl_cibil').value,
       bounces: document.getElementById('vl_bounces').value,
-      partnerCode: partnerCode
+      partnerCode: partnerCode,
+      consentGiven: true
     };
   } else {
     var requiredEl = ['el_studentName','el_studentMobile','el_studentEmail','el_courseName','el_universityName','el_loanAmount','el_coName','el_coIncome','el_coCibil','el_coBounces'];
@@ -324,7 +343,8 @@ document.getElementById('submitBtn').addEventListener('click', function(){
       coApplicantExistingEmi: (document.getElementById('el_coEmi').value || '0').replace(/[^0-9.]/g,''),
       coApplicantCibilBracket: document.getElementById('el_coCibil').value,
       coApplicantBounces: document.getElementById('el_coBounces').value,
-      partnerCode: partnerCode
+      partnerCode: partnerCode,
+      consentGiven: true
     };
   }
 
@@ -341,7 +361,7 @@ document.getElementById('submitBtn').addEventListener('click', function(){
     .then(function(data){
       document.getElementById('loadingState').style.display = 'none';
       if (!data.success) {
-        alert('Error: ' + (data.error || 'Unknown error') + ' — please try again.');
+        alert('Error: ' + (data.message || data.error || 'Unknown error') + ' — please try again.');
         btn.disabled = false; btn.textContent = 'Submit Application';
         document.getElementById('formWrap').classList.remove('hidden');
         return;
@@ -457,6 +477,20 @@ document.getElementById('docSubmitBtn').addEventListener('click', async function
       document.getElementById('formWrap').classList.remove('hidden');
     });
 })();
+
+// #9 — announcement popup
+fetch(BACKEND_URL + '?action=getAnnouncement&audience=Customer').then(function(r){ return r.json(); }).then(function(r){
+  if (!r.success || !r.announcement) return;
+  var a = r.announcement, overlay = document.createElement('div');
+  overlay.style = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:95;display:flex;align-items:center;justify-content:center;";
+  overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--panel-border);border-radius:14px;padding:20px;max-width:340px;width:90%;text-align:center;">' +
+    (a.imageUrl ? '<img src="'+a.imageUrl+'" style="max-width:100%;border-radius:10px;margin-bottom:12px;">' : '') +
+    '<h3 style="color:#fff;margin-bottom:8px;">'+(a.title||'')+'</h3><p style="color:var(--text-onnavy-muted);font-size:13px;margin-bottom:16px;">'+(a.body||'')+'</p>' +
+    (a.buttonText && a.buttonUrl ? '<a href="'+a.buttonUrl+'" target="_blank" style="text-decoration:none;"><button class="btn-submit" style="margin-top:0;">'+a.buttonText+'</button></a>' : '') +
+    '<button onclick="this.closest(\'div\').parentElement.remove()" style="margin-top:10px;background:none;border:none;color:var(--text-onnavy-muted);font-size:12px;cursor:pointer;">Dismiss</button></div>';
+  overlay.onclick = function(e){ if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}).catch(function(){});
 </script>
 </body>
 </html>
