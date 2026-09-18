@@ -62,14 +62,16 @@ main{ max-width:680px; margin:0 auto; padding:24px 20px 0; }
 .toggle-row{ display:flex; gap:8px; flex-wrap:wrap; }
 .toggle-btn{ padding:10px 16px; border:1.5px solid var(--panel-border); border-radius:20px; background:rgba(255,255,255,.04); font-size:13px; font-weight:700; color:var(--text-onnavy-muted); cursor:pointer; }
 .toggle-btn.active{ border-color:var(--gold); background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); }
-.upload-box{ border:1.5px dashed var(--panel-border); border-radius:10px; padding:16px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative; margin-bottom:10px; background:rgba(255,255,255,.02); }
-.upload-box.filled{ border-style:solid; border-color:var(--forest); background:rgba(63,190,134,.08); }
-.upload-icon{ width:36px; height:36px; border-radius:8px; background:rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:15px; }
+.upload-box{ border:1.5px dashed var(--panel-border); border-radius:12px; padding:16px; display:flex; align-items:center; gap:14px; cursor:pointer; position:relative; margin-bottom:10px; background:rgba(255,255,255,.02); transition:border-color .15s, background .15s; }
+.upload-box:hover{ border-color:var(--gold); background:rgba(217,169,78,.06); }
+.upload-box.filled{ border-style:solid; border-color:var(--forest); background:rgba(63,190,134,.1); }
+.upload-icon{ width:42px; height:42px; border-radius:10px; background:rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:18px; transition:background .15s, transform .15s; }
+.upload-box:hover .upload-icon{ transform:scale(1.05); }
 .upload-box.filled .upload-icon{ background:var(--forest); color:#fff; }
-.upload-text{ flex:1; min-width:0; }
-.upload-title{ font-size:13px; font-weight:700; color:#fff; }
-.upload-sub{ font-size:11.5px; color:var(--text-onnavy-muted); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.upload-box input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+.upload-title{ font-size:13.5px; font-weight:700; color:#fff; }
+.upload-sub{ font-size:11.5px; color:var(--text-onnavy-muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.upload-cta{ font-size:11px; font-weight:700; color:var(--gold-light); flex-shrink:0; padding:6px 10px; border:1px solid var(--panel-border); border-radius:20px; }
+.upload-box.filled .upload-cta{ display:none; }
 .person-block{ border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:14px; margin-bottom:12px; background:rgba(255,255,255,.02); }
 .person-block-title{ font-size:12px; font-weight:700; color:var(--gold-light); margin-bottom:10px; }
 .btn-submit{ width:100%; padding:16px; background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 6px 16px rgba(217,169,78,.3); }
@@ -110,6 +112,11 @@ main{ max-width:680px; margin:0 auto; padding:24px 20px 0; }
 </header>
 
 <main>
+  <div class="section" id="returningCustomerSection">
+  <div class="section-title">Already applied?</div>
+  <div class="field"><input type="text" id="trackMobile" placeholder="Enter your mobile number" maxlength="10" inputmode="numeric"></div>
+  <button class="btn-submit" id="trackBtn">Check My Application Status</button>
+</div>
   <div id="formWrap">
     <div style="text-align:center; margin-bottom:20px;">
       <div style="font-family:var(--font-display); font-weight:800; font-size:20px; color:#fff; margin-bottom:6px;">Same-day processing? Sirf VastMyWealth pe.</div>
@@ -230,7 +237,12 @@ main{ max-width:680px; margin:0 auto; padding:24px 20px 0; }
         <div class="field"><label>Market Value (₹)<span class="req">*</span></label><input type="text" id="f_marketValue" inputmode="numeric"></div>
       </div>
     </div>
-
+<div class="field" style="display:flex; gap:10px; align-items:flex-start;">
+  <input type="checkbox" id="f_consent" style="width:auto; margin-top:3px;">
+  <label for="f_consent" style="text-transform:none; font-weight:500; font-size:12.5px; color:var(--text-onnavy-muted);">
+    I authorise Vast Wealth Advisors Pvt Ltd to share my details with partner banks, NBFCs, and their representatives/agencies for processing this loan application.<span class="req">*</span>
+  </label>
+</div>
     <div style="padding-top:8px;">
       <button class="btn-submit" id="submitBtn">Find My Matching Lenders</button>
       <div class="trust-note">🔒 We'll match you with lenders first — documents come next.</div>
@@ -313,6 +325,9 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 var state = { loanType:"PL", employmentType:null, companyType:null, house:null, uploadedFiles:{} };
 var partnerCode = new URLSearchParams(window.location.search).get('ref') || '';
+  if (partnerCode) {
+  document.querySelectorAll('#loanToggle button[data-val="HL"], #loanToggle button[data-val="LAP"]').forEach(b => b.style.display = 'none');
+}
 
 function fetchJsonRetry(url, options, attemptsLeft){
   attemptsLeft = (attemptsLeft === undefined) ? 3 : attemptsLeft;
@@ -368,9 +383,8 @@ function updateIncomeLabel(){
 }
 
 function uploadBoxHtml(key, title, sub, accept, multiple){
-  return '<div class="upload-box" id="box_'+key+'"><div class="upload-icon">📄</div><div class="upload-text"><div class="upload-title">'+title+'</div><div class="upload-sub">'+sub+'</div></div><input type="file" accept="'+accept+'" '+(multiple?'multiple':'')+' data-key="'+key+'"></div>';
+  return '<div class="upload-box" id="box_'+key+'"><div class="upload-icon">📄</div><div class="upload-text"><div class="upload-title">'+title+'</div><div class="upload-sub">'+sub+'</div></div><span class="upload-cta">Tap to upload</span><input type="file" accept="'+accept+'" '+(multiple?'multiple':'')+' data-key="'+key+'"></div>';
 }
-
 function renderDocuments(){
   var c = document.getElementById('docContainer'), isSE = state.employmentType === 'Self-Employed', ct = state.companyType, html = '';
   if (!isSE || ct === 'Proprietorship') {
@@ -458,7 +472,50 @@ document.getElementById('docSubmitBtn').addEventListener('click', async function
   fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action:'finalizeDocumentUpload', leadId: state.leadId, product: state.loanType, profile: state.profile }) })
     .then(() => { document.getElementById('docWrap').innerHTML = '<div class="results-intro"><h1>✅ Documents Received</h1><p>Our team will review shortly.</p></div><button class="btn-new-application" onclick="closeApplication()">Close</button>'; });
 });
+document.getElementById('trackBtn').addEventListener('click', function(){
+  var mobile = document.getElementById('trackMobile').value.trim();
+  if (!mobile) { alert('Enter your mobile number'); return; }
+  var btn = this, original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Checking...';
+  fetch(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(mobile))
+    .then(r => r.json()).then(data => {
+      btn.disabled = false; btn.textContent = original;
+      if (!data.success || !data.found) { alert('No application found for this number. You can start a new one below.'); return; }
+      state.profile = { name: data.name, email: data.email, mobile: mobile };
+      state.leadId = data.leadId; state.loanType = data.product;
+      renderTrackingDashboard(data);
+    }).catch(() => { btn.disabled = false; btn.textContent = original; alert('Connection error.'); });
+});
 
+function renderTrackingDashboard(data){
+  document.getElementById('returningCustomerSection').classList.add('hidden');
+  document.getElementById('formWrap').classList.add('hidden');
+  var container = document.getElementById('lenderCards'); container.innerHTML = '';
+  if (data.processingBank) {
+    var note = document.createElement('div'); note.className = 'retry-note';
+    note.textContent = '🏦 Your application is currently being processed by a banker at ' + data.processingBank + '.';
+    container.parentNode.insertBefore(note, container);
+  }
+  (data.lenders || []).forEach((lender, idx) => {
+    var statusClass = { 'In Process':'process','Approved':'approved','Disbursed':'disbursed','Rejected':'rejected' }[lender.status] || 'process';
+    var card = document.createElement('div'); card.className = 'lender-card';
+    card.innerHTML = '<div class="lender-rank">'+(idx+1)+'</div><div class="lender-info"><div class="lender-name">'+lender.name+'<span class="status-badge '+statusClass+'">'+(lender.status||'')+'</span></div></div>';
+    container.appendChild(card);
+  });
+  document.getElementById('resultsWrap').classList.remove('hidden');
+  document.getElementById('resultsActionsPending').classList.toggle('hidden', data.documentStatus === 'Submitted');
+  document.getElementById('resultsActionsSubmitted').classList.toggle('hidden', data.documentStatus !== 'Submitted');
+
+  var startNewBtn = document.createElement('button');
+  startNewBtn.className = 'btn-new-application';
+  startNewBtn.textContent = '+ Start a New Application';
+  startNewBtn.onclick = function(){
+    document.getElementById('resultsWrap').classList.add('hidden');
+    document.getElementById('formWrap').classList.remove('hidden');
+    state.forceNew = true;
+  };
+  document.getElementById('resultsWrap').appendChild(startNewBtn);
+}
 function renderResults(data, profile, showUploadPrompt){
   var container = document.getElementById('lenderCards'); container.innerHTML = '';
   data.lenders.forEach((lender, idx) => {
@@ -502,6 +559,18 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }
 });
+  fetch(BACKEND_URL + '?action=getAnnouncement&audience=Customer').then(r=>r.json()).then(r=>{
+  if (!r.success || !r.announcement) return;
+  var a = r.announcement, overlay = document.createElement('div');
+  overlay.style = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:95;display:flex;align-items:center;justify-content:center;";
+  overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--panel-border);border-radius:14px;padding:20px;max-width:340px;width:90%;text-align:center;">' +
+    (a.imageUrl ? '<img src="'+a.imageUrl+'" style="max-width:100%;border-radius:10px;margin-bottom:12px;">' : '') +
+    '<h3 style="color:#fff;margin-bottom:8px;">'+(a.title||'')+'</h3><p style="color:var(--text-onnavy-muted);font-size:13px;margin-bottom:16px;">'+(a.body||'')+'</p>' +
+    (a.buttonText && a.buttonUrl ? '<a href="'+a.buttonUrl+'" target="_blank" style="text-decoration:none;"><button class="btn-submit" style="margin-top:0;">'+a.buttonText+'</button></a>' : '') +
+    '<button onclick="this.closest(\'div\').parentElement.remove()" style="margin-top:10px;background:none;border:none;color:var(--text-onnavy-muted);font-size:12px;cursor:pointer;">Dismiss</button></div>';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}).catch(()=>{});
 </script>
 </body>
 </html>
