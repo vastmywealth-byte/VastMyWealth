@@ -294,36 +294,26 @@ var HOME_PAGE = "index.html";
 var BACKEND_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
   // Auto-resume application if leadId is present in URL (Magic Link)
 window.addEventListener('DOMContentLoaded', async () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const leadId = urlParams.get('leadId');
-  const product = urlParams.get('product');
-
-  if (leadId) {
-    try {
-      const res = await fetch(SCRIPT_URL + '?action=resumeApplication&leadId=' + encodeURIComponent(leadId) + '&product=' + encodeURIComponent(product));
-      const data = await res.json();
-
-      if (data.success && data.found) {
-        window.activeLeadId = data.leadId;
-        window.activeProduct = data.product;
-        localStorage.setItem('vmw_active_lead_id', data.leadId);
-        localStorage.setItem('vmw_active_product', data.product);
-
-        if(document.getElementById('name')) document.getElementById('name').value = data.name || '';
-        if(document.getElementById('mobile')) document.getElementById('mobile').value = data.mobile || '';
-        if(document.getElementById('email')) document.getElementById('email').value = data.email || '';
-
-        // If your form has a function to skip to the document upload screen, call it here:
-        // e.g., showUploadScreen();
-      } else if (data.allocated) {
-        alert(data.error);
-      }
-    } catch (err) {
-      console.error("Failed to resume application:", err);
+  const p = new URLSearchParams(window.location.search);
+  const leadId = p.get('leadId'), product = p.get('product');
+  if (!leadId) return;
+  try {
+    const res = await fetch(BACKEND_URL + '?action=resumeApplication&leadId='
+      + encodeURIComponent(leadId) + '&product=' + encodeURIComponent(product || ''));
+    const data = await res.json();
+    if (data.success && data.found) {
+      state.leadId = data.leadId;
+      state.loanType = data.product;
+      state.profile = { name: data.name, mobile: data.mobile, email: data.email };
+      document.getElementById('returningCustomerSection').classList.add('hidden');
+      document.getElementById('formWrap').classList.add('hidden');
+      goToDocumentUpload();                    // land straight on upload step
+    } else if (data.allocated) {
+      alert(data.error);
     }
-  }
+  } catch (err) { console.error('resume failed', err); }
 });
-var state = { loanType:"PL", employmentType:null, companyType:null, house:null, uploadedFiles:{} };
+  var state = { loanType:"PL", employmentType:null, companyType:null, house:null, uploadedFiles:{} };
 var partnerCode = new URLSearchParams(window.location.search).get('ref') || '';
   if (partnerCode) {
   document.querySelectorAll('#loanToggle button[data-val="HL"], #loanToggle button[data-val="LAP"]').forEach(b => b.style.display = 'none');
@@ -438,12 +428,38 @@ document.getElementById('submitBtn').addEventListener('click', async function(){
   document.getElementById('loadingState').style.display = 'block';
 
   var profile = {
-    name: document.getElementById('f_name').value, mobile: document.getElementById('f_mobile').value, email: document.getElementById('f_email').value,
-    employmentType: state.employmentType, house: document.getElementById('f_house').value,
-    monthlyIncome: document.getElementById('f_income').value.replace(/[^0-9.]/g,''), loanAmount: document.getElementById('f_loanAmount').value,
-    cibilBracket: document.getElementById('f_cibil').value, bounces: document.getElementById('f_bounces').value, partnerCode: partnerCode
-  };
-
+  name: document.getElementById('f_name').value.trim(),
+  mobile: document.getElementById('f_mobile').value.replace(/\D/g,'').slice(-10),
+  email: document.getElementById('f_email').value.trim(),
+  employmentType: state.employmentType,
+  companyType: state.companyType || '',
+  companyName: (document.getElementById('f_companyName')||{}).value || '',
+  personCount: (document.getElementById('f_personCount')||{}).value || '',
+  house: document.getElementById('f_house').value,
+  monthlyIncome: document.getElementById('f_income').value.replace(/[^0-9.]/g,''),
+  existingEmi: document.getElementById('f_emi').value.replace(/[^0-9.]/g,''),
+  loanAmount: document.getElementById('f_loanAmount').value.replace(/[^0-9.]/g,''),
+  cibilBracket: document.getElementById('f_cibil').value,
+  bounces: document.getElementById('f_bounces').value,
+  enquiries: document.getElementById('f_enquiries').value,
+  vintageYears: (document.getElementById('f_vintage')||{}).value || '',
+  gstVintage: (document.getElementById('f_gstVintage')||{}).value || '',
+  udyam: (document.getElementById('f_udyam')||{}).value || '',
+  bankAccountType: (document.getElementById('f_bankAccountType')||{}).value || '',
+  pincode: document.getElementById('f_pincode').value.replace(/\D/g,''),
+  propertyAddress: (document.getElementById('f_propertyAddress')||{}).value || '',
+  propertyPincode: (document.getElementById('f_propertyPincode')||{}).value || '',
+  marketValue: (document.getElementById('f_marketValue')||{}).value || '',
+  consentGiven: document.getElementById('f_consent').checked,
+  partnerCode: partnerCode
+};
+for (var i=0;i<required.length;i++){
+  var el = document.getElementById(required[i]);
+  if (!el.value.trim()) { alert('Please fill in all required fields.'); el.focus();
+    btn.disabled=false; btn.textContent='Find My Matching Lenders';
+    document.getElementById('formWrap').classList.remove('hidden');
+    document.getElementById('loadingState').style.display='none'; return; }
+}
     fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action:'submitProfileOnly', product: state.loanType, profile: profile, forceNew: !!state.forceNew }) })
     .then(r => r.json()).then(data => {
       document.getElementById('loadingState').style.display = 'none';
@@ -569,8 +585,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }
 });
-  });
-
   fetch(BACKEND_URL + '?action=getAnnouncement&audience=Customer').then(r=>r.json()).then(r=>{
   if (!r.success || !r.announcement) return;
   var a = r.announcement, overlay = document.createElement('div');
