@@ -49,6 +49,19 @@ td{ padding:12px 8px; border-bottom:1px solid rgba(255,255,255,0.06); }
 /* View Control Container Display Logic */
 .view-section { display: none; width: 100%; justify-content: center; flex-direction: column; align-items: center; }
 .view-section.active { display: flex; }
+
+#pToast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(12px);
+  background:var(--gold-500); color:var(--navy-950);
+  padding:11px 20px; border-radius:999px;
+  font-size:13px; font-weight:700; letter-spacing:.01em;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+  opacity:0; pointer-events:none; z-index:99;
+  transition:opacity .18s ease, transform .18s ease;
+  max-width:88%; text-align:center;
+}
+#pToast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+#pToast.error{ background:#F0665E; color:#fff; }
 </style>
 </head>
 <body>
@@ -137,9 +150,19 @@ td{ padding:12px 8px; border-bottom:1px solid rgba(255,255,255,0.06); }
     <div style="color:var(--ink-400);">Loading…</div>
   </div>
 </div>
+
+<div id="pToast"></div>
+
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
 
+function pToast(msg, isError){
+  var t = document.getElementById('pToast');
+  t.textContent = msg;
+  t.className = isError ? 'show error' : 'show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.className = ''; }, 2400);
+}
 function switchView(viewId) {
   document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
   document.getElementById(viewId).classList.add('active');
@@ -216,8 +239,20 @@ function initDashboard() {
   document.getElementById('codeMsg').textContent = 'Partner Code: ' + partnerCode;
   const refLink = PORTAL_PAGE + '?ref=' + partnerCode;
   document.getElementById('refLink').textContent = refLink;
-  document.getElementById('copyBtn').onclick = () => { navigator.clipboard.writeText(refLink).then(() => alert('Copied!')); };
-  document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); switchView('loginView'); };
+    document.getElementById('copyBtn').onclick = function(){
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(refLink)
+        .then(function(){ pToast('Link copied — share it with your customer'); })
+        .catch(function(){ pToast('Could not copy. Long-press the link to copy it.', true); });
+    } else {
+      pToast('Long-press the link above to copy it.');
+    }
+  };
+  document.getElementById('logoutBtn').onclick = function(){
+    localStorage.clear();
+    pToast('Logged out');
+    switchView('loginView');
+  };
   document.getElementById('newAppBtn').href = PORTAL_PAGE + '?ref=' + partnerCode + '&new=1';
 document.getElementById('shareLinkBtn2').onclick = document.getElementById('copyBtn').onclick;
 
@@ -259,14 +294,14 @@ async function loadLeads(partnerCode) {
 function openDocLinks(leadId, product) {
   fetch(SCRIPT_URL + '?action=getLeadDocumentLinks&leadId=' + encodeURIComponent(leadId) + '&product=' + encodeURIComponent(product))
     .then(r => r.json()).then(r => {
-      if (!r.success || !r.files || !r.files.length) { alert('No documents uploaded yet.'); return; }
+            if (!r.success || !r.files || !r.files.length) { pToast('No documents uploaded yet', true); return; }
       var html = r.files.map(f => '<a href="' + f.url + '" target="_blank" style="display:block;padding:8px 0;color:var(--gold-300);text-decoration:underline;">📄 ' + f.name + '</a>').join("");
       var overlay = document.createElement('div');
       overlay.style = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;display:flex;align-items:center;justify-content:center;";
       overlay.innerHTML = '<div style="background:var(--navy-900);border:1px solid var(--gold-500);border-radius:14px;padding:20px;max-width:340px;width:90%;"><h3 style="margin-bottom:12px;">Documents</h3>' + html + '<button onclick="this.closest(\'div\').parentElement.remove()" style="margin-top:14px;width:100%;padding:10px;border:none;border-radius:8px;background:var(--gold-500);color:var(--navy-950);font-weight:700;">Close</button></div>';
       overlay.onclick = function (e) { if (e.target === overlay) overlay.remove(); };
       document.body.appendChild(overlay);
-    }).catch(() => alert('Could not load documents.'));
+        }).catch(function(){ pToast('Could not load documents', true); });
 }
 
 // #9 — announcement popup
