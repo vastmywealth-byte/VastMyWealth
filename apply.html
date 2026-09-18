@@ -432,6 +432,7 @@ function renderDocuments(){
 document.getElementById('submitBtn').addEventListener('click', async function(){
   var required = ['f_name','f_mobile','f_email','f_house','f_income','f_loanAmount','f_cibil','f_bounces'];
   if (!state.employmentType) { alert('Please select employment type.'); return; }
+  if (!document.getElementById('f_consent').checked) { alert('Please provide consent to proceed.'); return; }   // ← ADD THIS LINE
   var btn = this; btn.disabled = true; btn.textContent = 'Matching lenders…';
   document.getElementById('formWrap').classList.add('hidden');
   document.getElementById('loadingState').style.display = 'block';
@@ -443,16 +444,25 @@ document.getElementById('submitBtn').addEventListener('click', async function(){
     cibilBracket: document.getElementById('f_cibil').value, bounces: document.getElementById('f_bounces').value, partnerCode: partnerCode
   };
 
-  fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action:'submitProfileOnly', product: state.loanType, profile: profile }) })
+    fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action:'submitProfileOnly', product: state.loanType, profile: profile, forceNew: !!state.forceNew }) })
     .then(r => r.json()).then(data => {
       document.getElementById('loadingState').style.display = 'none';
-      if (!data.success) { alert('Error: ' + data.error); btn.disabled = false; btn.textContent = 'Find My Matching Lenders'; document.getElementById('formWrap').classList.remove('hidden'); return; }
+      if (!data.success) {
+        if (data.error === 'duplicate_customer') {
+          var proceed = confirm('You already have an application on file (Lead ' + data.existingLeadId + ', ' + data.existingProduct + '). Click OK to check its status, or Cancel to start a brand-new application anyway.');
+          btn.disabled = false; btn.textContent = 'Find My Matching Lenders';
+          if (proceed) { document.getElementById('trackMobile').value = profile.mobile; document.getElementById('returningCustomerSection').classList.remove('hidden'); document.getElementById('trackBtn').click(); }
+          else { state.forceNew = true; document.getElementById('submitBtn').click(); }
+          return;
+        }
+        alert('Error: ' + (data.message || data.error)); btn.disabled = false; btn.textContent = 'Find My Matching Lenders'; document.getElementById('formWrap').classList.remove('hidden'); return;
+      }
+      state.forceNew = false;
       state.leadId = data.leadId; state.profile = profile;
       localStorage.setItem('vmw_lead_id', data.leadId); localStorage.setItem('vmw_lead_product', state.loanType);
       renderResults(data, profile, true);
     }).catch(err => { document.getElementById('loadingState').textContent = 'Connection error.'; btn.disabled = false; document.getElementById('formWrap').classList.remove('hidden'); });
 });
-
 function goToDocumentUpload(){ document.getElementById('resultsWrap').classList.add('hidden'); document.getElementById('docWrap').classList.remove('hidden'); renderDocuments(); document.getElementById('waDocLink').href = buildWhatsAppLink(); }
 function closeApplication(){ localStorage.removeItem('vmw_lead_id'); window.location.href = HOME_PAGE; }
 
@@ -559,7 +569,23 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }
 });
+  });
+
   fetch(BACKEND_URL + '?action=getAnnouncement&audience=Customer').then(r=>r.json()).then(r=>{
+  if (!r.success || !r.announcement) return;
+  var a = r.announcement, overlay = document.createElement('div');
+  overlay.style = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:95;display:flex;align-items:center;justify-content:center;";
+  overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--panel-border);border-radius:14px;padding:20px;max-width:340px;width:90%;text-align:center;">' +
+    (a.imageUrl ? '<img src="'+a.imageUrl+'" style="max-width:100%;border-radius:10px;margin-bottom:12px;">' : '') +
+    '<h3 style="color:#fff;margin-bottom:8px;">'+(a.title||'')+'</h3><p style="color:var(--text-onnavy-muted);font-size:13px;margin-bottom:16px;">'+(a.body||'')+'</p>' +
+    (a.buttonText && a.buttonUrl ? '<a href="'+a.buttonUrl+'" target="_blank" style="text-decoration:none;"><button class="btn-submit" style="margin-top:0;">'+a.buttonText+'</button></a>' : '') +
+    '<button onclick="this.closest(\'div\').parentElement.remove()" style="margin-top:10px;background:none;border:none;color:var(--text-onnavy-muted);font-size:12px;cursor:pointer;">Dismiss</button></div>';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}).catch(()=>{});
+  // ↑ that's your existing last function — paste the snippet below right after it
+
+fetch(BACKEND_URL + '?action=getAnnouncement&audience=Customer').then(r=>r.json()).then(r=>{
   if (!r.success || !r.announcement) return;
   var a = r.announcement, overlay = document.createElement('div');
   overlay.style = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:95;display:flex;align-items:center;justify-content:center;";
