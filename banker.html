@@ -389,8 +389,8 @@ var AUTH_STORAGE_KEY = "vmw_banker_auth";
 var PORTAL_APPLICATION_URL = "https://loan.vastmywealth.com/portal-unified-application.html";
 function openDocLinks(leadId, loanType){
   showToast("Loading documents...");
-  fetch(LOAN_PORTAL_SCRIPT_URL + "?action=getLeadDocumentLinks&leadId=" + encodeURIComponent(leadId) + "&product=" + encodeURIComponent(loanType))
-    .then(r => r.json()).then(r => {
+  fetchJsonSafe(LOAN_PORTAL_SCRIPT_URL + "?action=getLeadDocumentLinks&leadId=" + encodeURIComponent(leadId) + "&product=" + encodeURIComponent(loanType))
+    .then(r => {
       if (!r.success || !r.files || !r.files.length) { showToast("No documents uploaded yet", true); return; }
       var html = r.files.map(function(f){
         return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);">'
@@ -407,6 +407,19 @@ function openDocLinks(leadId, loanType){
       document.getElementById("docViewerBody").innerHTML = html;
       openSheet("docViewerSheet", "docViewerBackdrop");
     }).catch(() => showToast("Could not load documents", true));
+}
+  function fetchJsonSafe(url, options, attemptsLeft){
+  attemptsLeft = (attemptsLeft === undefined) ? 2 : attemptsLeft;
+  return fetch(url, options).then(function(r){ return r.text(); }).then(function(raw){
+    return JSON.parse(raw);
+  }).catch(function(err){
+    if (attemptsLeft > 1) {
+      return new Promise(function(res){ setTimeout(res, 900); }).then(function(){
+        return fetchJsonSafe(url, options, attemptsLeft - 1);
+      });
+    }
+    throw err;
+  });
 }
   function apiPost(payload) {
   return fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
@@ -704,29 +717,50 @@ document.getElementById("submitCodeForm").addEventListener("submit", function(e)
   });
 });
 
+function renderBusinessRow(l){
+  var actions = "";
+  if (l.magicLink) {
+    actions = '<div class="row-actions"><a class="btn-link-out" href="' + escapeHtml(l.magicLink) + '" target="_blank">🔗 Upload Docs Link</a></div>';
+  } else if (l.leadId && l.loanType) {
+    actions = '<div class="row-actions"><button class="btn-link-out" onclick="openDocLinks(\'' + escapeHtml(l.leadId) + '\',\'' + escapeHtml(l.loanType) + '\')">📁 Docs</button></div>';
+  }
+  var statusClass = (l.fileStatus === "Disbursed") ? "disbursed" : "submitted";
+  return '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(l.customerName) +
+    '</div><div class="business-meta">' + escapeHtml(l.meta) + '</div></div><span class="status-chip ' + statusClass + '">' +
+    escapeHtml(l.fileStatus) + '</span></div>' + actions + '</div>';
+}
+
 function loadBusinessLogs(){
   var el = document.getElementById("businessLogList");
   el.innerHTML = '<div class="empty-state">Loading...</div>';
-  Promise.all([
-    apiPost({ action:"getLogs", bankerId:SESSION.bankerId }).catch(()=>({logs:[]})),
-    SESSION.refCode
-      ? fetch(LOAN_PORTAL_SCRIPT_URL + "?action=getPartnerLeads&partnerCode="
-          + encodeURIComponent(SESSION.refCode)).then(r=>r.json()).catch(()=>({leads:[]}))
-      : Promise.resolve({leads:[]})
-  ]).then(([a, b]) => {
-    var rows = (a.logs || []).map(l => ({
-      customerName: l.customerName, meta: l.meta, fileStatus: l.fileStatus,
-      leadId: l.leadId, loanType: l.loanType, magicLink: l.magicLink
-    })).concat((b.leads || []).map(l => ({
-      customerName: l.customerName,
-      meta: l.product + ' · ' + (l.mobile || '') + (l.processingBank ? ' · ' + l.processingBank : ''),
-      fileStatus: l.status, leadId: l.leadId, loanType: l.product,
-      magicLink: l.documentStatus === 'Pending' && l.leadId
-        ? (PORTAL_APPLICATION_URL + '?leadId=' + encodeURIComponent(l.leadId)
-           + '&product=' + encodeURIComponent(l.product)) : ''
-    })));
+
+  var ownLogs = apiPost({ action:"getLogs", bankerId:SESSION.bankerId }).catch(function(){ return { logs: [] }; });
+  var portalLeads = SESSION.refCode
+    ? fetch(LOAN_PORTAL_SCRIPT_URL + "?action=getPartnerLeads&partnerCode=" + encodeURIComponent(SESSION.refCode))
+        .then(function(r){ return r.json(); }).catch(function(){ return { leads: [] }; })
+    : Promise.resolve({ leads: [] });
+
+  Promise.all([ownLogs, portalLeads]).then(function(results){
+    var a = results[0] || {}, b = results[1] || {};
+    var rows = (a.logs || []).map(function(l){
+      return { customerName: l.customerName, meta: l.meta, fileStatus: l.fileStatus,
+               leadId: l.leadId, loanType: l.loanType, magicLink: l.magicLink };
+    }).concat((b.leads || []).map(function(l){
+      return {
+        customerName: l.customerName,
+        meta: l.product + ' · ' + (l.mobile || '') + (l.processingBank ? ' · ' + l.processingBank : ''),
+        fileStatus: l.status, leadId: l.leadId, loanType: l.product,
+        magicLink: (l.documentStatus === 'Pending' && l.leadId)
+          ? (PORTAL_APPLICATION_URL + '?leadId=' + encodeURIComponent(l.leadId) + '&product=' + encodeURIComponent(l.product))
+          : ''
+      };
+    }));
+
     if (!rows.length) { el.innerHTML = '<div class="empty-state">No business logged yet.</div>'; return; }
     el.innerHTML = rows.map(renderBusinessRow).join("");
+  }).catch(function(err){
+    console.error('loadBusinessLogs failed', err);
+    el.innerHTML = '<div class="empty-state">Could not load — check your connection.</div>';
   });
 }
   // #9,#14 — leads list shows Name / Loan Type / Amount / Pincode;
