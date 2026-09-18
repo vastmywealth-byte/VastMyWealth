@@ -231,9 +231,7 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
 function initDashboard() {
   const partnerCode = localStorage.getItem('vmw_partner_code');
   const partnerName = localStorage.getItem('vmw_partner_name');
-  const PORTAL_PAGE = window.location.origin
-  + window.location.pathname.replace(/[^/]*$/, '') + 'portal-unified-application.html';
-  if (!partnerCode) { switchView('loginView'); return; }
+  const PORTAL_PAGE = "https://loan.vastmywealth.com/portal-unified-application.html"
 
   document.getElementById('welcomeMsg').textContent = 'Welcome, ' + (partnerName || 'Partner');
   document.getElementById('codeMsg').textContent = 'Partner Code: ' + partnerCode;
