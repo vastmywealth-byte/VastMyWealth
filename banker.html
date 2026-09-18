@@ -150,21 +150,20 @@
   .sheet{position:fixed; left:0; right:0; bottom:0; background:var(--navy); border-radius:20px 20px 0 0; max-height:85vh; overflow-y:auto; z-index:21; padding:18px 16px 28px; box-shadow:0 -6px 0 var(--gold);}
   .sheet-handle{width:36px; height:4px; background:var(--navy-light); border-radius:3px; margin:0 auto 14px;}
   .sheet h3{margin:0 0 14px; color:#fff; font-size:15px;}
-  <div class="sheet-backdrop" id="docViewerBackdrop"></div>
-<div class="sheet" id="docViewerSheet" style="display:none;">
-  <div class="sheet-handle"></div>
-  <button class="close-x" onclick="closeSheet('docViewerSheet','docViewerBackdrop')">✕</button>
-  <h3>Documents</h3>
-  <div id="docViewerBody" style="background:var(--card); border-radius:12px; padding:16px;"></div>
-</div>
-  .close-x{position:absolute; top:14px; right:14px; background:none; font-size:18px; color:#EAF0FF; padding:4px;}
+    .close-x{position:absolute; top:14px; right:14px; background:none; font-size:18px; color:#EAF0FF; padding:4px;}
 
   .toast{position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--gold); color:var(--navy); padding:10px 18px; border-radius:24px; font-size:12.5px; font-weight:700; z-index:30; display:none; max-width:90%; text-align:center;}
   .toast.error{background:var(--rejected); color:#fff;}
 </style>
 </head>
 <body>
-
+<div class="sheet-backdrop" id="docViewerBackdrop"></div>
+<div class="sheet" id="docViewerSheet" style="display:none;">
+  <div class="sheet-handle"></div>
+  <button class="close-x" onclick="closeSheet('docViewerSheet','docViewerBackdrop')">✕</button>
+  <h3>Documents</h3>
+  <div id="docViewerBody" style="background:var(--card); border-radius:12px; padding:16px;"></div>
+</div>
 <!-- Boot screen — shown while we silently try auto-login, so the
      person never sees a flash of the request-code form first (#5,#6) -->
 <div id="bootScreen">
