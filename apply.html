@@ -486,7 +486,13 @@ for (var i=0;i<required.length;i++){
       state.leadId = data.leadId; state.profile = profile;
       localStorage.setItem('vmw_lead_id', data.leadId); localStorage.setItem('vmw_lead_product', state.loanType);
       renderResults(data, profile, true);
-    }).catch(err => { document.getElementById('loadingState').textContent = 'Connection error.'; btn.disabled = false; document.getElementById('formWrap').classList.remove('hidden'); });
+        }).catch(err => {
+      console.error('submit failed', err);
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('formWrap').classList.remove('hidden');
+      btn.disabled = false; btn.textContent = 'Find My Matching Lenders';
+      alert('Could not reach the server: ' + (err && err.message ? err.message : err));
+    });
 });
 function goToDocumentUpload(){ document.getElementById('resultsWrap').classList.add('hidden'); document.getElementById('docWrap').classList.remove('hidden'); renderDocuments(); document.getElementById('waDocLink').href = buildWhatsAppLink(); }
 function closeApplication(){ localStorage.removeItem('vmw_lead_id'); window.location.href = HOME_PAGE; }
