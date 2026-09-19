@@ -386,7 +386,7 @@ var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBP
 var SESSION = { bankerId: null, bankerEmail: null, mobile: null, pin: null, refCode: null };
 var BANK_LIST = [];
 var AUTH_STORAGE_KEY = "vmw_banker_auth";
-var PORTAL_APPLICATION_URL = "https://loan.vastmywealth.com/apply.html";
+var PORTAL_APPLICATION_URL = "https://loan.vastmywealth.com/portal-unified-application.html";
 function openDocSummary(leadId, loanType){
   showToast("Loading...");
   fetch(LOAN_PORTAL_SCRIPT_URL + "?action=getLeadSummary&leadId=" + encodeURIComponent(leadId) + "&product=" + encodeURIComponent(loanType))
