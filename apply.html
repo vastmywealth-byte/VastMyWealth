@@ -570,8 +570,8 @@ document.getElementById('trackBtn').addEventListener('click', function(){
   var mobile = document.getElementById('trackMobile').value.trim();
   if (!mobile) { alert('Enter your mobile number'); return; }
   var btn = this, original = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Connecting to server will take upto a min';
-  fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(mobile), {}, 4)
+  btn.disabled = true; btn.textContent = 'Connectin server will take upto a min';
+  fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(mobile), {}, 2)
     .then(data => {
       btn.disabled = false; btn.textContent = original;
       if (!data.success || !data.found) { alert('No application found for this number. You can start a new one below.'); return; }
