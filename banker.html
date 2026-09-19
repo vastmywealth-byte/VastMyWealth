@@ -584,9 +584,7 @@ function enterApp(){
     portalLink.href = PORTAL_APPLICATION_URL + "?ref=" + encodeURIComponent(SESSION.refCode) + "&new=1";
   }
 
-  loadCodes();
-  loadBusinessLogs();
-  loadLeads();
+  Promise.all([loadCodes(), loadBusinessLogs(), loadLeads()]);
 }
 
 document.getElementById("shareLinkBtn").addEventListener("click", function(){
@@ -608,34 +606,7 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
   });
 });
 
-function loadCodes(){
-  var el = document.getElementById("codesList");
-  el.innerHTML = '<div class="empty-state">Loading...</div>';
-  apiPost({ action:"getBankerCodes", bankerId:SESSION.bankerId }).then(r => {
-    var codes = r.codes || [], pending = r.pending || [];
-    if (!codes.length && !pending.length) { el.innerHTML = '<div class="empty-state">No DSA code submitted yet.</div>'; return; }
-    el.innerHTML = codes.map(c => '<span class="code-chip">' + escapeHtml(c.bankName) + ' · ' + escapeHtml(c.loanType) + '</span>').join("") +
-                   pending.map(c => '<span class="code-chip pending">' + escapeHtml(c.bankName) + ' · ' + escapeHtml(c.loanType) + ' (Pending)</span>').join("");
-  }).catch(() => { el.innerHTML = '<div class="empty-state">Could not load codes — check your connection.</div>'; });
-}
-
-// #8 — Add DSA sheet: chips for existing banks + "Add new bank" option
-var scSelectedBank = "";
-function openSubmitCodeSheet(){
-  document.getElementById("scCode").value = "";
-  document.getElementById("scNewBankFields").style.display = "none";
-  document.getElementById("scCodeHint").textContent = "";
-  document.querySelectorAll('input[name="scLoanType"]').forEach(c => c.checked = false);
-  openSheet("submitCodeSheet", "submitCodeBackdrop");
-
-  var chipsEl = document.getElementById("scBankChips");
-  chipsEl.innerHTML = '<div class="empty-state" style="padding:8px;">Loading your banks...</div>';
-  apiPost({ action:"getBankerBanks", bankerId:SESSION.bankerId }).then(r => {
-    var banks = (r.banks && r.banks.length) ? r.banks : [SESSION.currentBankName].filter(Boolean);
-    scSelectedBank = banks[0] || "";
-    renderBankChips(banks);
-  });
-}
+function loadCodes(){ var el = document.getElementById("codesList"); el.innerHTML = '<div class="empty-state">Loading...</div>'; return apiPost({ action:"getBankerCodes", bankerId:SESSION.bankerId }).then(r => { var codes = r.codes || [], pending = r.pending || []; if (!codes.length && !pending.length) { el.innerHTML = '<div class="empty-state">No DSA code submitted yet.</div>'; return; } el.innerHTML = codes.map(c => '<span class="code-chip">' + escapeHtml(c.bankName) + ' · ' + escapeHtml(c.loanType) + '</span>').join("") + pending.map(c => '<span class="code-chip pending">' + escapeHtml(c.bankName) + ' · ' + escapeHtml(c.loanType) + ' (Pending)</span>').join(""); }).catch(() => { el.innerHTML = '<div class="empty-state">Could not load codes — check your connection.</div>'; }); }
 function renderBankChips(banks){
   var chipsEl = document.getElementById("scBankChips");
   chipsEl.innerHTML = banks.map(b => '<button type="button" class="bank-chip' + (b === scSelectedBank ? ' selected' : '') + '" data-bank="' + escapeHtml(b) + '">' + escapeHtml(b) + '</button>').join("")
@@ -726,136 +697,55 @@ function renderBusinessRow(l){
     '</div><div class="business-meta">' + escapeHtml(l.meta) + '</div></div><span class="status-chip ' + statusClass + '">' +
     escapeHtml(l.fileStatus) + '</span></div>' + actions + '</div>';
 }
-function loadBusinessLogs(){
-  var el = document.getElementById("businessLogList");
-  el.innerHTML = '<div class="empty-state">Loading...</div>';
+function loadBusinessLogs(){ var el = document.getElementById("businessLogList"); el.innerHTML = '<div class="empty-state">Loading...</div>';
 
-  var ownLogs = apiPost({ action:"getLogs", bankerId:SESSION.bankerId }).catch(function(){ return { logs: [] }; });
-  var portalLeads = SESSION.refCode
-    ? fetch(LOAN_PORTAL_SCRIPT_URL + "?action=getPartnerLeads&partnerCode=" + encodeURIComponent(SESSION.refCode))
-        .then(function(r){ return r.json(); }).catch(function(){ return { leads: [] }; })
-    : Promise.resolve({ leads: [] });
+var ownLogs = apiPost({ action:"getLogs", bankerId:SESSION.bankerId }).catch(function(){ return { logs: [] }; }); var portalLeads = SESSION.refCode ? fetch(LOAN_PORTAL_SCRIPT_URL + "?action=getPartnerLeads&partnerCode=" + encodeURIComponent(SESSION.refCode)) .then(function(r){ return r.json(); }).catch(function(){ return { leads: [] }; }) : Promise.resolve({ leads: [] });
 
-  Promise.all([ownLogs, portalLeads]).then(function(results){
-    var a = results[0] || {}, b = results[1] || {};
-    var rows = (a.logs || []).map(function(l){
-      return { customerName: l.customerName, meta: l.meta, fileStatus: l.fileStatus,
-               leadId: l.leadId, loanType: l.loanType, magicLink: l.magicLink };
-    }).concat((b.leads || []).map(function(l){
-      return {
-        customerName: l.customerName,
-        meta: l.product + ' · ' + (l.mobile || '') + (l.processingBank ? ' · ' + l.processingBank : ''),
-        fileStatus: l.status, leadId: l.leadId, loanType: l.product,
-        magicLink: (l.documentStatus === 'Pending' && l.leadId)
-          ? (PORTAL_APPLICATION_URL + '?leadId=' + encodeURIComponent(l.leadId) + '&product=' + encodeURIComponent(l.product))
-          : ''
-      };
-    }));
+return Promise.all([ownLogs, portalLeads]).then(function(results){ var a = results[0] || {}, b = results[1] || {}; var rows = (a.logs || []).map(function(l){ return { customerName: l.customerName, meta: l.meta, fileStatus: l.fileStatus, leadId: l.leadId, loanType: l.loanType, magicLink: l.magicLink }; }).concat((b.leads || []).map(function(l){ return { customerName: l.customerName, meta: l.product + ' · ' + (l.mobile || '') + (l.processingBank ? ' · ' + l.processingBank : ''), fileStatus: l.status, leadId: l.leadId, loanType: l.product, magicLink: (l.documentStatus === 'Pending' && l.leadId) ? (PORTAL_APPLICATION_URL + '?leadId=' + encodeURIComponent(l.leadId) + '&product=' + encodeURIComponent(l.product)) : '' }; }));
 
-    if (!rows.length) { el.innerHTML = '<div class="empty-state">No business logged yet.</div>'; return; }
-    el.innerHTML = rows.map(renderBusinessRow).join("");
-  }).catch(function(err){
-    console.error('loadBusinessLogs failed', err);
-    el.innerHTML = '<div class="empty-state">Could not load — check your connection.</div>';
-  });
-}
+if (!rows.length) { el.innerHTML = '<div class="empty-state">No business logged yet.</div>'; return; }
+el.innerHTML = rows.map(renderBusinessRow).join("");
+
+}).catch(function(err){ console.error('loadBusinessLogs failed', err); el.innerHTML = '<div class="empty-state">Could not load — check your connection.</div>'; }); }
   // #9,#14 — leads list shows Name / Loan Type / Amount / Pincode;
 // claimed leads get Disburse + Reject action buttons
-function loadLeads(){
-  var gateEl = document.getElementById("bizLeadsGate");
-  var blockedEl = document.getElementById("bizLeadsBlocked");
-  var listEl = document.getElementById("bizLeadsList");
-  gateEl.style.display = "none"; blockedEl.style.display = "none";
-  if (!SESSION.hasActiveCode) { gateEl.style.display = "block"; listEl.innerHTML = ""; return; }
+function loadLeads(){ var gateEl = document.getElementById("bizLeadsGate"); var blockedEl = document.getElementById("bizLeadsBlocked"); var listEl = document.getElementById("bizLeadsList"); gateEl.style.display = "none"; blockedEl.style.display = "none"; if (!SESSION.hasActiveCode) { gateEl.style.display = "block"; listEl.innerHTML = ""; return Promise.resolve(); }
 
-  listEl.innerHTML = '<div class="empty-state">Loading leads...</div>';
-  apiPost({ action:"getLeads", bankerId:SESSION.bankerId }).then(r => {
-    if (r.status === "locked") { gateEl.style.display = "block"; listEl.innerHTML = ""; return; }
-    if (r.status === "blocked") { blockedEl.style.display = "block"; listEl.innerHTML = ""; return; }
-    if (r.status !== "success") { listEl.innerHTML = '<div class="empty-state">Could not load leads.</div>'; return; }
+listEl.innerHTML = '<div class="empty-state">Loading leads...</div>'; var leadsPromise = apiPost({ action:"getLeads", bankerId:SESSION.bankerId }).then(r => { if (r.status === "locked") { gateEl.style.display = "block"; listEl.innerHTML = ""; return; } if (r.status === "blocked") { blockedEl.style.display = "block"; listEl.innerHTML = ""; return; } if (r.status !== "success") { listEl.innerHTML = '<div class="empty-state">Could not load leads.</div>'; return; }
 
-    document.getElementById("bizLeadsSlots").textContent = r.slotsRemaining + " of " + (r.activeClaimCount + r.slotsRemaining) + " claim slots available";
-    var leads = r.businessLeads || [];
-    listEl.innerHTML = leads.length ? leads.map(l => '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(l.customerName) + '</div><div class="business-meta">' + escapeHtml(l.loanType) + ' · ₹' + escapeHtml(l.loanAmount) + (l.pincode ? (' · PIN ' + escapeHtml(l.pincode)) : '') + '</div></div><button class="icon-pill claim-btn" data-lead="' + escapeHtml(l.leadId) + '">Claim</button></div></div>').join("") : '<div class="empty-state">No leads available right now.</div>';
+document.getElementById("bizLeadsSlots").textContent = r.slotsRemaining + " of " + (r.activeClaimCount + r.slotsRemaining) + " claim slots available";
+var leads = r.businessLeads || [];
+listEl.innerHTML = leads.length ? leads.map(l => '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(l.customerName) + '</div><div class="business-meta">' + escapeHtml(l.loanType) + ' · ₹' + escapeHtml(l.loanAmount) + (l.pincode ? (' · PIN ' + escapeHtml(l.pincode)) : '') + '</div></div><button class="icon-pill claim-btn" data-lead="' + escapeHtml(l.leadId) + '">Claim</button></div></div>').join("") : '<div class="empty-state">No leads available right now.</div>';
 
-    listEl.querySelectorAll(".claim-btn").forEach(btn => {
-      btn.addEventListener("click", function(){
-        var leadId = this.getAttribute("data-lead");
-        withBusyButton(this, "Claiming...", function(){
-          return apiPost({ action:"claimLead", bankerId:SESSION.bankerId, leadId:leadId }).then(r2 => {
-            showToast(r2.status === "success" ? "Lead claimed!" : r2.message, r2.status !== "success");
-            if (r2.status === "success") loadLeads();
-          });
-        });
+listEl.querySelectorAll(".claim-btn").forEach(btn => {
+  btn.addEventListener("click", function(){
+    var leadId = this.getAttribute("data-lead");
+    withBusyButton(this, "Claiming...", function(){
+      return apiPost({ action:"claimLead", bankerId:SESSION.bankerId, leadId:leadId }).then(r2 => {
+        showToast(r2.status === "success" ? "Lead claimed!" : r2.message, r2.status !== "success");
+        if (r2.status === "success") loadLeads();
       });
     });
-  }).catch(() => { listEl.innerHTML = '<div class="empty-state">Could not load — check your connection.</div>'; });
-
-  loadMyClaims();
-}
-
-function loadMyClaims(){
-  var el = document.getElementById("bizMyClaimsList");
-  el.innerHTML = '<div class="empty-state">Loading...</div>';
-  apiPost({ action:"getMyLeadClaims", bankerId:SESSION.bankerId }).then(r => {
-    var claims = r.claims || [];
-    if (!claims.length) { el.innerHTML = '<div class="empty-state">No claims yet.</div>'; return; }
-    el.innerHTML = claims.map(c => {
-      var actions = "";
-      if (c.claimStatus === "Active") {
-        actions = '<div class="row-actions">'
-          + '<button class="btn-disburse" data-claim="' + escapeHtml(c.claimId) + '">✅ Disbursed</button>'
-          + '<button class="btn-reject" data-claim="' + escapeHtml(c.claimId) + '">❌ Reject</button>'
-          + '<button class="btn-link-out" onclick="openDocSummary((\'' + escapeHtml(c.leadId) + '\',\'' + escapeHtml(c.loanType) + '\')">📁 Docs</button>'
-          + '</div>';
-      } else if (c.claimStatus === "Disbursed") {
-        actions = '<div class="business-meta">Disbursed amount: ₹' + escapeHtml(c.disbursedAmount || "—") + '</div>';
-      } else if (c.claimStatus === "Rejected") {
-        actions = '<div class="business-meta">Reason: ' + escapeHtml(c.rejectionReason || "—") + '</div>';
-      }
-      return '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(c.customerName) + '</div><div class="business-meta">' + escapeHtml(c.customerMobile || "") + ' · ₹' + escapeHtml(c.loanAmount) + '</div></div><span class="status-chip ' + (c.claimStatus==="Disbursed"?"disbursed":c.claimStatus==="Rejected"?"rejected":"active") + '">' + escapeHtml(c.claimStatus) + '</span></div>' + actions + '</div>';
-    }).join("");
-
-    el.querySelectorAll(".btn-disburse").forEach(btn => btn.addEventListener("click", function(){
-      document.getElementById("disburseClaimId").value = this.getAttribute("data-claim");
-      document.getElementById("disburseAmount").value = "";
-      openSheet("disburseSheet", "disburseBackdrop");
-    }));
-    el.querySelectorAll(".btn-reject").forEach(btn => btn.addEventListener("click", function(){
-      document.getElementById("rejectClaimId").value = this.getAttribute("data-claim");
-      document.getElementById("rejectReason").value = "";
-      openSheet("rejectSheet", "rejectBackdrop");
-    }));
-  }).catch(() => { el.innerHTML = '<div class="empty-state">Could not load — check your connection.</div>'; });
-}
-
-document.getElementById("disburseForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  var btn = document.getElementById("disburseBtn");
-  var box = document.getElementById("disburseResult");
-  box.style.display = "none";
-  withBusyButton(btn, "Saving...", function(){
-    return apiPost({ action:"updateLeadClaimStatus", claimId: document.getElementById("disburseClaimId").value, status:"Disbursed", disbursedAmount: document.getElementById("disburseAmount").value })
-      .then(r => {
-        box.className = "msg-box " + (r.status==="success"?"success":"error"); box.textContent = r.message;
-        if (r.status === "success") { setTimeout(() => { closeSheet('disburseSheet','disburseBackdrop'); loadMyClaims(); loadLeads(); }, 700); }
-      });
   });
 });
 
-document.getElementById("rejectForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  var btn = document.getElementById("rejectBtn");
-  var box = document.getElementById("rejectResult");
-  box.style.display = "none";
-  withBusyButton(btn, "Saving...", function(){
-    return apiPost({ action:"updateLeadClaimStatus", claimId: document.getElementById("rejectClaimId").value, status:"Rejected", rejectionReason: document.getElementById("rejectReason").value })
-      .then(r => {
-        box.className = "msg-box " + (r.status==="success"?"success":"error"); box.textContent = r.message;
-        if (r.status === "success") { setTimeout(() => { closeSheet('rejectSheet','rejectBackdrop'); loadMyClaims(); loadLeads(); }, 700); }
-      });
-  });
-});
+}).catch(() => { listEl.innerHTML = '<div class="empty-state">Could not load — check your connection.</div>'; });
+
+return Promise.all([leadsPromise, loadMyClaims()]); }
+function loadMyClaims(){ var el = document.getElementById("bizMyClaimsList"); el.innerHTML = '<div class="empty-state">Loading...</div>'; return apiPost({ action:"getMyLeadClaims", bankerId:SESSION.bankerId }).then(r => { var claims = r.claims || []; if (!claims.length) { el.innerHTML = '<div class="empty-state">No claims yet.</div>'; return; } el.innerHTML = claims.map(c => { var actions = ""; if (c.claimStatus === "Active") { actions = '<div class="row-actions">' + '<button class="btn-disburse" data-claim="' + escapeHtml(c.claimId) + '">✅ Disbursed</button>' + '<button class="btn-reject" data-claim="' + escapeHtml(c.claimId) + '">❌ Reject</button>' + '<button class="btn-link-out" onclick="openDocSummary(\'' + escapeHtml(c.leadId) + '\',\'' + escapeHtml(c.loanType) + '\')">📁 Docs</button>' + '</div>'; } else if (c.claimStatus === "Disbursed") { actions = '<div class="business-meta">Disbursed amount: ₹' + escapeHtml(c.disbursedAmount || "—") + '</div>'; } else if (c.claimStatus === "Rejected") { actions = '<div class="business-meta">Reason: ' + escapeHtml(c.rejectionReason || "—") + '</div>'; } return '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(c.customerName) + '</div><div class="business-meta">' + escapeHtml(c.customerMobile || "") + ' · ₹' + escapeHtml(c.loanAmount) + '</div></div><span class="status-chip ' + (c.claimStatus==="Disbursed"?"disbursed":c.claimStatus==="Rejected"?"rejected":"active") + '">' + escapeHtml(c.claimStatus) + '</span></div>' + actions + '</div>'; }).join("");
+
+el.querySelectorAll(".btn-disburse").forEach(btn => btn.addEventListener("click", function(){
+  document.getElementById("disburseClaimId").value = this.getAttribute("data-claim");
+  document.getElementById("disburseAmount").value = "";
+  openSheet("disburseSheet", "disburseBackdrop");
+}));
+el.querySelectorAll(".btn-reject").forEach(btn => btn.addEventListener("click", function(){
+  document.getElementById("rejectClaimId").value = this.getAttribute("data-claim");
+  document.getElementById("rejectReason").value = "";
+  openSheet("rejectSheet", "rejectBackdrop");
+}));
+
+}).catch(() => { el.innerHTML = '<div class="empty-state">Could not load — check your connection.</div>'; }); }
 </script>
 </body>
 </html>
