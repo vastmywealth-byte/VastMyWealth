@@ -381,12 +381,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
-var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytDsEm2Z1_JD1Gpn-faYSdF1lVMIXxotMQ3qcB4P_7QIZC3juK8PZuhSTinkdlhASdEA/exec";
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
   var LOAN_PORTAL_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec"; // the Loan Portal project's own Web App URL, not the Banker CRM's
 var SESSION = { bankerId: null, bankerEmail: null, mobile: null, pin: null, refCode: null };
 var BANK_LIST = [];
 var AUTH_STORAGE_KEY = "vmw_banker_auth";
-var PORTAL_APPLICATION_URL = "https://loan.vastmywealth.com/portal-unified-application.html";
+var PORTAL_APPLICATION_URL = "https://loan.vastmywealth.com/apply.html";
 function openDocSummary(leadId, loanType){
   showToast("Loading...");
   fetch(LOAN_PORTAL_SCRIPT_URL + "?action=getLeadSummary&leadId=" + encodeURIComponent(leadId) + "&product=" + encodeURIComponent(loanType))
