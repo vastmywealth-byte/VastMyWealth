@@ -592,23 +592,6 @@ function renderResults(data, profile, showUploadPrompt){
   document.getElementById('resultsWrap').classList.remove('hidden');
   document.getElementById('resultsActionsPending').classList.toggle('hidden', !showUploadPrompt);
 }
-  // Check if the URL has a leadId (Magic Link click from dashboard or reminder email)
-window.addEventListener('DOMContentLoaded', async () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const leadId = urlParams.get('leadId');
-  const product = urlParams.get('product');
-
-  if (leadId) {
-    try {
-      // Call the existing resumeApplication function in code.gs
-      const res = await fetch(SCRIPT_URL + '?action=resumeApplication&leadId=' + encodeURIComponent(leadId) + '&product=' + encodeURIComponent(product));
-      const data = await res.json();
-
-      if (data.success && data.found) {
-        // Pre-fill user details if inputs exist on your form
-        if(document.getElementById('name')) document.getElementById('name').value = data.name || '';
-        if(document.getElementById('mobile')) document.getElementById('mobile').value = data.mobile || '';
-        if(document.getElementById('email')) document.getElementById('email').value = data.email || '';
         
         // Save the leadId to local storage or hidden inputs so the upload step knows which lead to update
         localStorage.setItem('vmw_active_lead_id', data.leadId);
