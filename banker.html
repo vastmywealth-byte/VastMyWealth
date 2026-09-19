@@ -719,14 +719,13 @@ function renderBusinessRow(l){
   if (l.magicLink) {
     actions = '<div class="row-actions"><a class="btn-link-out" href="' + escapeHtml(l.magicLink) + '" target="_blank">🔗 Upload Docs Link</a></div>';
   } else if (l.leadId && l.loanType) {
-    actions = '<div class="row-actions"><button class="btn-link-out" onclick="openDocSummary((\'' + escapeHtml(l.leadId) + '\',\'' + escapeHtml(l.loanType) + '\')">📁 Docs</button></div>';
+    actions = '<div class="row-actions"><button class="btn-link-out" onclick="openDocSummary(\'' + escapeHtml(l.leadId) + '\', \'' + escapeHtml(l.loanType) + '\')">📁 Docs</button></div>';
   }
   var statusClass = (l.fileStatus === "Disbursed") ? "disbursed" : "submitted";
   return '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(l.customerName) +
     '</div><div class="business-meta">' + escapeHtml(l.meta) + '</div></div><span class="status-chip ' + statusClass + '">' +
     escapeHtml(l.fileStatus) + '</span></div>' + actions + '</div>';
 }
-
 function loadBusinessLogs(){
   var el = document.getElementById("businessLogList");
   el.innerHTML = '<div class="empty-state">Loading...</div>';
