@@ -517,20 +517,20 @@ document.getElementById('trackBtn').addEventListener('click', function(){
   var mobile = document.getElementById('trackMobile').value.trim();
   if (!mobile) { alert('Enter your mobile number'); return; }
   var btn = this, original = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Connecting to server — this can take up to a minute…';
-
-  fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(mobile), undefined, 2)
+  btn.disabled = true; btn.textContent = 'Checking...';
+  fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(mobile), {}, 4)
     .then(data => {
       btn.disabled = false; btn.textContent = original;
       if (!data.success || !data.found) { alert('No application found for this number. You can start a new one below.'); return; }
+      if (data.isVlEl) {
+        window.location.href = 'vl-el-application.html?leadId=' + encodeURIComponent(data.leadId) + '&product=' + encodeURIComponent(data.product);
+        return;
+      }
       state.profile = { name: data.name, email: data.email, mobile: mobile };
       state.leadId = data.leadId; state.loanType = data.product;
       renderTrackingDashboard(data);
-    }).catch(() => {
-      btn.disabled = false; btn.textContent = original;
-      alert('The server is taking too long to respond. Please check your internet connection and try again.');
-    });
+      history.replaceState(null, '', '?leadId=' + encodeURIComponent(data.leadId) + '&product=' + encodeURIComponent(data.product));
+    }).catch(() => { btn.disabled = false; btn.textContent = original; alert('Still having trouble reaching the server — please check your connection and try again.'); });
 });
 function renderTrackingDashboard(data){
   document.getElementById('returningCustomerSection').classList.add('hidden');
