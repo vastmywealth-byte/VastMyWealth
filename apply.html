@@ -568,26 +568,38 @@ document.getElementById('docSubmitBtn').addEventListener('click', async function
     .then(() => { document.getElementById('docWrap').innerHTML = '<div class="results-intro"><h1>✅ Documents Received</h1><p>Our team will review shortly.</p></div><button class="btn-new-application" onclick="closeApplication()">Close</button>'; });
 });
 
-document.getElementById('trackBtn').addEventListener('click', function(){
-  var mobile = document.getElementById('trackMobile').value.trim();
-  if (!mobile) { alert('Enter your mobile number'); return; }
-  var btn = this, original = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Connecting server will take upto a min';
-  fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(mobile), {}, 2)
+function runTrack(mobile, silent, btn){
+  var original = btn ? btn.textContent : null;
+  if (btn) { btn.disabled = true; btn.textContent = 'Checking...'; }
+  return fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(mobile), {}, 2)
     .then(data => {
-      btn.disabled = false; btn.textContent = original;
-      if (!data.success || !data.found) { alert('No application found for this number. You can start a new one below.'); return; }
+      if (btn) { btn.disabled = false; btn.textContent = original; }
+      if (!data.success || !data.found) {
+        document.getElementById('f_mobile').value = mobile;
+        if (!silent) alert('No application found for this number. You can start a new one below.');
+        return false;
+      }
       if (data.isVlEl) {
         window.location.href = 'vl-el-application.html?leadId=' + encodeURIComponent(data.leadId) + '&product=' + encodeURIComponent(data.product);
-        return;
+        return true;
       }
       state.profile = { name: data.name, email: data.email, mobile: mobile };
       state.leadId = data.leadId; state.loanType = data.product;
       renderTrackingDashboard(data);
       history.replaceState(null, '', '?leadId=' + encodeURIComponent(data.leadId) + '&product=' + encodeURIComponent(data.product));
-    }).catch(() => { btn.disabled = false; btn.textContent = original; alert('Still having trouble reaching the server — please check your connection and try again.'); });
-});
+      return true;
+    }).catch(() => {
+      if (btn) { btn.disabled = false; btn.textContent = original; }
+      if (!silent) alert('Still having trouble reaching the server — please check your connection and try again.');
+      return false;
+    });
+}
 
+document.getElementById('trackBtn').addEventListener('click', function(){
+  var mobile = document.getElementById('trackMobile').value.trim();
+  if (!mobile) { alert('Enter your mobile number'); return; }
+  runTrack(mobile, false, this);
+});
 function renderTrackingDashboard(data){
   document.getElementById('returningCustomerSection').classList.add('hidden');
   document.getElementById('formWrap').classList.add('hidden');
@@ -640,7 +652,8 @@ function renderResults(data, profile, showUploadPrompt){
   var leadId = urlParams.get('leadId');
   if (!prefillMobile || leadId) return;
   document.getElementById('trackMobile').value = prefillMobile;
-  document.getElementById('trackBtn').click();
+  document.getElementById('f_mobile').value = prefillMobile;
+  runTrack(prefillMobile, true, document.getElementById('trackBtn'));
 })();
 </script>
 </body>
