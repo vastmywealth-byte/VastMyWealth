@@ -450,22 +450,22 @@ document.getElementById('submitBtn').addEventListener('click', async function(){
   var required = ['f_name','f_mobile','f_email','f_house','f_income','f_loanAmount','f_cibil','f_bounces'];
   if (!state.employmentType) { alert('Please select employment type.'); return; }
   if (!document.getElementById('f_consent').checked) { alert('Please provide consent to proceed.'); return; }
-
+ 
   for (var i=0; i<required.length; i++){
     var el = document.getElementById(required[i]);
-    if (!el || !el.value.trim()) { 
-      alert('Please fill in all required fields.'); 
+    if (!el || !el.value.trim()) {
+      alert('Please fill in all required fields.');
       if(el) el.focus();
-      return; 
+      return;
     }
   }
-
-  var btn = this; 
-  btn.disabled = true; 
+ 
+  var btn = this;
+  btn.disabled = true;
   btn.textContent = 'Matching lenders…';
   document.getElementById('formWrap').classList.add('hidden');
   document.getElementById('loadingState').style.display = 'block';
-
+ 
   var profile = {
     name: document.getElementById('f_name').value.trim(),
     mobile: document.getElementById('f_mobile').value.replace(/\D/g,'').slice(-10),
@@ -492,51 +492,53 @@ document.getElementById('submitBtn').addEventListener('click', async function(){
     consentGiven: document.getElementById('f_consent').checked,
     partnerCode: partnerCode
   };
-
+ 
   try {
-    const data = await fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(profile.mobile));
+    const data = await fetchJsonRetry(BACKEND_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'submitProfileOnly', product: state.loanType, profile: profile, forceNew: !!state.forceNew })
+    });
     document.getElementById('loadingState').style.display = 'none';
-
+ 
     if (!data.success) {
       if (data.error === 'duplicate_customer') {
         var proceed = confirm('You already have an application on file (Lead ' + data.existingLeadId + ', ' + data.existingProduct + '). Click OK to check its status, or Cancel to start a brand-new application anyway.');
         btn.disabled = false; btn.textContent = 'Find My Matching Lenders';
-        if (proceed) { 
-          document.getElementById('trackMobile').value = profile.mobile; 
-          document.getElementById('returningCustomerSection').classList.remove('hidden'); 
-          document.getElementById('trackBtn').click(); 
-        } else { 
-          state.forceNew = true; 
-          document.getElementById('submitBtn').click(); 
+        if (proceed) {
+          document.getElementById('trackMobile').value = profile.mobile;
+          document.getElementById('returningCustomerSection').classList.remove('hidden');
+          document.getElementById('trackBtn').click();
+        } else {
+          state.forceNew = true;
+          document.getElementById('submitBtn').click();
         }
         return;
       }
-      alert('Error: ' + (data.message || data.error)); 
-      btn.disabled = false; 
-      btn.textContent = 'Find My Matching Lenders'; 
-      document.getElementById('formWrap').classList.remove('hidden'); 
+      alert('Error: ' + (data.message || data.error));
+      btn.disabled = false;
+      btn.textContent = 'Find My Matching Lenders';
+      document.getElementById('formWrap').classList.remove('hidden');
       return;
     }
-
+ 
     state.forceNew = false;
-    state.leadId = data.leadId; 
+    state.leadId = data.leadId;
     state.profile = profile;
-    localStorage.setItem('vmw_lead_id', data.leadId); 
+    localStorage.setItem('vmw_lead_id', data.leadId);
     localStorage.setItem('vmw_lead_product', state.loanType);
     localStorage.setItem('vmw_active_lead_id', data.leadId);
-    localStorage.setItem('vmw_active_product', data.product);
+    localStorage.setItem('vmw_active_product', state.loanType);
     renderResults(data, profile, true);
-
+ 
   } catch (err) {
     console.error('submit failed', err);
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('formWrap').classList.remove('hidden');
-    btn.disabled = false; 
+    btn.disabled = false;
     btn.textContent = 'Find My Matching Lenders';
     alert('Could not reach the server: ' + (err && err.message ? err.message : err));
   }
 });
-
 function goToDocumentUpload(){ 
   document.getElementById('resultsWrap').classList.add('hidden'); 
   document.getElementById('docWrap').classList.remove('hidden'); 
@@ -632,6 +634,14 @@ function renderResults(data, profile, showUploadPrompt){
   document.getElementById('resultsWrap').classList.remove('hidden');
   document.getElementById('resultsActionsPending').classList.toggle('hidden', !showUploadPrompt);
 }
+  (function initFromMobileParam(){
+  var urlParams = new URLSearchParams(window.location.search);
+  var prefillMobile = urlParams.get('mobile');
+  var leadId = urlParams.get('leadId');
+  if (!prefillMobile || leadId) return;
+  document.getElementById('trackMobile').value = prefillMobile;
+  document.getElementById('trackBtn').click();
+})();
 </script>
 </body>
 </html>
