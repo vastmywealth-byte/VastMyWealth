@@ -302,26 +302,41 @@ function buildWhatsAppLink(){
 var HOME_PAGE = "index.html";
 var BACKEND_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
   // Auto-resume application if leadId is present in URL (Magic Link)
-window.addEventListener('DOMContentLoaded', async () => {
-  const p = new URLSearchParams(window.location.search);
-  const leadId = p.get('leadId'), product = p.get('product');
+(async function initFromUrl(){
+  const urlParams = new URLSearchParams(window.location.search);
+  const leadId = urlParams.get('leadId');
+  const product = urlParams.get('product');
   if (!leadId) return;
+
+  document.getElementById('formWrap').classList.add('hidden');
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('loadingState').textContent = 'Resuming your application…';
+
   try {
-    const res = await fetch(BACKEND_URL + '?action=resumeApplication&leadId='
-      + encodeURIComponent(leadId) + '&product=' + encodeURIComponent(product || ''));
-    const data = await res.json();
-    if (data.success && data.found) {
-      state.leadId = data.leadId;
-      state.loanType = data.product;
-      state.profile = { name: data.name, mobile: data.mobile, email: data.email };
-      document.getElementById('returningCustomerSection').classList.add('hidden');
-      document.getElementById('formWrap').classList.add('hidden');
-      goToDocumentUpload();                    // land straight on upload step
-    } else if (data.allocated) {
-      alert(data.error);
+    const res = await fetchJsonRetry(BACKEND_URL + '?action=resumeApplication&leadId=' + encodeURIComponent(leadId) + '&product=' + encodeURIComponent(product || ''), {}, 3);
+    document.getElementById('loadingState').style.display = 'none';
+
+    if (res.success && res.found) {
+      state.leadId = res.leadId; state.loanType = product;
+      state.profile = { name: res.name, mobile: res.mobile, email: res.email };
+
+      if (String(res.documentStatus).toUpperCase() === 'SUBMITTED') {
+        const statusRes = await fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(res.mobile), {}, 3);
+        if (statusRes.success && statusRes.found && !statusRes.isVlEl) { renderTrackingDashboard(statusRes); return; }
+      }
+      renderDocuments();
+      goToDocumentUpload();
+    } else if (res.allocated) {
+      alert(res.error);
+      document.getElementById('formWrap').classList.remove('hidden');
+    } else {
+      document.getElementById('formWrap').classList.remove('hidden');
     }
-  } catch (err) { console.error('resume failed', err); }
-});
+  } catch (err) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('formWrap').classList.remove('hidden');
+  }
+})();
   var state = { loanType:"PL", employmentType:null, companyType:null, house:null, uploadedFiles:{} };
 var partnerCode = new URLSearchParams(window.location.search).get('ref') || '';
   if (partnerCode) {
