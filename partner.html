@@ -134,9 +134,9 @@ td{ padding:12px 8px; border-bottom:1px solid rgba(255,255,255,0.06); }
   <p style="color:var(--ink-400);font-size:13px;margin-top:4px;">
     Start a new customer application — automatically attributed to your code.
   </p>
-  <a id="newAppBtn" class="btn" style="display:block;text-align:center;text-decoration:none;margin-top:12px;">
-    ＋ New Application
-  </a>
+    <label style="margin-top:12px;">Customer Mobile Number</label>
+  <input type="tel" id="newAppMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile">
+  <button id="newAppBtn" class="btn" style="margin-top:10px;">＋ Start / Continue Application</button>
   <button class="btn" id="shareLinkBtn2" style="background:none;border:1.5px solid var(--gold-500);color:var(--gold-300);margin-top:8px;width:100%;">
     🔗 Copy My Application Link
   </button>
@@ -236,16 +236,19 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
   reader.readAsDataURL(file);
 });
 
+function buildFollowUpLink(partnerCode, mobile){
+  return PORTAL_PAGE + '?ref=' + encodeURIComponent(partnerCode) + '&mobile=' + encodeURIComponent(mobile);
+}
+
 function initDashboard() {
   const partnerCode = localStorage.getItem('vmw_partner_code');
   const partnerName = localStorage.getItem('vmw_partner_name');
-  const PORTAL_PAGE = "https://loan.vastmywealth.com/portal-unified-application.html"
 
   document.getElementById('welcomeMsg').textContent = 'Welcome, ' + (partnerName || 'Partner');
   document.getElementById('codeMsg').textContent = 'Partner Code: ' + partnerCode;
   const refLink = PORTAL_PAGE + '?ref=' + partnerCode;
   document.getElementById('refLink').textContent = refLink;
-    document.getElementById('copyBtn').onclick = function(){
+  document.getElementById('copyBtn').onclick = function(){
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(refLink)
         .then(function(){ pToast('Link copied — share it with your customer'); })
@@ -259,12 +262,15 @@ function initDashboard() {
     pToast('Logged out');
     switchView('loginView');
   };
-  document.getElementById('newAppBtn').href = PORTAL_PAGE + '?ref=' + partnerCode + '&new=1';
-document.getElementById('shareLinkBtn2').onclick = document.getElementById('copyBtn').onclick;
+  document.getElementById('newAppBtn').onclick = function(){
+    var mobile = document.getElementById('newAppMobile').value.replace(/\D/g, '');
+    if (mobile.length !== 10) { pToast('Enter a valid 10-digit mobile number', true); return; }
+    window.open(buildFollowUpLink(partnerCode, mobile), '_blank');
+  };
+  document.getElementById('shareLinkBtn2').onclick = document.getElementById('copyBtn').onclick;
 
   Promise.all([loadLeads(partnerCode), loadAnnouncement()]);
 }
-
 // #5 — speed: show a skeleton immediately, don't block on the fetch
 async function loadLeads(partnerCode) {
   var area = document.getElementById('leadsArea');
@@ -276,16 +282,9 @@ async function loadLeads(partnerCode) {
       area.innerHTML = '<div style="color:var(--ink-400); padding:20px 0;">No applications yet. Share your link to start.</div>';
       return;
     }
-    var portalBaseUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'apply.html';
-    area.innerHTML = data.leads.map(l => {
+        area.innerHTML = data.leads.map(l => {
       var displayName = (l.employmentType === 'Self-Employed' && l.companyName) ? l.companyName : (l.customerName || '—');
-      var uploadLink = l.leadId ? (portalBaseUrl + '?leadId=' + l.leadId + '&product=' + encodeURIComponent(l.product)) : '#';
-      var actionHtml = '';
-      if (l.documentStatus === 'Pending' && l.leadId) {
-        actionHtml = '<a href="' + uploadLink + '" target="_blank" class="pill-btn">Upload Docs</a>';
-      } else if (l.leadId) {
-        actionHtml = '<button class="pill-btn" onclick="openDocSummary(\'' + l.leadId + '\',\'' + l.product + '\')">📁 Details</button>';
-      }
+      var actionHtml = l.mobile ? ('<a href="' + buildFollowUpLink(partnerCode, l.mobile) + '" target="_blank" class="pill-btn">💬 Follow Up</a>') : '';
       return '<div class="lead-card"><div class="lead-card-top"><b>' + displayName + '</b><span class="status-pill">' + l.status + '</span></div>' +
         '<div class="lead-card-meta">' + l.product + (l.processingBank ? (' · ' + l.processingBank) : '') + '</div>' +
         (actionHtml ? ('<div class="lead-card-action">' + actionHtml + '</div>') : '') + '</div>';
@@ -293,25 +292,6 @@ async function loadLeads(partnerCode) {
   } catch (err) {
     area.innerHTML = '<div style="color:#FFC5C1;">Could not load applications — check your connection.</div>';
   }
-}
-// #2 — safe per-file Docs viewer, same endpoint the Banker CRM uses
-function openDocSummary(leadId, loanType){
-  showToast("Loading...");
-  fetch(LOAN_PORTAL_SCRIPT_URL + "?action=getLeadSummary&leadId=" + encodeURIComponent(leadId) + "&product=" + encodeURIComponent(loanType))
-    .then(r => r.json()).then(r => {
-      var body = document.getElementById("docViewerBody");
-      body.innerHTML = (!r.success || !r.fields || !r.fields.length)
-        ? '<div class="empty-state">No details available yet.</div>'
-        : '<table style="width:100%; font-size:12.5px;">' + r.fields.map(f => '<tr><td style="padding:6px 4px; color:var(--muted); white-space:nowrap;">' + escapeHtml(f.field) + '</td><td style="padding:6px 4px; font-weight:600;">' + escapeHtml(f.value) + '</td></tr>').join('') + '</table>';
-      body.innerHTML += '<button class="btn-primary" style="margin-top:14px;" id="emailDocsBtn">📧 Email Me These Documents</button>';
-      document.getElementById("emailDocsBtn").addEventListener("click", function(){
-        withBusyButton(this, "Sending...", function(){
-          return fetch(LOAN_PORTAL_SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "emailLeadDocuments", leadId: leadId, toEmail: SESSION.bankerEmail }) })
-            .then(r2 => r2.json()).then(r2 => showToast(r2.success ? r2.message : r2.error, !r2.success));
-        });
-      });
-      openSheet("docViewerSheet", "docViewerBackdrop");
-    }).catch(() => showToast("Could not load details", true));
 }
 // #9 — announcement popup
 function loadAnnouncement() { return fetch(SCRIPT_URL + '?action=getAnnouncement&audience=Partner').then(r => r.json()).then(r => { if (!r.success || !r.announcement) return; var a = r.announcement, overlay = document.createElement('div'); overlay.style = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:95;display:flex;align-items:center;justify-content:center;"; overlay.innerHTML = '<div style="background:var(--navy-900);border:1px solid var(--gold-500);border-radius:14px;padding:20px;max-width:340px;width:90%;text-align:center;">' + (a.imageUrl ? '<img src="' + a.imageUrl + '" style="max-width:100%;border-radius:10px;margin-bottom:12px;">' : '') + '<h3 style="margin-bottom:8px;">' + (a.title || '') + '</h3><p style="color:var(--ink-400);font-size:13px;margin-bottom:16px;">' + (a.body || '') + '</p>' + (a.buttonText && a.buttonUrl ? '<a href="' + a.buttonUrl + '" target="_blank" style="text-decoration:none;"><button class="btn">' + a.buttonText + '</button></a>' : '') + '<button onclick="this.closest(\'div\').parentElement.remove()" style="margin-top:10px;background:none;border:none;color:var(--ink-400);font-size:12px;cursor:pointer;">Dismiss</button></div>'; overlay.onclick = function (e) { if (e.target === overlay) overlay.remove(); }; document.body.appendChild(overlay); }).catch(() => {}); }
