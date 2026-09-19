@@ -570,7 +570,7 @@ document.getElementById('trackBtn').addEventListener('click', function(){
   var mobile = document.getElementById('trackMobile').value.trim();
   if (!mobile) { alert('Enter your mobile number'); return; }
   var btn = this, original = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Connectin server will take upto a min';
+  btn.disabled = true; btn.textContent = 'Connecting server will take upto a min';
   fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(mobile), {}, 2)
     .then(data => {
       btn.disabled = false; btn.textContent = original;
