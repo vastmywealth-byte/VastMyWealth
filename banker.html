@@ -253,16 +253,18 @@
   <main class="content">
     <div class="pending-banner" id="pendingBanner" style="display:none;">Your DSA code is under verification. You'll be notified once active.</div>
 
-    <div id="tabLog" class="tab-pane">
+        <div id="tabLog" class="tab-pane">
       <div class="section-card">
         <h3>Log New Business</h3>
-        <p class="desc">Start a brand-new customer application — attributed to you automatically.</p>
+        <p class="desc">Enter the customer's mobile number — we'll resume their application if one exists, or take you straight to a fresh one.</p>
         <div id="logGate" class="gate-state" style="display:none;">Submit and get a DSA code verified before logging business.</div>
-        <a id="portalLink" href="#" target="_blank" class="btn-primary" style="display:block; text-align:center; text-decoration:none;">＋ New Application</a>
+        <div id="newAppArea">
+          <div class="form-group"><label>Customer Mobile Number</label><input type="tel" id="newAppMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile"></div>
+          <button id="portalLinkBtn" class="btn-primary" style="display:block; width:100%;">＋ Start / Continue Application</button>
+        </div>
         <button class="btn-secondary" id="shareLinkBtn" style="color:var(--navy); border-color:var(--navy);">🔗 Copy My Application Link to Share</button>
       </div>
     </div>
-
     <div id="tabCodes" class="tab-pane" style="display:none;">
       <div class="section-card">
         <h3>Your DSA Codes</h3>
@@ -567,25 +569,28 @@ document.getElementById("logoutBtn").addEventListener("click", function(){
   showView("requestCodeView");
 });
 
+function buildFollowUpLink(mobile){
+  return PORTAL_APPLICATION_URL + "?ref=" + encodeURIComponent(SESSION.refCode) + "&mobile=" + encodeURIComponent(mobile);
+}
+
 function enterApp(){
   document.getElementById("authScreen").style.display = "none";
   document.getElementById("app").style.display = "block";
   document.getElementById("welcomeName").textContent = SESSION.bankerName ? ("Hi, " + SESSION.bankerName) : "Bank Channel CRM";
   document.getElementById("pendingBanner").style.display = (SESSION.pendingVerification && !SESSION.hasActiveCode) ? "block" : "none";
 
-  var portalLink = document.getElementById("portalLink");
   var gated = !SESSION.hasActiveCode;
   document.getElementById("logGate").style.display = gated ? "block" : "none";
-  portalLink.style.display = gated ? "none" : "block";
-  // #7 — &new=1 tells the portal to start a fresh application instead of
-  // resuming a previous one. Requires portal-unified-application.html to
-  // read this param and skip its own resume-lead lookup when present.
-  if (!gated && SESSION.refCode) {
-    portalLink.href = PORTAL_APPLICATION_URL + "?ref=" + encodeURIComponent(SESSION.refCode) + "&new=1";
-  }
+  document.getElementById("newAppArea").style.display = gated ? "none" : "block";
 
   Promise.all([loadCodes(), loadBusinessLogs(), loadLeads()]);
 }
+
+document.getElementById("portalLinkBtn").addEventListener("click", function(){
+  var mobile = document.getElementById("newAppMobile").value.replace(/\D/g, "");
+  if (mobile.length !== 10) { showToast("Enter a valid 10-digit mobile number", true); return; }
+  window.open(buildFollowUpLink(mobile), "_blank");
+});
 
 document.getElementById("shareLinkBtn").addEventListener("click", function(){
   if (!SESSION.refCode) { showToast("Get a verified DSA code first", true); return; }
@@ -596,7 +601,6 @@ document.getElementById("shareLinkBtn").addEventListener("click", function(){
     showToast(link);
   }
 });
-
 document.querySelectorAll(".nav-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
@@ -686,12 +690,9 @@ document.getElementById("submitCodeForm").addEventListener("submit", function(e)
 });
 
 function renderBusinessRow(l){
-  var actions = "";
-  if (l.magicLink) {
-    actions = '<div class="row-actions"><a class="btn-link-out" href="' + escapeHtml(l.magicLink) + '" target="_blank">🔗 Upload Docs Link</a></div>';
-  } else if (l.leadId && l.loanType) {
-    actions = '<div class="row-actions"><button class="btn-link-out" onclick="openDocSummary(\'' + escapeHtml(l.leadId) + '\', \'' + escapeHtml(l.loanType) + '\')">📁 Docs</button></div>';
-  }
+  var actions = l.customerMobile
+    ? '<div class="row-actions"><a class="btn-link-out" href="' + buildFollowUpLink(l.customerMobile) + '" target="_blank">💬 Follow Up</a></div>'
+    : "";
   var statusClass = (l.fileStatus === "Disbursed") ? "disbursed" : "submitted";
   return '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(l.customerName) +
     '</div><div class="business-meta">' + escapeHtml(l.meta) + '</div></div><span class="status-chip ' + statusClass + '">' +
@@ -701,7 +702,17 @@ function loadBusinessLogs(){ var el = document.getElementById("businessLogList")
 
 var ownLogs = apiPost({ action:"getLogs", bankerId:SESSION.bankerId }).catch(function(){ return { logs: [] }; }); var portalLeads = SESSION.refCode ? fetch(LOAN_PORTAL_SCRIPT_URL + "?action=getPartnerLeads&partnerCode=" + encodeURIComponent(SESSION.refCode)) .then(function(r){ return r.json(); }).catch(function(){ return { leads: [] }; }) : Promise.resolve({ leads: [] });
 
-return Promise.all([ownLogs, portalLeads]).then(function(results){ var a = results[0] || {}, b = results[1] || {}; var rows = (a.logs || []).map(function(l){ return { customerName: l.customerName, meta: l.meta, fileStatus: l.fileStatus, leadId: l.leadId, loanType: l.loanType, magicLink: l.magicLink }; }).concat((b.leads || []).map(function(l){ return { customerName: l.customerName, meta: l.product + ' · ' + (l.mobile || '') + (l.processingBank ? ' · ' + l.processingBank : ''), fileStatus: l.status, leadId: l.leadId, loanType: l.product, magicLink: (l.documentStatus === 'Pending' && l.leadId) ? (PORTAL_APPLICATION_URL + '?leadId=' + encodeURIComponent(l.leadId) + '&product=' + encodeURIComponent(l.product)) : '' }; }));
+return Promise.all([ownLogs, portalLeads]).then(function(results){ var a = results[0] || {}, b = results[1] || {}
+ var rows = (a.logs || []).map(function(l){
+      return { customerName: l.customerName, meta: l.meta, fileStatus: l.fileStatus,
+               leadId: l.leadId, loanType: l.loanType, customerMobile: l.customerMobile };
+    }).concat((b.leads || []).map(function(l){
+      return {
+        customerName: l.customerName,
+        meta: l.product + ' · ' + (l.mobile || '') + (l.processingBank ? ' · ' + l.processingBank : ''),
+        fileStatus: l.status, leadId: l.leadId, loanType: l.product, customerMobile: l.mobile
+      };
+    }));
 
 if (!rows.length) { el.innerHTML = '<div class="empty-state">No business logged yet.</div>'; return; }
 el.innerHTML = rows.map(renderBusinessRow).join("");
@@ -732,7 +743,8 @@ listEl.querySelectorAll(".claim-btn").forEach(btn => {
 }).catch(() => { listEl.innerHTML = '<div class="empty-state">Could not load — check your connection.</div>'; });
 
 return Promise.all([leadsPromise, loadMyClaims()]); }
-function loadMyClaims(){ var el = document.getElementById("bizMyClaimsList"); el.innerHTML = '<div class="empty-state">Loading...</div>'; return apiPost({ action:"getMyLeadClaims", bankerId:SESSION.bankerId }).then(r => { var claims = r.claims || []; if (!claims.length) { el.innerHTML = '<div class="empty-state">No claims yet.</div>'; return; } el.innerHTML = claims.map(c => { var actions = ""; if (c.claimStatus === "Active") { actions = '<div class="row-actions">' + '<button class="btn-disburse" data-claim="' + escapeHtml(c.claimId) + '">✅ Disbursed</button>' + '<button class="btn-reject" data-claim="' + escapeHtml(c.claimId) + '">❌ Reject</button>' + '<button class="btn-link-out" onclick="openDocSummary(\'' + escapeHtml(c.leadId) + '\',\'' + escapeHtml(c.loanType) + '\')">📁 Docs</button>' + '</div>'; } else if (c.claimStatus === "Disbursed") { actions = '<div class="business-meta">Disbursed amount: ₹' + escapeHtml(c.disbursedAmount || "—") + '</div>'; } else if (c.claimStatus === "Rejected") { actions = '<div class="business-meta">Reason: ' + escapeHtml(c.rejectionReason || "—") + '</div>'; } return '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(c.customerName) + '</div><div class="business-meta">' + escapeHtml(c.customerMobile || "") + ' · ₹' + escapeHtml(c.loanAmount) + '</div></div><span class="status-chip ' + (c.claimStatus==="Disbursed"?"disbursed":c.claimStatus==="Rejected"?"rejected":"active") + '">' + escapeHtml(c.claimStatus) + '</span></div>' + actions + '</div>'; }).join("");
+function loadMyClaims(){ var el = document.getElementById("bizMyClaimsList"); el.innerHTML = '<div class="empty-state">Loading...</div>'; return apiPost({ action:"getMyLeadClaims", bankerId:SESSION.bankerId }).then(r => { var claims = r.claims || []; if (!claims.length) { el.innerHTML = '<div class="empty-state">No claims yet.</div>'; return; } el.innerHTML = claims.map(c => { var actions = ""; if (c.claimStatus === "Active") { actions = '<div class="row-actions">' + '<button class="btn-disburse" data-claim="' + escapeHtml(c.claimId) + '">✅ Disbursed</button>' + '<button class="btn-reject" data-claim="' + escapeHtml(c.claimId) + '">❌ Reject</button>' + (c.customerMobile ? ('<a class="btn-link-out" href="' + buildFollowUpLink(c.customerMobile) + '" target="_blank">💬 Follow Up</a>') : '')
+  + '</div>'; } else if (c.claimStatus === "Disbursed") { actions = '<div class="business-meta">Disbursed amount: ₹' + escapeHtml(c.disbursedAmount || "—") + '</div>'; } else if (c.claimStatus === "Rejected") { actions = '<div class="business-meta">Reason: ' + escapeHtml(c.rejectionReason || "—") + '</div>'; } return '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(c.customerName) + '</div><div class="business-meta">' + escapeHtml(c.customerMobile || "") + ' · ₹' + escapeHtml(c.loanAmount) + '</div></div><span class="status-chip ' + (c.claimStatus==="Disbursed"?"disbursed":c.claimStatus==="Rejected"?"rejected":"active") + '">' + escapeHtml(c.claimStatus) + '</span></div>' + actions + '</div>'; }).join("");
 
 el.querySelectorAll(".btn-disburse").forEach(btn => btn.addEventListener("click", function(){
   document.getElementById("disburseClaimId").value = this.getAttribute("data-claim");
