@@ -262,8 +262,7 @@ function initDashboard() {
   document.getElementById('newAppBtn').href = PORTAL_PAGE + '?ref=' + partnerCode + '&new=1';
 document.getElementById('shareLinkBtn2').onclick = document.getElementById('copyBtn').onclick;
 
-  loadLeads(partnerCode);
-  loadAnnouncement();
+  Promise.all([loadLeads(partnerCode), loadAnnouncement()]);
 }
 
 // #5 — speed: show a skeleton immediately, don't block on the fetch
@@ -315,22 +314,7 @@ function openDocSummary(leadId, loanType){
     }).catch(() => showToast("Could not load details", true));
 }
 // #9 — announcement popup
-function loadAnnouncement() {
-  fetch(SCRIPT_URL + '?action=getAnnouncement&audience=Partner').then(r => r.json()).then(r => {
-    if (!r.success || !r.announcement) return;
-    var a = r.announcement, overlay = document.createElement('div');
-    overlay.style = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:95;display:flex;align-items:center;justify-content:center;";
-    overlay.innerHTML = '<div style="background:var(--navy-900);border:1px solid var(--gold-500);border-radius:14px;padding:20px;max-width:340px;width:90%;text-align:center;">' +
-      (a.imageUrl ? '<img src="' + a.imageUrl + '" style="max-width:100%;border-radius:10px;margin-bottom:12px;">' : '') +
-      '<h3 style="margin-bottom:8px;">' + (a.title || '') + '</h3><p style="color:var(--ink-400);font-size:13px;margin-bottom:16px;">' + (a.body || '') + '</p>' +
-      (a.buttonText && a.buttonUrl ? '<a href="' + a.buttonUrl + '" target="_blank" style="text-decoration:none;"><button class="btn">' + a.buttonText + '</button></a>' : '') +
-      '<button onclick="this.closest(\'div\').parentElement.remove()" style="margin-top:10px;background:none;border:none;color:var(--ink-400);font-size:12px;cursor:pointer;">Dismiss</button></div>';
-    overlay.onclick = function (e) { if (e.target === overlay) overlay.remove(); };
-    document.body.appendChild(overlay);
-  }).catch(() => {});
-}
-
-checkInitialAuthState();
+function loadAnnouncement() { return fetch(SCRIPT_URL + '?action=getAnnouncement&audience=Partner').then(r => r.json()).then(r => { if (!r.success || !r.announcement) return; var a = r.announcement, overlay = document.createElement('div'); overlay.style = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:95;display:flex;align-items:center;justify-content:center;"; overlay.innerHTML = '<div style="background:var(--navy-900);border:1px solid var(--gold-500);border-radius:14px;padding:20px;max-width:340px;width:90%;text-align:center;">' + (a.imageUrl ? '<img src="' + a.imageUrl + '" style="max-width:100%;border-radius:10px;margin-bottom:12px;">' : '') + '<h3 style="margin-bottom:8px;">' + (a.title || '') + '</h3><p style="color:var(--ink-400);font-size:13px;margin-bottom:16px;">' + (a.body || '') + '</p>' + (a.buttonText && a.buttonUrl ? '<a href="' + a.buttonUrl + '" target="_blank" style="text-decoration:none;"><button class="btn">' + a.buttonText + '</button></a>' : '') + '<button onclick="this.closest(\'div\').parentElement.remove()" style="margin-top:10px;background:none;border:none;color:var(--ink-400);font-size:12px;cursor:pointer;">Dismiss</button></div>'; overlay.onclick = function (e) { if (e.target === overlay) overlay.remove(); }; document.body.appendChild(overlay); }).catch(() => {}); }
 </script>
 </body>
 </html>
