@@ -301,7 +301,8 @@ function buildWhatsAppLink(){
 
 var HOME_PAGE = "index.html";
 var BACKEND_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
-  // Auto-resume application if leadId is present in URL (Magic Link)
+
+// Auto-resume application if leadId is present in URL (Magic Link)
 (async function initFromUrl(){
   const urlParams = new URLSearchParams(window.location.search);
   const leadId = urlParams.get('leadId');
@@ -337,9 +338,10 @@ var BACKEND_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuB
     document.getElementById('formWrap').classList.remove('hidden');
   }
 })();
-  var state = { loanType:"PL", employmentType:null, companyType:null, house:null, uploadedFiles:{} };
+
+var state = { loanType:"PL", employmentType:null, companyType:null, house:null, uploadedFiles:{} };
 var partnerCode = new URLSearchParams(window.location.search).get('ref') || '';
-  if (partnerCode) {
+if (partnerCode) {
   document.querySelectorAll('#loanToggle button[data-val="HL"], #loanToggle button[data-val="LAP"]').forEach(b => b.style.display = 'none');
 }
 
@@ -399,6 +401,7 @@ function updateIncomeLabel(){
 function uploadBoxHtml(key, title, sub, accept, multiple){
   return '<div class="upload-box" id="box_'+key+'"><div class="upload-icon">📄</div><div class="upload-text"><div class="upload-title">'+title+'</div><div class="upload-sub">'+sub+'</div></div><span class="upload-cta">Tap to upload</span><input type="file" accept="'+accept+'" '+(multiple?'multiple':'')+' data-key="'+key+'"></div>';
 }
+
 function renderDocuments(){
   var c = document.getElementById('docContainer'), isSE = state.employmentType === 'Self-Employed', ct = state.companyType, html = '';
   if (!isSE || ct === 'Proprietorship') {
@@ -446,71 +449,105 @@ function renderDocuments(){
 document.getElementById('submitBtn').addEventListener('click', async function(){
   var required = ['f_name','f_mobile','f_email','f_house','f_income','f_loanAmount','f_cibil','f_bounces'];
   if (!state.employmentType) { alert('Please select employment type.'); return; }
-  if (!document.getElementById('f_consent').checked) { alert('Please provide consent to proceed.'); return; }   // ← ADD THIS LINE
-  var btn = this; btn.disabled = true; btn.textContent = 'Matching lenders…';
+  if (!document.getElementById('f_consent').checked) { alert('Please provide consent to proceed.'); return; }
+
+  for (var i=0; i<required.length; i++){
+    var el = document.getElementById(required[i]);
+    if (!el || !el.value.trim()) { 
+      alert('Please fill in all required fields.'); 
+      if(el) el.focus();
+      return; 
+    }
+  }
+
+  var btn = this; 
+  btn.disabled = true; 
+  btn.textContent = 'Matching lenders…';
   document.getElementById('formWrap').classList.add('hidden');
   document.getElementById('loadingState').style.display = 'block';
 
   var profile = {
-  name: document.getElementById('f_name').value.trim(),
-  mobile: document.getElementById('f_mobile').value.replace(/\D/g,'').slice(-10),
-  email: document.getElementById('f_email').value.trim(),
-  employmentType: state.employmentType,
-  companyType: state.companyType || '',
-  companyName: (document.getElementById('f_companyName')||{}).value || '',
-  personCount: (document.getElementById('f_personCount')||{}).value || '',
-  house: document.getElementById('f_house').value,
-  monthlyIncome: document.getElementById('f_income').value.replace(/[^0-9.]/g,''),
-  existingEmi: document.getElementById('f_emi').value.replace(/[^0-9.]/g,''),
-  loanAmount: document.getElementById('f_loanAmount').value.replace(/[^0-9.]/g,''),
-  cibilBracket: document.getElementById('f_cibil').value,
-  bounces: document.getElementById('f_bounces').value,
-  enquiries: document.getElementById('f_enquiries').value,
-  vintageYears: (document.getElementById('f_vintage')||{}).value || '',
-  gstVintage: (document.getElementById('f_gstVintage')||{}).value || '',
-  udyam: (document.getElementById('f_udyam')||{}).value || '',
-  bankAccountType: (document.getElementById('f_bankAccountType')||{}).value || '',
-  pincode: document.getElementById('f_pincode').value.replace(/\D/g,''),
-  propertyAddress: (document.getElementById('f_propertyAddress')||{}).value || '',
-  propertyPincode: (document.getElementById('f_propertyPincode')||{}).value || '',
-  marketValue: (document.getElementById('f_marketValue')||{}).value || '',
-  consentGiven: document.getElementById('f_consent').checked,
-  partnerCode: partnerCode
-};
-for (var i=0;i<required.length;i++){
-  var el = document.getElementById(required[i]);
-  if (!el.value.trim()) { alert('Please fill in all required fields.'); el.focus();
-    btn.disabled=false; btn.textContent='Find My Matching Lenders';
-    document.getElementById('formWrap').classList.remove('hidden');
-    document.getElementById('loadingState').style.display='none'; return; }
-}
-      fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(mobile))
-    .then(data => {
-      document.getElementById('loadingState').style.display = 'none';
-      if (!data.success) {
-        if (data.error === 'duplicate_customer') {
-          var proceed = confirm('You already have an application on file (Lead ' + data.existingLeadId + ', ' + data.existingProduct + '). Click OK to check its status, or Cancel to start a brand-new application anyway.');
-          btn.disabled = false; btn.textContent = 'Find My Matching Lenders';
-          if (proceed) { document.getElementById('trackMobile').value = profile.mobile; document.getElementById('returningCustomerSection').classList.remove('hidden'); document.getElementById('trackBtn').click(); }
-          else { state.forceNew = true; document.getElementById('submitBtn').click(); }
-          return;
+    name: document.getElementById('f_name').value.trim(),
+    mobile: document.getElementById('f_mobile').value.replace(/\D/g,'').slice(-10),
+    email: document.getElementById('f_email').value.trim(),
+    employmentType: state.employmentType,
+    companyType: state.companyType || '',
+    companyName: (document.getElementById('f_companyName')||{}).value || '',
+    personCount: (document.getElementById('f_personCount')||{}).value || '',
+    house: document.getElementById('f_house').value,
+    monthlyIncome: document.getElementById('f_income').value.replace(/[^0-9.]/g,''),
+    existingEmi: document.getElementById('f_emi').value.replace(/[^0-9.]/g,''),
+    loanAmount: document.getElementById('f_loanAmount').value.replace(/[^0-9.]/g,''),
+    cibilBracket: document.getElementById('f_cibil').value,
+    bounces: document.getElementById('f_bounces').value,
+    enquiries: document.getElementById('f_enquiries').value,
+    vintageYears: (document.getElementById('f_vintage')||{}).value || '',
+    gstVintage: (document.getElementById('f_gstVintage')||{}).value || '',
+    udyam: (document.getElementById('f_udyam')||{}).value || '',
+    bankAccountType: (document.getElementById('f_bankAccountType')||{}).value || '',
+    pincode: document.getElementById('f_pincode').value.replace(/\D/g,''),
+    propertyAddress: (document.getElementById('f_propertyAddress')||{}).value || '',
+    propertyPincode: (document.getElementById('f_propertyPincode')||{}).value || '',
+    marketValue: (document.getElementById('f_marketValue')||{}).value || '',
+    consentGiven: document.getElementById('f_consent').checked,
+    partnerCode: partnerCode
+  };
+
+  try {
+    const data = await fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(profile.mobile));
+    document.getElementById('loadingState').style.display = 'none';
+
+    if (!data.success) {
+      if (data.error === 'duplicate_customer') {
+        var proceed = confirm('You already have an application on file (Lead ' + data.existingLeadId + ', ' + data.existingProduct + '). Click OK to check its status, or Cancel to start a brand-new application anyway.');
+        btn.disabled = false; btn.textContent = 'Find My Matching Lenders';
+        if (proceed) { 
+          document.getElementById('trackMobile').value = profile.mobile; 
+          document.getElementById('returningCustomerSection').classList.remove('hidden'); 
+          document.getElementById('trackBtn').click(); 
+        } else { 
+          state.forceNew = true; 
+          document.getElementById('submitBtn').click(); 
         }
-        alert('Error: ' + (data.message || data.error)); btn.disabled = false; btn.textContent = 'Find My Matching Lenders'; document.getElementById('formWrap').classList.remove('hidden'); return;
+        return;
       }
-      state.forceNew = false;
-      state.leadId = data.leadId; state.profile = profile;
-      localStorage.setItem('vmw_lead_id', data.leadId); localStorage.setItem('vmw_lead_product', state.loanType);
-      renderResults(data, profile, true);
-        }).catch(err => {
-      console.error('submit failed', err);
-      document.getElementById('loadingState').style.display = 'none';
-      document.getElementById('formWrap').classList.remove('hidden');
-      btn.disabled = false; btn.textContent = 'Find My Matching Lenders';
-      alert('Could not reach the server: ' + (err && err.message ? err.message : err));
-    });
+      alert('Error: ' + (data.message || data.error)); 
+      btn.disabled = false; 
+      btn.textContent = 'Find My Matching Lenders'; 
+      document.getElementById('formWrap').classList.remove('hidden'); 
+      return;
+    }
+
+    state.forceNew = false;
+    state.leadId = data.leadId; 
+    state.profile = profile;
+    localStorage.setItem('vmw_lead_id', data.leadId); 
+    localStorage.setItem('vmw_lead_product', state.loanType);
+    localStorage.setItem('vmw_active_lead_id', data.leadId);
+    localStorage.setItem('vmw_active_product', data.product);
+    renderResults(data, profile, true);
+
+  } catch (err) {
+    console.error('submit failed', err);
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('formWrap').classList.remove('hidden');
+    btn.disabled = false; 
+    btn.textContent = 'Find My Matching Lenders';
+    alert('Could not reach the server: ' + (err && err.message ? err.message : err));
+  }
 });
-function goToDocumentUpload(){ document.getElementById('resultsWrap').classList.add('hidden'); document.getElementById('docWrap').classList.remove('hidden'); renderDocuments(); document.getElementById('waDocLink').href = buildWhatsAppLink(); }
-function closeApplication(){ localStorage.removeItem('vmw_lead_id'); window.location.href = HOME_PAGE; }
+
+function goToDocumentUpload(){ 
+  document.getElementById('resultsWrap').classList.add('hidden'); 
+  document.getElementById('docWrap').classList.remove('hidden'); 
+  renderDocuments(); 
+  document.getElementById('waDocLink').href = buildWhatsAppLink(); 
+}
+
+function closeApplication(){ 
+  localStorage.removeItem('vmw_lead_id'); 
+  window.location.href = HOME_PAGE; 
+}
 
 document.getElementById('docSubmitBtn').addEventListener('click', async function(){
   var btn = this; btn.disabled = true;
@@ -528,6 +565,7 @@ document.getElementById('docSubmitBtn').addEventListener('click', async function
   fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action:'finalizeDocumentUpload', leadId: state.leadId, product: state.loanType, profile: state.profile }) })
     .then(() => { document.getElementById('docWrap').innerHTML = '<div class="results-intro"><h1>✅ Documents Received</h1><p>Our team will review shortly.</p></div><button class="btn-new-application" onclick="closeApplication()">Close</button>'; });
 });
+
 document.getElementById('trackBtn').addEventListener('click', function(){
   var mobile = document.getElementById('trackMobile').value.trim();
   if (!mobile) { alert('Enter your mobile number'); return; }
@@ -547,11 +585,12 @@ document.getElementById('trackBtn').addEventListener('click', function(){
       history.replaceState(null, '', '?leadId=' + encodeURIComponent(data.leadId) + '&product=' + encodeURIComponent(data.product));
     }).catch(() => { btn.disabled = false; btn.textContent = original; alert('Still having trouble reaching the server — please check your connection and try again.'); });
 });
+
 function renderTrackingDashboard(data){
   document.getElementById('returningCustomerSection').classList.add('hidden');
   document.getElementById('formWrap').classList.add('hidden');
   var container = document.getElementById('lenderCards'); container.innerHTML = '';
-    if (data.hasMatching === false) {
+  if (data.hasMatching === false) {
     container.innerHTML = '<div class="retry-note">Your ' +
       (data.product === 'VL' ? 'Vehicle' : 'Education') +
       ' Loan application is with our team. We will contact you shortly.</div>';
@@ -581,6 +620,7 @@ function renderTrackingDashboard(data){
   };
   document.getElementById('resultsWrap').appendChild(startNewBtn);
 }
+
 function renderResults(data, profile, showUploadPrompt){
   var container = document.getElementById('lenderCards'); container.innerHTML = '';
   data.lenders.forEach((lender, idx) => {
@@ -592,21 +632,6 @@ function renderResults(data, profile, showUploadPrompt){
   document.getElementById('resultsWrap').classList.remove('hidden');
   document.getElementById('resultsActionsPending').classList.toggle('hidden', !showUploadPrompt);
 }
-        
-        // Save the leadId to local storage or hidden inputs so the upload step knows which lead to update
-        localStorage.setItem('vmw_active_lead_id', data.leadId);
-        localStorage.setItem('vmw_active_product', data.product);
-
-        // If your form uses multi-step screens, automatically advance the user straight to the Document Upload step:
-        // Example: showDocumentUploadStep(); 
-      } else if (data.allocated) {
-        alert(data.error);
-      }
-    } catch (err) {
-      console.error("Error resuming application:", err);
-    }
-  }
-});
-   </script>
+</script>
 </body>
 </html>
