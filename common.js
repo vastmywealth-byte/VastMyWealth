@@ -360,6 +360,61 @@
   /* ---------- offline / installable app ---------- */
   if ('serviceWorker' in navigator) {
     w.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () { /* optional */ }); });
-    
   }
+
+  /* ---------- "Install the app" bar (every page) ----------
+     Browsers only show their own install prompt on some pages/visits, so the app
+     shows its own bar at the top of every module. It stays hidden once the app is
+     installed, and after "✕" it stays away for 7 days. */
+  var DISMISS_KEY = 'vmw_install_dismissed', deferred = null, bar = null;
+  function isStandalone() {
+    return (w.matchMedia && w.matchMedia('(display-mode: standalone)').matches) || w.navigator.standalone === true;
+  }
+  function dismissedRecently() {
+    var t = 0; try { t = parseInt(localStorage.getItem(DISMISS_KEY), 10) || 0; } catch (e) { /* ignore */ }
+    return Date.now() - t < 7 * 24 * 3600 * 1000;
+  }
+  function hideBar() { if (bar && bar.parentNode) bar.parentNode.removeChild(bar); bar = null; }
+  function showBar(iosHelp) {
+    if (bar || isStandalone() || dismissedRecently()) return;
+    bar = document.createElement('div');
+    bar.className = 'install-banner';
+    bar.setAttribute('role', 'dialog');
+    bar.setAttribute('aria-label', 'Install the app');
+    bar.innerHTML = '<img src="1000550390.png" alt="" onerror="this.style.display=\'none\'">' +
+      '<div class="ib-text"><b>Install the VastMyWealth app</b><span>' + (iosHelp
+        ? 'Tap <b>Share</b> (the square with an arrow), then <b>Add to Home Screen</b>.'
+        : 'Faster access — it works just like an app on your phone.') + '</span></div>' +
+      (iosHelp ? '' : '<button type="button" class="btn btn-primary btn-sm" id="vmwInstallBtn">Install</button>') +
+      '<button type="button" class="ib-x" aria-label="Not now">✕</button>';
+    document.body.insertBefore(bar, document.body.firstChild);
+    bar.querySelector('.ib-x').addEventListener('click', function () {
+      try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) { /* ignore */ }
+      hideBar();
+    });
+    var b = bar.querySelector('#vmwInstallBtn');
+    if (b) b.addEventListener('click', function () { VMW.install.prompt(); });
+  }
+  VMW.install = {
+    ready: function () { return !!deferred; },
+    prompt: function () {
+      if (!deferred) return Promise.resolve(false);
+      var d = deferred; deferred = null;
+      d.prompt();
+      return d.userChoice.then(function (c) { hideBar(); return c && c.outcome === 'accepted'; });
+    }
+  };
+  w.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferred = e;
+    showBar(false);
+    document.dispatchEvent(new Event('vmw-install-ready'));
+  });
+  w.addEventListener('appinstalled', function () { deferred = null; hideBar(); });
+  // iPhone / iPad Safari has no install event — show the how-to instead
+  (function () {
+    var ua = w.navigator.userAgent || '';
+    var ios = /iphone|ipad|ipod/i.test(ua) && /safari/i.test(ua) && !/crios|fxios|edgios/i.test(ua);
+    if (ios) w.addEventListener('load', function () { setTimeout(function () { showBar(true); }, 1500); });
+  })();
 })(window);
