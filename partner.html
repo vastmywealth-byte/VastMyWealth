@@ -5,296 +5,275 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Partner Portal — VastMyWealth</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#081228">
+<meta name="theme-color" content="#0B1A38">
 <link rel="apple-touch-icon" href="1000550390.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 <style>
-:root{ --navy-950:#081228; --navy-900:#0d1c3f; --gold-500:#D4A24C; --gold-300:#F3CE86; --ink-100:#EAF0FC; --ink-300:#C4D0E8; --ink-400:#93A3C4; }
-*{box-sizing:border-box; margin:0; padding:0;}
-body{ background:linear-gradient(180deg, var(--navy-950), var(--navy-900)); color:var(--ink-100); font-family:'Inter',sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:32px 20px; }
-
-/* Common Layout Elements */
-.shell{ width:100%; max-width:760px; }
-.shell-narrow{ width:100%; max-width:480px; }
-.brand{ display:flex; align-items:center; gap:12px; }
-.brand img{ width:40px; height:40px; border-radius:50%; }
-.card{ background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:20px; padding:24px; margin-top:20px; }
-.card-wide{ padding:32px; }
-label{ display:block; font-size:13px; font-weight:600; color:var(--ink-300); margin:16px 0 6px; }
-input{ width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.04); color:#fff; font-size:14.5px; }
-.btn{ width:100%; padding:14px; border-radius:12px; font-weight:700; font-size:15px; border:none; cursor:pointer; margin-top:24px; background:linear-gradient(135deg, var(--gold-300), var(--gold-500)); color:var(--navy-950); }
-
-/* Dashboard Specific Styles */
-.topbar{ width:100%; max-width:760px; display:flex; justify-content:space-between; align-items:center; }
-.logout{ font-size:13px; color:var(--ink-400); border:1px solid rgba(255,255,255,0.15); padding:7px 14px; border-radius:999px; cursor:pointer; background:none; }
-.linkbox{ display:flex; gap:8px; margin-top:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:10px 12px; align-items:center; }
-.linkbox span{ flex:1; font-size:13px; color:var(--ink-300); overflow:hidden; text-overflow:ellipsis; }
-.linkbox button{ background:var(--gold-500); color:var(--navy-950); border:none; border-radius:8px; padding:7px 12px; font-weight:700; cursor:pointer; }
-table{ width:100%; border-collapse:collapse; margin-top:18px; font-size:13px; }
-th{ text-align:left; color:var(--ink-400); padding:10px 8px; border-bottom:1px solid rgba(255,255,255,0.12); }
-td{ padding:12px 8px; border-bottom:1px solid rgba(255,255,255,0.06); }
-
-/* Register / Login Specific Styles */
-.back-portal{ display:block; text-align:center; font-size:12px; color:var(--ink-400); text-decoration:none; margin-bottom:16px; }
-.brand-center{ justify-content:center; margin-bottom:28px; }
-.brand-center img{ width:44px; height:44px; }
-.card h2{ font-size:22px; font-weight:800; color:#fff; }
-.card p.sub{ color:var(--ink-400); font-size:14px; margin-top:8px; margin-bottom:24px; }
-.footlink{ text-align:center; margin-top:20px; font-size:13.5px; color:var(--ink-400); }
-.footlink a, .back-portal { cursor: pointer; }
-.msg{ padding:12px; border-radius:10px; font-size:13px; margin-top:14px; display:none; }
-.msg.success{ background:rgba(95,211,160,0.1); border:1px solid rgba(95,211,160,0.35); color:#B7F0D8; display:block; }
-.msg.error{ background:rgba(240,102,94,0.1); border:1px solid rgba(240,102,94,0.35); color:#FFC5C1; display:block; }
-
-/* View Control Container Display Logic */
-.view-section { display: none; width: 100%; justify-content: center; flex-direction: column; align-items: center; }
-.view-section.active { display: flex; }
-
-.lead-card{ background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:14px; margin-bottom:10px; }
-.lead-card-top{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
-.lead-card-top b{ font-size:14px; color:#fff; }
-.status-pill{ font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:20px; background:rgba(212,165,74,0.15); color:var(--gold-300); white-space:nowrap; }
-.lead-card-meta{ font-size:12px; color:var(--ink-400); margin-top:4px; }
-.lead-card-action{ margin-top:10px; }
-.pill-btn{ display:inline-block; background:var(--gold-500); color:var(--navy-950); border:none; border-radius:8px; padding:8px 14px; font-weight:700; font-size:12.5px; text-decoration:none; cursor:pointer; }
-  
-#pToast{
-  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(12px);
-  background:var(--gold-500); color:var(--navy-950);
-  padding:11px 20px; border-radius:999px;
-  font-size:13px; font-weight:700; letter-spacing:.01em;
-  box-shadow:0 8px 24px rgba(0,0,0,.35);
-  opacity:0; pointer-events:none; z-index:99;
-  transition:opacity .18s ease, transform .18s ease;
-  max-width:88%; text-align:center;
-}
-#pToast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-#pToast.error{ background:#F0665E; color:#fff; }
+  .view{display:none}.view.active{display:block}
 </style>
 </head>
 <body>
 
-<!-- VIEW 1: LOGIN -->
-<div id="loginView" class="view-section active">
-  <div class="shell-narrow">
-    <a href="index.html" class="back-portal">← Back to portal</a>
-    <div class="brand brand-center"><img src="1000550390.png" alt=""><div><b>VastMyWealth</b><em style="font-style:normal; color:var(--gold-300); font-size:11px; display:block;">DSA / Partner</em></div></div>
-    <div class="card card-wide">
-      <h2>DSA / Partner Login</h2>
-      <p class="sub">Log in to track referrals and commission updates.</p>
-      <form id="loginForm">
-        <label>Mobile number</label><input type="tel" id="loginMobile" required maxlength="10" inputmode="numeric" placeholder="10-digit mobile">
-        <label>4-digit PIN</label><input type="password" id="loginPin" required maxlength="4" inputmode="numeric" placeholder="••••">
-        <button type="submit" class="btn" id="loginSubmitBtn">Log In</button>
-        <div class="msg" id="loginMsgBox"></div>
-      </form>
-      <div class="footlink">New Partner? <a id="gotoRegister">Register here</a></div>
-    </div>
-  </div>
+<div id="bootScreen" class="wrap narrow">
+  <div class="card state-box" style="margin-top:80px;"><div class="spinner"></div><p>Loading…</p></div>
 </div>
 
-<!-- VIEW 2: REGISTER -->
-<div id="registerView" class="view-section">
-  <div class="shell-narrow">
-    <div class="brand brand-center"><img src="1000550390.png" alt=""><div><b>VastMyWealth</b><em style="font-style:normal; color:var(--gold-300); font-size:11px; display:block;">Partner Program</em></div></div>
-    <div class="card card-wide">
-      <h2>Register as Partner</h2>
-      <form id="regForm">
-        <label>Full name</label><input type="text" id="name" required placeholder="Your name">
-        <label>Mobile number</label><input type="tel" id="mobile" required maxlength="10" placeholder="10-digit mobile">
-        <label>Email address</label><input type="email" id="email" required placeholder="Email">
-        <label>Bank name</label><input type="text" id="bankName" required placeholder="Bank name">
-        <label>Account number</label><input type="text" id="accountNo" required placeholder="Account number">
-        <label>IFSC code</label><input type="text" id="ifsc" required placeholder="IFSC">
-        <label>Cancelled Cheque</label><input type="file" id="cheque" required accept="image/*,application/pdf">
-        <label>4-digit PIN</label><input type="password" id="pin" required maxlength="4" placeholder="••••">
-        <button type="submit" class="btn" id="submitBtn">Register</button>
-        <div class="msg" id="msgBox"></div>
-      </form>
-      <div class="footlink">Already a partner? <a id="gotoLogin">Log in</a></div>
+<!-- ===================== LOGIN / REGISTER ===================== -->
+<div id="authScreen" class="hidden">
+  <header class="app-header"><div class="in">
+    <a class="brand" href="index.html"><img src="1000550390.png" alt="" onerror="this.style.display='none'"><div><b>VastMyWealth</b><small>DSA / Partner</small></div></a>
+    <div class="hdr-right"><a class="hdr-link" href="index.html">← Home</a></div>
+  </div></header>
+
+  <main class="wrap narrow">
+    <div id="loginView" class="view active">
+      <div class="hero"><h1>DSA / Partner login</h1><p>Log in to submit applications, track referrals and see commission updates.</p></div>
+      <div class="card">
+        <form id="loginForm" novalidate>
+          <div class="field"><label for="loginMobile">Mobile number</label><input type="tel" id="loginMobile" maxlength="10" inputmode="numeric" autocomplete="tel" placeholder="10-digit mobile"></div>
+          <div class="field"><label for="loginPin">4-digit PIN</label><input type="password" id="loginPin" maxlength="4" inputmode="numeric" autocomplete="current-password" placeholder="••••"></div>
+          <button type="submit" class="btn btn-primary btn-block" id="loginSubmitBtn">Log in</button>
+        </form>
+        <div id="loginMsgBox" class="alert hidden"></div>
+        <div class="btn-row mt16" style="justify-content:space-between;">
+          <button class="link-btn" id="gotoRegister" type="button">New partner? Register here</button>
+          <button class="link-btn" id="gotoForgot" type="button">Forgot PIN?</button>
+        </div>
+      </div>
     </div>
-  </div>
+
+    <div id="forgotView" class="view">
+      <div class="hero"><h1>Reset your PIN</h1><p>We'll email your PIN to the email address on your partner account.</p></div>
+      <div class="card">
+        <form id="forgotForm" novalidate>
+          <div class="field"><label for="fpMobile">Registered mobile number</label><input type="tel" id="fpMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile"></div>
+          <button type="submit" class="btn btn-primary btn-block" id="fpBtn">Email my PIN</button>
+        </form>
+        <div id="fpMsg" class="alert hidden"></div>
+        <button class="link-btn mt16" id="fpBack" type="button">← Back to login</button>
+      </div>
+    </div>
+
+    <div id="registerView" class="view">
+      <div class="hero"><h1>Register as a partner</h1><p>Create your partner account to get your personal application link.</p></div>
+      <div class="card">
+        <form id="regForm" novalidate>
+          <div class="field"><label for="name">Full name<span class="req">*</span></label><input type="text" id="name" autocomplete="name" placeholder="Your name"></div>
+          <div class="field"><label for="mobile">Mobile number<span class="req">*</span></label><input type="tel" id="mobile" maxlength="10" inputmode="numeric" autocomplete="tel" placeholder="10-digit mobile"></div>
+          <div class="field"><label for="email">Email address<span class="req">*</span></label><input type="email" id="email" autocomplete="email" placeholder="you@example.com"></div>
+          <div class="group-label">Bank details for payouts</div>
+          <div class="field"><label for="bankName">Bank name<span class="req">*</span></label><input type="text" id="bankName" placeholder="Your bank"></div>
+          <div class="row2">
+            <div class="field"><label for="accountNo">Account number<span class="req">*</span></label><input type="text" id="accountNo" inputmode="numeric" placeholder="Account number"></div>
+            <div class="field"><label for="ifsc">IFSC code<span class="req">*</span></label><input type="text" id="ifsc" maxlength="11" placeholder="e.g. HDFC0001234" style="text-transform:uppercase;"></div>
+          </div>
+          <div class="field"><label for="cheque">Cancelled cheque<span class="req">*</span></label><input type="file" id="cheque" accept="image/*,application/pdf" style="color:var(--text);font-size:14px;">
+            <div class="hint">Photo or PDF, up to 5 MB.</div></div>
+          <div class="field"><label for="pin">Create a 4-digit PIN<span class="req">*</span></label><input type="password" id="pin" maxlength="4" inputmode="numeric" autocomplete="new-password" placeholder="••••"></div>
+          <div class="field"><div class="check-row"><input type="checkbox" id="terms">
+            <label for="terms">I have read and agree to the <a href="#" id="termsLink" target="_blank" rel="noopener">Partner Terms &amp; Conditions</a>.<span style="color:var(--bad)"> *</span></label></div></div>
+          <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Register</button>
+        </form>
+        <div id="msgBox" class="alert hidden"></div>
+        <button class="link-btn mt16" id="gotoLogin" type="button">Already a partner? Log in</button>
+      </div>
+    </div>
+  </main>
 </div>
 
-<!-- VIEW 3: DASHBOARD -->
-<div id="dashboardView" class="view-section">
-  <div class="topbar">
-    <div class="brand"><img src="1000550390.png" alt=""><div><b>VastMyWealth</b><em style="font-style:normal; color:var(--gold-300); font-size:11px;">DSA Partner</em></div></div>
-    <button class="logout" id="logoutBtn">Log out</button>
-  </div>
-  <div class="shell">
+<!-- ===================== DASHBOARD ===================== -->
+<div id="dashboardView" class="hidden">
+  <header class="app-header"><div class="in">
+    <a class="brand" href="index.html"><img src="1000550390.png" alt="" onerror="this.style.display='none'"><div><b>VastMyWealth</b><small>DSA Partner</small></div></a>
+    <div class="hdr-right"><button class="btn btn-ghost btn-sm" id="logoutBtn">Log out</button></div>
+  </div></header>
+
+  <main class="wrap">
     <div class="card">
-      <h2 id="welcomeMsg" style="font-family:'Poppins',sans-serif;">Welcome</h2>
-      <p style="color:var(--ink-400); font-size:13.5px; margin-top:4px;" id="codeMsg"></p>
-      <label style="display:block; font-size:12.5px; font-weight:600; color:var(--ink-300); margin:20px 0 6px;">Your referral link</label>
-      <div class="linkbox"><span id="refLink"></span><button id="copyBtn">Copy</button></div>
-      <div style="margin-top:28px;">
-        <div class="card">
-  <h3 style="font-family:'Poppins',sans-serif;font-size:16px;">Partner Referral Link</h3>
-  <p style="color:var(--ink-400);font-size:13px;margin-top:4px;">
-    Start a new customer application — automatically attributed to your code.
-  </p>
-    <label style="margin-top:12px;">Customer Mobile Number</label>
-  <input type="tel" id="newAppMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile">
-  <button id="newAppBtn" class="btn" style="margin-top:10px;">＋ Start / Continue Application</button>
-  <button class="btn" id="shareLinkBtn2" style="background:none;border:1.5px solid var(--gold-500);color:var(--gold-300);margin-top:8px;width:100%;">
-    🔗 Copy My Application Link
-  </button>
+      <h2 id="welcomeMsg">Welcome</h2>
+      <p class="muted small mt8" id="codeMsg"></p>
+      <div class="group-label" style="margin-top:16px;">Your application link</div>
+      <div class="linkbox"><span id="refLink"></span><button class="btn btn-primary btn-sm" id="copyBtn">Copy</button></div>
+      <a class="btn btn-ghost btn-block mt12" id="waShareBtn" href="#" target="_blank" rel="noopener">💬 Share on WhatsApp</a>
+      <p class="small muted mt8">Anyone who applies through this link is credited to you.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Start or continue an application</div>
+      <p class="card-sub">Type your customer's mobile number. If they already applied you'll see their status and can upload their documents; otherwise a new application opens, credited to you.</p>
+      <div class="field"><label for="newAppMobile">Customer mobile number</label>
+        <input type="tel" id="newAppMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
+      <button id="newAppBtn" class="btn btn-primary btn-block">＋ Start / continue application</button>
+    </div>
+
+    <div class="card">
+      <div class="row-top"><div class="card-title">Your applications</div><button class="btn btn-ghost btn-sm" id="leadsRefresh">↻ Refresh</button></div>
+      <div id="statsBar" class="stats hidden"></div>
+      <div id="leadsArea" class="mt12"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Business tool</div>
+      <p class="card-sub">Run your own campaigns and keep those leads exclusive to you.</p>
+      <div class="alert info" style="margin-bottom:0;">🚧 Coming soon.</div>
+    </div>
+  </main>
 </div>
 
-<div class="card" style="margin-top:16px;">
-  <h3 style="font-family:'Poppins',sans-serif;font-size:16px;">Business Tool</h3>
-  <p style="color:var(--ink-400);font-size:13px;margin-top:4px;">
-    Run your own campaigns and keep those leads exclusive to you.
-  </p>
-  <div style="margin-top:12px;padding:16px;border:1px dashed rgba(255,255,255,.15);border-radius:10px;color:var(--ink-400);font-size:13px;text-align:center;">
-    🚧 Coming soon.
-  </div>
-</div>
-
-<div class="card" style="margin-top:16px;">
-  <h3 style="font-family:'Poppins',sans-serif; font-size:16px; margin-bottom:10px;">Your Applications</h3>
-  <div id="leadsArea">
-    <div style="color:var(--ink-400);">Loading…</div>
-  </div>
-</div>
-
-<div id="pToast"></div>
-
+<script src="config.js"></script>
+<script src="common.js"></script>
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
- const PORTAL_PAGE = "https://loan.vastmywealth.com/apply.html";
-function pToast(msg, isError){
-  var t = document.getElementById('pToast');
-  t.textContent = msg;
-  t.className = isError ? 'show error' : 'show';
-  clearTimeout(t._timer);
-  t._timer = setTimeout(function(){ t.className = ''; }, 2400);
-}
-function switchView(viewId) {
-  document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-  document.getElementById(viewId).classList.add('active');
-  if (viewId === 'dashboardView') initDashboard();
-}
-document.getElementById('gotoRegister').addEventListener('click', e => { e.preventDefault(); switchView('registerView'); });
-document.getElementById('gotoLogin').addEventListener('click', e => { e.preventDefault(); switchView('loginView'); });
+(function () {
+  'use strict';
+  var $ = VMW.$, esc = VMW.esc, C = VMW_CONFIG;
+  var CODE_KEY = 'vmw_partner_code', NAME_KEY = 'vmw_partner_name';
+  $('termsLink').href = C.PARTNER_TERMS_URL;
+  ['loginMobile', 'fpMobile', 'mobile', 'newAppMobile'].forEach(function (id) { VMW.wireDigits($(id), 10); });
+  VMW.wireDigits($('loginPin'), 4); VMW.wireDigits($('pin'), 4);
 
-function checkInitialAuthState() {
-  switchView(localStorage.getItem('vmw_partner_code') ? 'dashboardView' : 'loginView');
-}
-
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  var btn = document.getElementById('loginSubmitBtn'), original = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Logging in...';
-  var mobile = document.getElementById('loginMobile').value, pin = document.getElementById('loginPin').value;
-  try {
-    var res = await fetch(SCRIPT_URL + '?action=loginPartner&mobile=' + encodeURIComponent(mobile) + '&pin=' + encodeURIComponent(pin));
-    var data = await res.json();
-    if (data.success) {
-      localStorage.setItem('vmw_partner_code', data.partnerCode);
-      localStorage.setItem('vmw_partner_name', data.name);
-      switchView('dashboardView');
-    } else {
-      var box = document.getElementById('loginMsgBox'); box.textContent = data.error || 'Login failed.'; box.className = 'msg error';
-    }
-  } catch (err) {
-    var box2 = document.getElementById('loginMsgBox'); box2.textContent = 'Connection error.'; box2.className = 'msg error';
+  /* ---------- views ---------- */
+  function showAuth(view) {
+    $('bootScreen').classList.add('hidden'); $('dashboardView').classList.add('hidden'); $('authScreen').classList.remove('hidden');
+    document.querySelectorAll('#authScreen .view').forEach(function (v) { v.classList.toggle('active', v.id === view); });
+    window.scrollTo(0, 0);
   }
-  btn.disabled = false; btn.textContent = original;
-});
+  function showDashboard() {
+    $('bootScreen').classList.add('hidden'); $('authScreen').classList.add('hidden'); $('dashboardView').classList.remove('hidden');
+    initDashboard();
+  }
+  $('gotoRegister').onclick = function () { showAuth('registerView'); };
+  $('gotoLogin').onclick = function () { showAuth('loginView'); };
+  $('gotoForgot').onclick = function () { showAuth('forgotView'); };
+  $('fpBack').onclick = function () { showAuth('loginView'); };
 
-document.getElementById('regForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  var btn = document.getElementById('submitBtn'), original = btn.textContent;
-  var file = document.getElementById('cheque').files[0];
-  var reader = new FileReader();
-  reader.onload = async function () {
-    btn.disabled = true; btn.textContent = 'Registering...';
-    var payload = {
-      action: "registerPartner", name: document.getElementById('name').value, mobile: document.getElementById('mobile').value,
-      email: document.getElementById('email').value, bankName: document.getElementById('bankName').value,
-      accountNo: document.getElementById('accountNo').value, ifsc: document.getElementById('ifsc').value,
-      pin: document.getElementById('pin').value, consentGiven: true,
-      cancelledCheque: { name: file.name, mimeType: file.type, base64: reader.result.split(',')[1] }
+  /* ---------- login (POST, so the PIN never appears in the web address) ---------- */
+  $('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var box = $('loginMsgBox'); VMW.hideMsg(box);
+    var mobile = VMW.mobile10($('loginMobile').value), pin = $('loginPin').value;
+    if (mobile.length !== 10 || pin.length !== 4) { VMW.showMsg(box, 'Enter your 10-digit mobile number and 4-digit PIN.', 'error'); return; }
+    VMW.busy($('loginSubmitBtn'), 'Logging in…', function () {
+      return VMW.post({ action: 'loginPartner', mobile: mobile, pin: pin }).then(function (d) {
+        if (d.success) { VMW.store.set(CODE_KEY, d.partnerCode); VMW.store.set(NAME_KEY, d.name); showDashboard(); }
+        else VMW.showMsg(box, d.error || 'Login failed.', 'error');
+      });
+    }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
+  });
+  $('forgotForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var box = $('fpMsg'); VMW.hideMsg(box);
+    var m = VMW.mobile10($('fpMobile').value);
+    if (m.length !== 10) { VMW.showMsg(box, 'Enter your registered 10-digit mobile number.', 'error'); return; }
+    VMW.busy($('fpBtn'), 'Sending…', function () {
+      return VMW.get('forgotPartnerPin', { mobile: m }, { tries: 1 }).then(function (d) {
+        VMW.showMsg(box, d.success ? 'Your PIN has been emailed to you.' : (d.error || 'Could not send the PIN.'), d.success ? 'success' : 'error');
+      });
+    }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
+  });
+
+  /* ---------- register ---------- */
+  $('regForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var box = $('msgBox'); VMW.hideMsg(box); VMW.clearErrors($('regForm'));
+    var ok = true; function bad(id, m) { VMW.setErr(id, m); ok = false; }
+    var name = $('name').value.trim(), mobile = VMW.mobile10($('mobile').value), email = $('email').value.trim(), bank = $('bankName').value.trim();
+    var acc = VMW.digits($('accountNo').value), ifsc = $('ifsc').value.trim().toUpperCase(), pin = $('pin').value, file = $('cheque').files[0];
+    if (name.length < 2) bad('name', 'Please enter your full name.');
+    if (!/^[6-9]\d{9}$/.test(mobile)) bad('mobile', 'Enter a valid 10-digit mobile number.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) bad('email', 'Enter a valid email address.');
+    if (bank.length < 2) bad('bankName', 'Please enter your bank name.');
+    if (acc.length < 9 || acc.length > 18) bad('accountNo', 'Enter a valid account number (9–18 digits).');
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) bad('ifsc', 'Enter a valid IFSC code, e.g. HDFC0001234.');
+    if (!file) bad('cheque', 'Please attach a photo or PDF of a cancelled cheque.');
+    else if (file.size > 5 * 1024 * 1024) bad('cheque', 'The file is larger than 5 MB. Please choose a smaller one.');
+    if (!/^\d{4}$/.test(pin)) bad('pin', 'Your PIN must be exactly 4 digits.');
+    if (!$('terms').checked) bad('terms', 'Please accept the Terms & Conditions to continue.');
+    if (!ok) { VMW.focusFirstError($('regForm')); return; }
+
+    var reader = new FileReader();
+    reader.onerror = function () { VMW.showMsg(box, 'Could not read the cheque file. Please choose it again.', 'error'); };
+    reader.onload = function () {
+      VMW.busy($('submitBtn'), 'Registering…', function () {
+        return VMW.post({ action: 'registerPartner', name: name, mobile: mobile, email: email, bankName: bank, accountNo: acc, ifsc: ifsc, pin: pin, consentGiven: true,
+          cancelledCheque: { name: file.name, mimeType: file.type, base64: String(reader.result).split(',')[1] } }, { timeout: 90000 }).then(function (d) {
+          if (d.success) {
+            VMW.showMsg(box, 'You\'re registered! Your partner code is ' + d.partnerCode + '. Taking you to login…', 'success');
+            $('loginMobile').value = mobile;
+            setTimeout(function () { showAuth('loginView'); }, 2200);
+          } else VMW.showMsg(box, d.error || 'Registration failed.', 'error');
+        });
+      }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
     };
-    try {
-      var res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-      var data = await res.json();
-      var box = document.getElementById('msgBox');
-      if (data.success) {
-        box.textContent = 'Registered! Partner Code: ' + data.partnerCode; box.className = 'msg success';
-        setTimeout(() => switchView('loginView'), 2000);
-      } else {
-        box.textContent = data.error || 'Failed.'; box.className = 'msg error';
-      }
-    } catch (err) {
-      var box2 = document.getElementById('msgBox'); box2.textContent = 'Connection error.'; box2.className = 'msg error';
-    }
-    btn.disabled = false; btn.textContent = original;
-  };
-  reader.readAsDataURL(file);
-});
+    reader.readAsDataURL(file);
+  });
 
-function buildFollowUpLink(partnerCode, mobile){
-  return PORTAL_PAGE + '?ref=' + encodeURIComponent(partnerCode) + '&mobile=' + encodeURIComponent(mobile);
-}
-
-function initDashboard() {
-  const partnerCode = localStorage.getItem('vmw_partner_code');
-  const partnerName = localStorage.getItem('vmw_partner_name');
-
-  document.getElementById('welcomeMsg').textContent = 'Welcome, ' + (partnerName || 'Partner');
-  document.getElementById('codeMsg').textContent = 'Partner Code: ' + partnerCode;
-  const refLink = PORTAL_PAGE + '?ref=' + partnerCode;
-  document.getElementById('refLink').textContent = refLink;
-  document.getElementById('copyBtn').onclick = function(){
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(refLink)
-        .then(function(){ pToast('Link copied — share it with your customer'); })
-        .catch(function(){ pToast('Could not copy. Long-press the link to copy it.', true); });
-    } else {
-      pToast('Long-press the link above to copy it.');
-    }
-  };
-  document.getElementById('logoutBtn').onclick = function(){
-    localStorage.clear();
-    pToast('Logged out');
-    switchView('loginView');
-  };
-  document.getElementById('newAppBtn').onclick = function(){
-    var mobile = document.getElementById('newAppMobile').value.replace(/\D/g, '');
-    if (mobile.length !== 10) { pToast('Enter a valid 10-digit mobile number', true); return; }
-    window.open(buildFollowUpLink(partnerCode, mobile), '_blank');
-  };
-  document.getElementById('shareLinkBtn2').onclick = document.getElementById('copyBtn').onclick;
-
-  Promise.all([loadLeads(partnerCode), loadAnnouncement()]);
-}
-// #5 — speed: show a skeleton immediately, don't block on the fetch
-async function loadLeads(partnerCode) {
-  var area = document.getElementById('leadsArea');
-  area.innerHTML = '<div style="color:var(--ink-400);">Loading your applications...</div>';
-  try {
-    var res = await fetch(SCRIPT_URL + '?action=getPartnerLeads&partnerCode=' + encodeURIComponent(partnerCode));
-    var data = await res.json();
-    if (!data.success || !data.leads || data.leads.length === 0) {
-      area.innerHTML = '<div style="color:var(--ink-400); padding:20px 0;">No applications yet. Share your link to start.</div>';
-      return;
-    }
-        area.innerHTML = data.leads.map(l => {
-      var displayName = (l.employmentType === 'Self-Employed' && l.companyName) ? l.companyName : (l.customerName || '—');
-      var actionHtml = l.mobile ? ('<a href="' + buildFollowUpLink(partnerCode, l.mobile) + '" target="_blank" class="pill-btn">💬 Follow Up</a>') : '';
-      return '<div class="lead-card"><div class="lead-card-top"><b>' + displayName + '</b><span class="status-pill">' + l.status + '</span></div>' +
-        '<div class="lead-card-meta">' + l.product + (l.processingBank ? (' · ' + l.processingBank) : '') + '</div>' +
-        (actionHtml ? ('<div class="lead-card-action">' + actionHtml + '</div>') : '') + '</div>';
-    }).join('');
-  } catch (err) {
-    area.innerHTML = '<div style="color:#FFC5C1;">Could not load applications — check your connection.</div>';
+  /* ---------- dashboard ---------- */
+  var CODE = '';
+  function initDashboard() {
+    CODE = VMW.store.get(CODE_KEY) || '';
+    var pname = VMW.store.get(NAME_KEY);
+    $('welcomeMsg').textContent = 'Welcome, ' + (pname || 'Partner');
+    $('codeMsg').textContent = 'Partner code: ' + CODE;
+    var link = VMW.refLink(CODE);
+    $('refLink').textContent = link;
+    $('waShareBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + link);
+    loadLeads();
+    setTimeout(function () { VMW.showAnnouncement('Partner'); }, 1500);
   }
-}
-// #9 — announcement popup
-function loadAnnouncement() { return fetch(SCRIPT_URL + '?action=getAnnouncement&audience=Partner').then(r => r.json()).then(r => { if (!r.success || !r.announcement) return; var a = r.announcement, overlay = document.createElement('div'); overlay.style = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:95;display:flex;align-items:center;justify-content:center;"; overlay.innerHTML = '<div style="background:var(--navy-900);border:1px solid var(--gold-500);border-radius:14px;padding:20px;max-width:340px;width:90%;text-align:center;">' + (a.imageUrl ? '<img src="' + a.imageUrl + '" style="max-width:100%;border-radius:10px;margin-bottom:12px;">' : '') + '<h3 style="margin-bottom:8px;">' + (a.title || '') + '</h3><p style="color:var(--ink-400);font-size:13px;margin-bottom:16px;">' + (a.body || '') + '</p>' + (a.buttonText && a.buttonUrl ? '<a href="' + a.buttonUrl + '" target="_blank" style="text-decoration:none;"><button class="btn">' + a.buttonText + '</button></a>' : '') + '<button onclick="this.closest(\'div\').parentElement.remove()" style="margin-top:10px;background:none;border:none;color:var(--ink-400);font-size:12px;cursor:pointer;">Dismiss</button></div>'; overlay.onclick = function (e) { if (e.target === overlay) overlay.remove(); }; document.body.appendChild(overlay); }).catch(() => {}); }
+  $('copyBtn').onclick = function () {
+    VMW.copy(VMW.refLink(CODE)).then(function () { VMW.toast('Link copied — share it with your customer', 'success'); })
+      .catch(function () { VMW.toast('Could not copy. Long-press the link to copy it.', 'error'); });
+  };
+  $('logoutBtn').onclick = function () { VMW.store.del(CODE_KEY); VMW.store.del(NAME_KEY); CODE = ''; showAuth('loginView'); VMW.toast('Logged out'); };
+  $('newAppBtn').onclick = function () {
+    var m = VMW.mobile10($('newAppMobile').value);
+    if (m.length !== 10) { VMW.toast('Enter a valid 10-digit mobile number', 'error'); return; }
+    window.open(VMW.startLink(m, CODE), '_blank');
+  };
+  $('leadsRefresh').onclick = loadLeads;
+
+  function leadRow(l) {
+    var pending = String(l.documentStatus || '').toLowerCase() !== 'submitted';
+    var notElig = String(l.status).toLowerCase() === 'not eligible';
+    var name = (l.employmentType === 'Self-Employed' && l.companyName) ? l.companyName : (l.customerName || '—');
+    var tags = '';
+    if (l.state) tags += '<span class="tag">📍 ' + esc(l.state) + '</span>';
+    if (l.pincode) tags += '<span class="tag">Pincode ' + esc(l.pincode) + '</span>';
+    if (l.processingBank) tags += '<span class="tag">🏦 ' + esc(l.processingBank) + '</span>';
+    var m = VMW.mobile10(l.mobile), main = '', contact = '';
+    if (l.leadId && !notElig) {
+      var href = esc(VMW.leadLink({ leadId: l.leadId, product: l.product, ref: CODE }));
+      main = pending ? '<a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="' + href + '">📤 Upload documents</a>'
+                     : '<a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="' + href + '">View status</a>';
+    }
+    if (m.length === 10) contact = '<a class="btn btn-ghost btn-sm" href="tel:' + m + '">📞 Call</a>' +
+      '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(VMW.waLink('91' + m, 'Hi ' + (l.customerName || '') + ', this is regarding your loan application with VastMyWealth.')) + '">💬 WhatsApp</a>';
+    return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(name) + '</div>' +
+      '<div class="row-meta">' + esc(VMW.productLabel(l.product)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + (m ? ' · 📱 ' + esc(m) : '') + '</div></div>' +
+      '<div class="row-badges">' + VMW.badge(l.status) + (pending && !notElig ? VMW.docBadge('Pending') : '') + '</div></div>' +
+      (tags ? '<div class="row-tags">' + tags + '</div>' : '') + '<div class="row-actions">' + main + contact + '</div></div>';
+  }
+  function loadLeads() {
+    var area = $('leadsArea'); area.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
+    $('statsBar').classList.add('hidden');
+    VMW.get('getPartnerLeads', { partnerCode: CODE }).then(function (d) {
+      if (!d.success) { area.innerHTML = '<div class="alert error">' + esc(d.error || 'Could not load your applications.') + '</div>'; return; }
+      var leads = d.leads || [];
+      if (!leads.length) { area.innerHTML = '<div class="empty">No applications yet. Share your link or start one above.</div>'; return; }
+      var pend = leads.filter(function (l) { return String(l.documentStatus || '').toLowerCase() !== 'submitted' && String(l.status).toLowerCase() !== 'not eligible'; }).length;
+      var done = leads.filter(function (l) { return String(l.status).toLowerCase() === 'disbursed'; }).length;
+      $('statsBar').innerHTML = '<div class="stat"><b>' + leads.length + '</b><span>Applications</span></div><div class="stat"><b>' + pend + '</b><span>Documents pending</span></div><div class="stat"><b>' + done + '</b><span>Disbursed</span></div>';
+      $('statsBar').classList.remove('hidden');
+      area.innerHTML = leads.map(leadRow).join('');
+    }).catch(function (err) { area.innerHTML = '<div class="alert error">' + esc(VMW.errMsg(err)) + ' Tap Refresh to try again.</div>'; });
+  }
+
+  /* ---------- start: stay logged in ---------- */
+  if (VMW.store.get(CODE_KEY)) showDashboard(); else showAuth('loginView');
+})();
 </script>
 </body>
 </html>
