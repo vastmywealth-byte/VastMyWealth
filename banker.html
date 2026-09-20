@@ -150,6 +150,12 @@
         <div id="bizLeadsBlocked" class="alert error hidden mt16">You've reached your rejection limit for this period. Please contact your RM to unlock leads.</div>
         <div id="bizLeadsSlots" class="small muted mt12"></div>
         <div id="bizLeadsList" class="mt12"></div>
+        <div id="leadsPager" class="pager hidden">
+          <button class="btn btn-ghost btn-sm" id="pgPrev" type="button">← Previous</button>
+          <span class="pg-info" id="pgInfo"></span>
+          <button class="btn btn-ghost btn-sm" id="pgNext" type="button">Next →</button>
+        </div>
+        <div id="leadsHiddenNote" class="small muted mt12 hidden"></div>
       </div>
       <div class="card">
         <div class="card-title">My claimed leads</div>
@@ -355,12 +361,12 @@
     document.querySelectorAll('.nav-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === id); });
     window.scrollTo(0, 0);
     if (!SESSION) return;
-    if (id === 'tabTrack' && !LOADED.track) loadTrack();
-    if (id === 'tabBizLeads' && !LOADED.leads) loadLeads();
+    if (id === 'tabTrack' && (!LOADED.track || Date.now() - (LOADED.trackAt || 0) > 30000)) loadTrack();
+    if (id === 'tabBizLeads' && (!LOADED.leads || Date.now() - (LOADED.leadsAt || 0) > 20000)) loadLeads(false);
   }
   document.querySelectorAll('.nav-btn').forEach(function (b) { b.addEventListener('click', function () { selectTab(b.dataset.tab); }); });
   $('trackRefresh').onclick = loadTrack;
-  $('leadsRefresh').onclick = loadLeads;
+  $('leadsRefresh').onclick = function () { loadLeads(false); };
 
   /* ---------- log business ---------- */
   $('portalLinkBtn').addEventListener('click', function () {
@@ -490,7 +496,7 @@
       '<div class="row-actions">' + main + contactButtons(r.mobile, r.name) + '</div></div>';
   }
   function loadTrack() {
-    LOADED.track = true;
+    LOADED.track = true; LOADED.trackAt = Date.now();
     var el = $('trackList'); el.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
     var failed = 0;
     var logs = VMW.post({ action: 'getLogs', bankerId: SESSION.bankerId }).catch(function () { failed++; return { logs: [] }; });
@@ -515,10 +521,50 @@
   }
 
   /* ---------- business leads ---------- */
-  function loadLeads() {
-    LOADED.leads = true;
+  var LEADS = { all: [], page: 1, per: 5 };
+  function isNewLead(l) { return l.timestamp && (Date.now() - l.timestamp) < 24 * 3600 * 1000; }
+  function leadCardHtml(l) {
+    return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(l.customerName) + (isNewLead(l) ? ' <span class="badge info">NEW</span>' : '') + '</div>' +
+      '<div class="row-meta">' + esc(VMW.productLabel(l.loanType)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + '</div></div>' +
+      '<button class="btn btn-primary btn-sm claim-btn" data-lead="' + esc(l.leadId) + '">Claim</button></div>' +
+      '<div class="row-tags">' + (locTags(l) || '<span class="tag">Location not provided</span>') + '</div></div>';
+  }
+  // 5 leads per page, newest first — page 1 always holds the newest leads
+  function renderLeadsPage() {
+    var list = $('bizLeadsList'), pager = $('leadsPager');
+    var total = LEADS.all.length, pages = Math.max(1, Math.ceil(total / LEADS.per));
+    LEADS.page = Math.min(Math.max(1, LEADS.page), pages);
+    if (!total) { list.innerHTML = '<div class="empty">No leads available right now. Check back soon.</div>'; pager.classList.add('hidden'); return; }
+    var from = (LEADS.page - 1) * LEADS.per;
+    list.innerHTML = LEADS.all.slice(from, from + LEADS.per).map(leadCardHtml).join('');
+    pager.classList.toggle('hidden', pages <= 1);
+    $('pgInfo').textContent = 'Page ' + LEADS.page + ' of ' + pages + ' · ' + total + ' leads';
+    $('pgPrev').disabled = LEADS.page <= 1;
+    $('pgNext').disabled = LEADS.page >= pages;
+  }
+  $('pgPrev').addEventListener('click', function () { LEADS.page--; renderLeadsPage(); $('bizLeadsList').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  $('pgNext').addEventListener('click', function () { LEADS.page++; renderLeadsPage(); $('bizLeadsList').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+
+  function hiddenNote(h, total) {
+    var el = $('leadsHiddenNote');
+    if (!h) { el.classList.add('hidden'); return; }
+    var parts = [];
+    if (h.ownReferral) parts.push(h.ownReferral + ' referred by you');
+    if (h.otherLoanType) parts.push(h.otherLoanType + ' in loan types you have no DSA code for');
+    if (h.alreadyClaimed) parts.push(h.alreadyClaimed + ' already claimed by you');
+    if (h.closed) parts.push(h.closed + ' already closed');
+    if (!parts.length) { el.classList.add('hidden'); return; }
+    el.textContent = 'Not shown here: ' + parts.join(' · ') + '.';
+    el.classList.remove('hidden');
+  }
+
+  // keepPage = true keeps the banker on the same page (e.g. after claiming); otherwise back to page 1 (newest)
+  function loadLeads(keepPage) {
+    LOADED.leads = true; LOADED.leadsAt = Date.now();
     var gate = $('bizLeadsGate'), blocked = $('bizLeadsBlocked'), list = $('bizLeadsList');
     gate.classList.add('hidden'); blocked.classList.add('hidden'); $('bizLeadsSlots').textContent = '';
+    $('leadsPager').classList.add('hidden'); $('leadsHiddenNote').classList.add('hidden');
+    if (keepPage !== true) LEADS.page = 1;
     if (!SESSION.hasActiveCode) { gate.classList.remove('hidden'); list.innerHTML = ''; loadMyClaims(); return; }
     list.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
     VMW.post({ action: 'getLeads', bankerId: SESSION.bankerId }).then(function (r) {
@@ -526,13 +572,9 @@
       if (r.status === 'blocked') { blocked.classList.remove('hidden'); list.innerHTML = ''; return; }
       if (r.status !== 'success') { list.innerHTML = '<div class="alert error">Could not load leads.</div>'; return; }
       $('bizLeadsSlots').textContent = r.slotsRemaining + ' of ' + (r.activeClaimCount + r.slotsRemaining) + ' claim slots available';
-      var leads = r.businessLeads || [];
-      list.innerHTML = leads.length ? leads.map(function (l) {
-        return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(l.customerName) + '</div>' +
-          '<div class="row-meta">' + esc(VMW.productLabel(l.loanType)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + '</div></div>' +
-          '<button class="btn btn-primary btn-sm claim-btn" data-lead="' + esc(l.leadId) + '">Claim</button></div>' +
-          '<div class="row-tags">' + (locTags(l) || '<span class="tag">Location not provided</span>') + '</div></div>';
-      }).join('') : '<div class="empty">No leads available right now. Check back soon.</div>';
+      LEADS.all = (r.businessLeads || []).slice().sort(function (a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+      renderLeadsPage();
+      hiddenNote(r.hidden, r.totalInPool);
     }).catch(function (err) { list.innerHTML = '<div class="alert error">' + esc(VMW.errMsg(err)) + '</div>'; LOADED.leads = false; });
     loadMyClaims();
   }
@@ -542,7 +584,7 @@
     VMW.busy(b, 'Claiming…', function () {
       return VMW.post({ action: 'claimLead', bankerId: SESSION.bankerId, leadId: id }).then(function (r) {
         VMW.toast(r.status === 'success' ? 'Lead claimed! Full details are in “My claimed leads”.' : r.message, r.status === 'success' ? 'success' : 'error');
-        if (r.status === 'success') { loadLeads(); LOADED.track = false; }
+        if (r.status === 'success') { loadLeads(true); LOADED.track = false; }
       });
     }).catch(function (err) { VMW.toast(VMW.errMsg(err), 'error'); });
   });
