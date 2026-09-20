@@ -3,505 +3,362 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vehicle & Education Loans — VastMyWealth Digital</title>
-  <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0A1730">
+<title>Vehicle &amp; Education Loans — VastMyWealth Digital</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0B1A38">
 <link rel="apple-touch-icon" href="1000550390.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --navy-1:#0A1730; --navy-2:#122a56; --navy-3:#173768;
-  --panel:#152B54; --panel-border:rgba(212,165,74,.35);
-  --gold:#D9A94E; --gold-deep:#B8863B; --gold-light:#F2DFB0;
-  --ink:#0F1E3D; --white:#FFFFFF;
-  --text-onnavy:#EDF1FA; --text-onnavy-muted:#A9B8DA;
-  --input-bg:#FFFFFF; --input-border:#D8DCE8;
-  --forest:#3FBE86;
-  --font-display:'Poppins',sans-serif; --font-body:'IBM Plex Sans',sans-serif;
-  --radius:14px;
-}
-*{box-sizing:border-box; margin:0; padding:0;}
-body{
-  font-family:var(--font-body);
-  background:linear-gradient(180deg, var(--navy-1) 0%, var(--navy-2) 45%, var(--navy-3) 100%);
-  color:var(--text-onnavy); line-height:1.5; padding-bottom:60px; min-height:100vh;
-}
-header{ background:rgba(10,23,48,.85); backdrop-filter:blur(6px); border-bottom:1px solid var(--panel-border); position:sticky; top:0; z-index:50; }
-.header-inner{ max-width:680px; margin:0 auto; padding:14px 20px; }
-.logo-text{ font-family:var(--font-display); font-weight:800; font-size:16px; color:#fff; }
-main{ max-width:680px; margin:0 auto; padding:24px 20px 0; }
-
-.product-badge{ text-align:center; margin-bottom:20px; }
-.product-badge span{ display:inline-block; padding:8px 20px; border-radius:20px; background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); font-weight:700; font-size:14px; }
-
-.section{ background:var(--panel); border:1px solid var(--panel-border); border-radius:var(--radius); padding:22px 20px; margin-bottom:16px; box-shadow:0 8px 24px rgba(0,0,0,.2); }
-.section-title{ font-family:var(--font-display); font-size:15px; font-weight:700; margin-bottom:16px; color:#fff; }
-
-.field{ margin-bottom:16px; }
-.field:last-child{ margin-bottom:0; }
-.field label{ display:block; font-size:11.5px; font-weight:700; color:var(--gold-light); text-transform:uppercase; letter-spacing:.04em; margin-bottom:7px; }
-.field label .req{ color:#E4776B; margin-left:2px; }
-.field input, .field select{ width:100%; padding:12px 13px; border:1.5px solid var(--input-border); border-radius:9px; font-size:14.5px; color:var(--ink); background:var(--input-bg); }
-.field input:focus, .field select:focus{ outline:none; border-color:var(--gold); }
-.field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-@media (max-width:480px){ .field-row{ grid-template-columns:1fr; } }
-.select-wrap{ position:relative; }
-.select-wrap select{ appearance:none; -webkit-appearance:none; cursor:pointer; width:100%; padding:12px 13px; border:1.5px solid var(--input-border); border-radius:9px; font-size:14.5px; color:var(--ink); background:var(--input-bg); }
-
-.toggle-row{ display:flex; gap:8px; flex-wrap:wrap; }
-.toggle-btn{ padding:10px 16px; border:1.5px solid var(--panel-border); border-radius:20px; background:rgba(255,255,255,.04); font-size:13px; font-weight:700; color:var(--text-onnavy-muted); cursor:pointer; }
-.toggle-btn.active{ border-color:var(--gold); background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); }
-
-/* ---------- Upload button — redesigned (#1) ---------- */
-.upload-box{ border:1.5px dashed var(--panel-border); border-radius:12px; padding:16px; display:flex; align-items:center; gap:14px; cursor:pointer; position:relative; margin-bottom:10px; background:rgba(255,255,255,.02); transition:border-color .15s, background .15s; }
-.upload-box:hover{ border-color:var(--gold); background:rgba(217,169,78,.06); }
-.upload-box.filled{ border-style:solid; border-color:var(--forest); background:rgba(63,190,134,.1); }
-.upload-icon{ width:42px; height:42px; border-radius:10px; background:rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:18px; transition:background .15s, transform .15s; }
-.upload-box:hover .upload-icon{ transform:scale(1.05); }
-.upload-box.filled .upload-icon{ background:var(--forest); color:#fff; }
-.upload-text{ flex:1; min-width:0; }
-.upload-title{ font-size:13.5px; font-weight:700; color:#fff; }
-.upload-sub{ font-size:11.5px; color:var(--text-onnavy-muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.upload-cta{ font-size:11px; font-weight:700; color:var(--gold-light); flex-shrink:0; padding:6px 10px; border:1px solid var(--panel-border); border-radius:20px; }
-.upload-box.filled .upload-cta{ display:none; }
-.upload-box input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer; }
-
-.btn-submit{ width:100%; padding:16px; background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; }
-.btn-submit:disabled{ background:#4a5578; color:#9aa5c4; cursor:not-allowed; }
-.trust-note{ text-align:center; font-size:11.5px; color:var(--text-onnavy-muted); margin-top:10px; }
-.hidden{ display:none !important; }
-.loading{ text-align:center; padding:60px 20px; color:var(--text-onnavy-muted); font-size:14px; }
-.results-intro{ text-align:center; padding:8px 0 20px; }
-.results-intro h1{ font-family:var(--font-display); font-size:22px; font-weight:800; margin-bottom:8px; color:#fff; }
-.results-intro p{ font-size:13.5px; color:var(--text-onnavy-muted); max-width:480px; margin:0 auto; }
-.btn-new-application{ width:100%; padding:15px; margin-top:18px; background:transparent; color:var(--gold-light); border:1.5px solid var(--panel-border); border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; }
-</style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header><div class="header-inner"><span class="logo-text">VastMyWealth Digital</span></div></header>
 
-<main>
-  <div class="product-badge"><span id="productBadgeText">🚗 Vehicle Loan</span></div>
+<header class="app-header">
+  <div class="in">
+    <a class="brand" href="index.html">
+      <img src="1000550390.png" alt="" onerror="this.style.display='none'">
+      <div><b>VastMyWealth</b><small>Digital</small></div>
+    </a>
+    <div class="hdr-right"><a class="hdr-link" href="apply.html" id="otherLoansLink">Other loans</a></div>
+  </div>
+</header>
 
-  <div id="formWrap">
-    <!-- VL-ONLY SECTIONS -->
-    <div class="section" id="vlBasicSection">
-      <div class="section-title">Vehicle &amp; Basic Details</div>
-      <div class="field">
-        <label>Vehicle Condition<span class="req">*</span></label>
+<main class="wrap">
+
+  <section id="checkingState" class="card state-box">
+    <div class="spinner"></div>
+    <p id="checkingText">Loading…</p>
+  </section>
+
+  <div id="formWrap" class="hidden">
+    <div class="hero">
+      <h1 id="productTitle">🚗 Vehicle Loan</h1>
+      <p>Fill in a few details, then upload your documents. Already applied? <a href="apply.html">Track your application</a>.</p>
+    </div>
+
+    <div id="dupNotice" class="alert warn hidden">
+      <b>You already have an application with us.</b>
+      <div id="dupText" class="mt8"></div>
+      <div class="btn-row mt12">
+        <button type="button" class="btn btn-primary btn-sm" id="dupContinue">Continue my application</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="dupNew">Start a new one anyway</button>
+      </div>
+    </div>
+
+    <!-- VEHICLE LOAN -->
+    <div class="card" id="vlBasicSection">
+      <div class="card-title">Vehicle &amp; basic details</div>
+      <div class="field" style="margin-top:14px;">
+        <label>Vehicle condition<span class="req">*</span></label>
         <div class="toggle-row" id="vehicleConditionToggle">
           <button type="button" class="toggle-btn" data-val="New">New</button>
           <button type="button" class="toggle-btn" data-val="Used">Used</button>
         </div>
       </div>
-            <div class="field"><label>Full Name<span class="req">*</span></label><input type="text" id="vl_name"></div>
-      <div class="field-row">
-        <div class="field"><label>Mobile Number<span class="req">*</span></label><input type="text" id="vl_mobile" maxlength="10" inputmode="numeric"></div>
-        <div class="field"><label>Email ID<span class="req">*</span></label><input type="email" id="vl_email"></div>
+      <div class="field"><label for="vl_name">Full name<span class="req">*</span></label><input type="text" id="vl_name" autocomplete="name"></div>
+      <div class="row2">
+        <div class="field"><label for="vl_mobile">Mobile number<span class="req">*</span></label><input type="tel" id="vl_mobile" maxlength="10" inputmode="numeric" autocomplete="tel"></div>
+        <div class="field"><label for="vl_email">Email ID<span class="req">*</span></label><input type="email" id="vl_email" autocomplete="email"></div>
       </div>
-      <div class="field" id="pincodeField">
-  <label>Residence / Business Pincode<span class="req">*</span></label>
-  <input type="text" id="f_pincode" maxlength="6" inputmode="numeric">
-</div>
       <div class="field">
-        <label>Employment Type<span class="req">*</span></label>
+        <label>Employment type<span class="req">*</span></label>
         <div class="toggle-row" id="vlEmpToggle">
           <button type="button" class="toggle-btn" data-val="Salaried">Salaried</button>
           <button type="button" class="toggle-btn" data-val="Self-Employed">Self-Employed</button>
         </div>
       </div>
-      <div class="field-row">
-        <div class="field"><label>Monthly Income (₹)<span class="req">*</span></label><input type="text" id="vl_income" inputmode="numeric"></div>
-        <div class="field"><label>Existing EMI (₹/month)</label><input type="text" id="vl_emi" placeholder="0 if none" inputmode="numeric"></div>
+      <div class="row2">
+        <div class="field"><label for="vl_income">Monthly income (₹)<span class="req">*</span></label><input type="text" id="vl_income" inputmode="numeric"></div>
+        <div class="field"><label for="vl_emi">Existing EMI (₹ / month)</label><input type="text" id="vl_emi" inputmode="numeric" placeholder="0 if none"></div>
       </div>
-      <div class="field"><label>Loan Amount Required (₹)<span class="req">*</span></label><input type="text" id="vl_loanAmount" inputmode="numeric"></div>
-      <div class="field">
-        <label>Approximate CIBIL Score<span class="req">*</span></label>
-        <div class="select-wrap"><select id="vl_cibil">
-          <option value="">Select</option><option value="Above 750">750+</option><option value="700-749">700–749</option>
-          <option value="650-699">650–699</option><option value="Below 650">Below 650</option>
-        </select></div>
-      </div>
-      <div class="field"><label>Bounces (last 6 months)<span class="req">*</span></label>
-        <div class="select-wrap"><select id="vl_bounces"><option value="">Select</option><option value="No">No</option><option value="1-2">1–2</option></select></div>
+      <div class="field"><label for="vl_loanAmount">Loan amount required (₹)<span class="req">*</span></label><input type="text" id="vl_loanAmount" inputmode="numeric"></div>
+      <div class="row2">
+        <div class="field"><label for="vl_cibil">Approximate CIBIL score<span class="req">*</span></label>
+          <select id="vl_cibil"><option value="">Select</option><option value="Above 750">750+</option><option value="700-749">700–749</option><option value="650-699">650–699</option><option value="Below 650">Below 650</option></select></div>
+        <div class="field"><label for="vl_bounces">Bounces (last 6 months)<span class="req">*</span></label>
+          <select id="vl_bounces"><option value="">Select</option><option value="No">No</option><option value="1-2">1–2</option></select></div>
       </div>
     </div>
 
-    <!-- EL-ONLY SECTIONS -->
-    <div class="section hidden" id="elStudentSection">
-      <div class="section-title">Student &amp; Course Details</div>
-      <div class="field"><label>Student Full Name<span class="req">*</span></label><input type="text" id="el_studentName"></div>
-      <div class="field-row">
-        <div class="field"><label>Student Mobile Number<span class="req">*</span></label><input type="text" id="el_studentMobile" maxlength="10" inputmode="numeric"></div>
-        <div class="field"><label>Student Email ID<span class="req">*</span></label><input type="email" id="el_studentEmail"></div>
+    <!-- EDUCATION LOAN -->
+    <div class="card hidden" id="elStudentSection">
+      <div class="card-title">Student &amp; course details</div>
+      <div class="field" style="margin-top:14px;"><label for="el_studentName">Student full name<span class="req">*</span></label><input type="text" id="el_studentName" autocomplete="name"></div>
+      <div class="row2">
+        <div class="field"><label for="el_studentMobile">Student mobile number<span class="req">*</span></label><input type="tel" id="el_studentMobile" maxlength="10" inputmode="numeric"></div>
+        <div class="field"><label for="el_studentEmail">Student email ID<span class="req">*</span></label><input type="email" id="el_studentEmail"></div>
       </div>
-      <div class="field" id="pincodeField">
-  <label>Residence / Business Pincode<span class="req">*</span></label>
-  <input type="text" id="f_pincode" maxlength="6" inputmode="numeric">
-</div>
-      <div class="field"><label>Course Name<span class="req">*</span></label><input type="text" id="el_courseName"></div>
-      <div class="field-row">
-        <div class="field"><label>University / Institution<span class="req">*</span></label><input type="text" id="el_universityName"></div>
-        <div class="field"><label>Course Duration</label><input type="text" id="el_courseDuration" placeholder="e.g. 2 Years"></div>
+      <div class="field"><label for="el_courseName">Course name<span class="req">*</span></label><input type="text" id="el_courseName"></div>
+      <div class="row2">
+        <div class="field"><label for="el_universityName">University / institution<span class="req">*</span></label><input type="text" id="el_universityName"></div>
+        <div class="field"><label for="el_courseDuration">Course duration</label><input type="text" id="el_courseDuration" placeholder="e.g. 2 years"></div>
       </div>
-      <div class="field">
-        <label>Admission Status</label>
-        <div class="select-wrap"><select id="el_admissionStatus">
-          <option value="">Select</option><option value="Admission Confirmed">Admission Confirmed</option>
-          <option value="Awaiting Confirmation">Awaiting Confirmation</option>
-        </select></div>
-      </div>
-      <div class="field"><label>Loan Amount Required (₹)<span class="req">*</span></label><input type="text" id="el_loanAmount" inputmode="numeric"></div>
+      <div class="field"><label for="el_admissionStatus">Admission status</label>
+        <select id="el_admissionStatus"><option value="">Select</option><option value="Admission Confirmed">Admission confirmed</option><option value="Awaiting Confirmation">Awaiting confirmation</option></select></div>
+      <div class="field"><label for="el_loanAmount">Loan amount required (₹)<span class="req">*</span></label><input type="text" id="el_loanAmount" inputmode="numeric"></div>
     </div>
 
-    <div class="section hidden" id="elCoApplicantSection">
-      <div class="section-title">Co-Applicant Details</div>
-      <div class="field"><label>Co-Applicant Full Name<span class="req">*</span></label><input type="text" id="el_coName"></div>
+    <div class="card hidden" id="elCoApplicantSection">
+      <div class="card-title">Co-applicant details</div>
+      <div class="field" style="margin-top:14px;"><label for="el_coName">Co-applicant full name<span class="req">*</span></label><input type="text" id="el_coName"></div>
       <div class="field">
-        <label>Co-Applicant Employment Type<span class="req">*</span></label>
+        <label>Co-applicant employment type<span class="req">*</span></label>
         <div class="toggle-row" id="elEmpToggle">
           <button type="button" class="toggle-btn" data-val="Salaried">Salaried</button>
           <button type="button" class="toggle-btn" data-val="Self-Employed">Self-Employed</button>
         </div>
       </div>
-      <div class="field-row">
-        <div class="field"><label>Co-Applicant Monthly Income (₹)<span class="req">*</span></label><input type="text" id="el_coIncome" inputmode="numeric"></div>
-        <div class="field"><label>Co-Applicant Existing EMI (₹)</label><input type="text" id="el_coEmi" placeholder="0 if none" inputmode="numeric"></div>
+      <div class="row2">
+        <div class="field"><label for="el_coIncome">Monthly income (₹)<span class="req">*</span></label><input type="text" id="el_coIncome" inputmode="numeric"></div>
+        <div class="field"><label for="el_coEmi">Existing EMI (₹)</label><input type="text" id="el_coEmi" inputmode="numeric" placeholder="0 if none"></div>
       </div>
+      <div class="row2">
+        <div class="field"><label for="el_coCibil">Co-applicant CIBIL score<span class="req">*</span></label>
+          <select id="el_coCibil"><option value="">Select</option><option value="Above 750">750+</option><option value="700-749">700–749</option><option value="650-699">650–699</option><option value="Below 650">Below 650</option></select></div>
+        <div class="field"><label for="el_coBounces">Bounces (last 6 months)<span class="req">*</span></label>
+          <select id="el_coBounces"><option value="">Select</option><option value="No">No</option><option value="1-2">1–2</option></select></div>
+      </div>
+    </div>
+
+    <!-- LOCATION (both loan types) -->
+    <div class="card">
+      <div class="card-title">Where do you live?</div>
+      <div class="row2" style="margin-top:14px;">
+        <div class="field"><label for="f_state">State<span class="req">*</span></label><input type="text" id="f_state" autocomplete="off" placeholder="Start typing your state"></div>
+        <div class="field"><label for="f_pincode">Residence pincode<span class="req">*</span></label><input type="tel" id="f_pincode" maxlength="6" inputmode="numeric" autocomplete="postal-code"></div>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="field">
-        <label>Co-Applicant CIBIL Score<span class="req">*</span></label>
-        <div class="select-wrap"><select id="el_coCibil">
-          <option value="">Select</option><option value="Above 750">750+</option><option value="700-749">700–749</option>
-          <option value="650-699">650–699</option><option value="Below 650">Below 650</option>
-        </select></div>
-      </div>
-      <div class="field"><label>Co-Applicant Bounces (last 6 months)<span class="req">*</span></label>
-        <div class="select-wrap"><select id="el_coBounces"><option value="">Select</option><option value="No">No</option><option value="1-2">1–2</option></select></div>
+        <div class="check-row">
+          <input type="checkbox" id="f_consent">
+          <label for="f_consent">I authorise Vast Wealth Advisors Pvt Ltd to share my details with partner banks, NBFCs, and their representatives/agencies for processing this loan application.<span style="color:var(--bad)"> *</span></label>
+        </div>
       </div>
     </div>
 
-    <!-- DOCUMENTS CONTAINER -->
-    <div class="section">
-      <div class="section-title">Documents</div>
+    <div id="formError" class="alert hidden"></div>
+    <button class="btn btn-primary btn-block" id="submitBtn">Submit application</button>
+    <p class="small muted center mt12">🔒 Your details and documents are confidential and reviewed only by our team.</p>
+  </div>
+
+  <section id="loadingState" class="card state-box hidden">
+    <div class="spinner"></div>
+    <p>Submitting your application…</p>
+  </section>
+
+  <section id="docWrap" class="hidden">
+    <div class="hero" style="padding-bottom:12px;">
+      <h1>Upload your documents</h1>
+      <p>Almost done — upload these to complete your application. Photos or PDFs, up to 10 MB each.</p>
+    </div>
+    <div class="card">
       <div id="docContainer"></div>
-    </div>
-
-    <!-- CONSENT (#7) -->
-    <div class="section">
-      <div class="field" style="display:flex; gap:10px; align-items:flex-start; margin-bottom:0;">
-        <input type="checkbox" id="f_consent" style="width:auto; margin-top:3px;">
-        <label for="f_consent" style="text-transform:none; font-weight:500; font-size:12.5px; color:var(--text-onnavy-muted);">
-          I authorise VastWealth Advisors Pvt Ltd to share my details with partner banks, NBFCs, and their representatives/agencies for processing this loan application.<span class="req">*</span>
-        </label>
+      <div id="docMsg" class="alert hidden"></div>
+      <div id="docProgress" class="progress hidden"><i id="docProgressBar"></i></div>
+      <div class="btn-stack mt16">
+        <button class="btn btn-primary btn-block" id="docSubmitBtn">Submit documents</button>
+        <button class="btn btn-ghost btn-block" id="docBack" type="button">I'll upload later</button>
       </div>
     </div>
+  </section>
 
-    <div style="padding-top:8px;">
-      <button class="btn-submit" id="submitBtn">Submit Application</button>
-      <div class="trust-note">🔒 Your details and documents are confidential and reviewed only by our team.</div>
+  <section id="doneWrap" class="hidden">
+    <div class="card center">
+      <div style="font-size:44px;">✅</div>
+      <h2 class="mt8">Application received</h2>
+      <p class="muted mt8">Thank you! Our team will review your application and get in touch with you shortly.</p>
+      <a class="btn btn-primary btn-block mt16" href="index.html">Back to home</a>
     </div>
-  </div>
-
-  <div class="loading" id="loadingState" style="display:none;">Submitting your application…</div>
-
-  <div class="hidden" id="docWrap">
-    <div class="results-intro"><h1>Upload Your Documents</h1><p>Almost done — upload these to complete your application.</p></div>
-    <div class="section"><div id="docContainer2"></div>
-      <div style="padding-top:8px;">
-        <button class="btn-submit" id="docSubmitBtn">Submit Documents</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="hidden" id="doneWrap">
-    <div class="results-intro"><h1>✅ Application Received</h1><p>Thank you! Our team will review your application and get in touch with you shortly.</p></div>
-    <button class="btn-new-application" onclick="window.location.reload()">Close</button>
-  </div>
+  </section>
 </main>
 
+<script src="config.js"></script>
+<script src="common.js"></script>
 <script>
-var BACKEND_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
-var params = new URLSearchParams(window.location.search);
-var product = params.get('product') === 'EL' ? 'EL' : 'VL'; 
-var partnerCode = params.get('ref') || '';
+(function () {
+  'use strict';
+  var $ = VMW.$, esc = VMW.esc;
+  var params = new URLSearchParams(location.search);
+  var product = params.get('product') === 'EL' ? 'EL' : 'VL';
+  var REF = params.get('ref') || '';
+  var VIEWS = ['checkingState', 'formWrap', 'loadingState', 'docWrap', 'doneWrap'];
+  var S = { vehicleCondition: null, employmentType: null, coEmploymentType: null, leadId: null, mobile: '', docStore: {}, warnedMissing: false, forceNew: false, lastDup: null };
 
-var state = { vehicleCondition:null, employmentType:null, coEmploymentType:null, uploadedFiles:{}, leadId:null };
+  function show(ids) { VIEWS.forEach(function (v) { $(v).classList.toggle('hidden', ids.indexOf(v) === -1); }); window.scrollTo(0, 0); }
+  function val(id) { var el = $(id); return el ? String(el.value).trim() : ''; }
+  function num(id) { return val(id).replace(/[^0-9.]/g, ''); }
 
-document.getElementById('productBadgeText').textContent = product === 'EL' ? '🎓 Education Loan' : '🚗 Vehicle Loan';
-document.getElementById('vlBasicSection').classList.toggle('hidden', product !== 'VL');
-document.getElementById('elStudentSection').classList.toggle('hidden', product !== 'EL');
-document.getElementById('elCoApplicantSection').classList.toggle('hidden', product !== 'EL');
+  $('productTitle').textContent = product === 'EL' ? '🎓 Education Loan' : '🚗 Vehicle Loan';
+  $('vlBasicSection').classList.toggle('hidden', product !== 'VL');
+  $('elStudentSection').classList.toggle('hidden', product !== 'EL');
+  $('elCoApplicantSection').classList.toggle('hidden', product !== 'EL');
 
-function wireSimpleToggle(container, onSelect){
-  if (!container) return;
-  container.querySelectorAll('.toggle-btn').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      container.querySelectorAll('.toggle-btn').forEach(function(b){ b.classList.remove('active'); });
-      btn.classList.add('active');
-      onSelect(btn.dataset.val);
+  ['vl_income', 'vl_emi', 'vl_loanAmount', 'el_loanAmount', 'el_coIncome', 'el_coEmi'].forEach(function (id) { VMW.wireAmount($(id)); });
+  ['vl_mobile', 'el_studentMobile'].forEach(function (id) { VMW.wireDigits($(id), 10); });
+  VMW.wireDigits($('f_pincode'), 6);
+  VMW.autosuggest($('f_state'), function () { return VMW.lists.states; });
+  VMW.loadLists('states');
+
+  function wireToggle(id, onSelect) {
+    var c = $(id); if (!c) return;
+    c.querySelectorAll('.toggle-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        c.querySelectorAll('.toggle-btn').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active'); onSelect(b.dataset.val);
+      });
     });
-  });
-}
-wireSimpleToggle(document.getElementById('vehicleConditionToggle'), function(val){ state.vehicleCondition = val; renderDocuments(); });
-wireSimpleToggle(document.getElementById('vlEmpToggle'), function(val){ state.employmentType = val; renderDocuments(); });
-wireSimpleToggle(document.getElementById('elEmpToggle'), function(val){ state.coEmploymentType = val; renderDocuments(); });
+  }
+  wireToggle('vehicleConditionToggle', function (v) { S.vehicleCondition = v; renderDocuments(); });
+  wireToggle('vlEmpToggle', function (v) { S.employmentType = v; });
+  wireToggle('elEmpToggle', function (v) { S.coEmploymentType = v; });
 
-function uploadBoxHtml(key, title, sub, accept, multiple){
-  return '<div class="upload-box" id="box_'+key+'">' +
-    '<div class="upload-icon">📄</div>' +
-    '<div class="upload-text"><div class="upload-title">'+title+'</div><div class="upload-sub">'+sub+'</div></div>' +
-    '<span class="upload-cta">Tap to upload</span>' +
-    '<input type="file" accept="'+accept+'" '+(multiple?'multiple':'')+' data-key="'+key+'">' +
-  '</div>';
-}
+  /* ---------- submit ---------- */
+  function validateAndBuild() {
+    VMW.clearErrors($('formWrap'));
+    var ok = true;
+    function bad(id, msg) { VMW.setErr(id, msg); ok = false; }
+    function chk(id, min, msg) { if (val(id).length < min) bad(id, msg); }
+    function mob(id) { var m = VMW.mobile10(val(id)); if (!/^[6-9]\d{9}$/.test(m)) bad(id, 'Enter a valid 10-digit mobile number.'); return m; }
+    function eml(id) { var e = val(id); if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)) bad(id, 'Enter a valid email address.'); return e; }
+    function amt(id, msg) { if (!(parseFloat(num(id)) > 0)) bad(id, msg); }
+    function sel(id) { if (!val(id)) bad(id, 'Please select an option.'); }
+    var profile;
+    var state = VMW.canonicalState(val('f_state')); if (!state) bad('f_state', 'Please pick your state from the list.');
+    var pincode = VMW.digits(val('f_pincode')); if (!/^[1-9]\d{5}$/.test(pincode)) bad('f_pincode', 'Enter a valid 6-digit pincode.');
 
-function renderDocuments(){
-  var c = document.getElementById('docContainer');
-  var html = '';
-  if (product === 'VL') {
-    html += uploadBoxHtml('pan','PAN Card','JPG, PNG or PDF','image/*,.pdf',false);
-    html += uploadBoxHtml('aadhar','Aadhaar Card','JPG, PNG or PDF','image/*,.pdf',false);
-    html += uploadBoxHtml('selfie','Selfie / Photo','Clear face photo','image/*',false);
-    html += uploadBoxHtml('bankStatement','Bank Statement — last 6 months','Single PDF','application/pdf',false);
-    html += '<div class="field"><label>Bank Statement PDF Password (if any)</label><input type="password" id="docStmtPassword" placeholder="Leave blank if not password-protected"></div>';
-    if (state.vehicleCondition === 'New') {
-      html += uploadBoxHtml('vehicleQuotation','Vehicle Quotation / Proforma Invoice','JPG, PNG or PDF','image/*,.pdf',false);
-    } else if (state.vehicleCondition === 'Used') {
-      html += uploadBoxHtml('vehicleRc','Vehicle RC (Registration Certificate)','JPG, PNG or PDF','image/*,.pdf',false);
+    if (product === 'VL') {
+      if (!S.vehicleCondition) bad('vehicleConditionToggle', 'Please choose New or Used.');
+      chk('vl_name', 2, 'Please enter your full name.');
+      var m1 = mob('vl_mobile'), e1 = eml('vl_email');
+      if (!S.employmentType) bad('vlEmpToggle', 'Please choose Salaried or Self-Employed.');
+      amt('vl_income', 'Enter your monthly income.'); amt('vl_loanAmount', 'Enter the loan amount you need.');
+      sel('vl_cibil'); sel('vl_bounces');
+      profile = { name: val('vl_name'), mobile: m1, email: e1, vehicleCondition: S.vehicleCondition, employmentType: S.employmentType,
+        monthlyIncome: num('vl_income'), existingEmi: num('vl_emi') || '0', loanAmount: num('vl_loanAmount'), cibilBracket: val('vl_cibil'), bounces: val('vl_bounces') };
+    } else {
+      chk('el_studentName', 2, 'Please enter the student\'s full name.');
+      var m2 = mob('el_studentMobile'), e2 = eml('el_studentEmail');
+      chk('el_courseName', 2, 'Please enter the course name.'); chk('el_universityName', 2, 'Please enter the university / institution.');
+      amt('el_loanAmount', 'Enter the loan amount you need.');
+      chk('el_coName', 2, 'Please enter the co-applicant\'s name.');
+      if (!S.coEmploymentType) bad('elEmpToggle', 'Please choose Salaried or Self-Employed.');
+      amt('el_coIncome', 'Enter the co-applicant\'s monthly income.'); sel('el_coCibil'); sel('el_coBounces');
+      profile = { name: val('el_studentName'), mobile: m2, email: e2, courseName: val('el_courseName'), universityName: val('el_universityName'),
+        courseDuration: val('el_courseDuration'), admissionStatus: val('el_admissionStatus'), loanAmount: num('el_loanAmount'),
+        coApplicantName: val('el_coName'), coApplicantEmploymentType: S.coEmploymentType, coApplicantMonthlyIncome: num('el_coIncome'),
+        coApplicantExistingEmi: num('el_coEmi') || '0', coApplicantCibilBracket: val('el_coCibil'), coApplicantBounces: val('el_coBounces') };
     }
-  } else {
-    html += uploadBoxHtml('studentPan','Student PAN / ID Proof','JPG, PNG or PDF','image/*,.pdf',false);
-    html += uploadBoxHtml('studentAadhar','Student Aadhaar Card','JPG, PNG or PDF','image/*,.pdf',false);
-    html += uploadBoxHtml('admissionLetter','Admission Letter','JPG, PNG or PDF','image/*,.pdf',false);
-    html += uploadBoxHtml('feeStructure','Fee Structure','JPG, PNG or PDF','image/*,.pdf',false);
-    html += uploadBoxHtml('coPan','Co-Applicant PAN Card','JPG, PNG or PDF','image/*,.pdf',false);
-    html += uploadBoxHtml('coAadhar','Co-Applicant Aadhaar Card','JPG, PNG or PDF','image/*,.pdf',false);
-    html += uploadBoxHtml('coBankStatement','Co-Applicant Bank Statement — last 6 months','Single PDF','application/pdf',false);
-  }
-  c.innerHTML = html;
-  wireUploadBoxes();
-}
-
-function wireUploadBoxes(){
-  document.querySelectorAll('.upload-box input[type=file]').forEach(function(input){
-    input.addEventListener('change', function(){
-      var key = this.dataset.key;
-      var box = document.getElementById('box_'+key);
-      if (!this.files || !this.files.length) return;
-      var file = this.files[0];
-      box.classList.add('filled');
-      box.querySelector('.upload-sub').textContent = file.name;
-      box.querySelector('.upload-icon').textContent = '✓';
-      state.uploadedFiles[key] = file;
-    });
-  });
-}
-renderDocuments();
-
-function fileToBase64(file){
-  return new Promise(function(resolve, reject){
-    var reader = new FileReader();
-    reader.onload = function(){ resolve(reader.result.split(',')[1]); };
-    reader.onerror = function(){ reject(new Error('Could not read file: ' + file.name)); };
-    reader.readAsDataURL(file);
-  });
-}
-
-document.getElementById('submitBtn').addEventListener('click', function(){
-  if (!document.getElementById('f_consent').checked) { alert('Please provide consent to proceed.'); return; }
-
-  var profile = {};
-  if (product === 'VL') {
-    var required = ['vl_name','vl_mobile','vl_email','vl_income','vl_loanAmount','vl_cibil','vl_bounces'];
-    if (!state.vehicleCondition) { alert('Please select vehicle condition.'); return; }
-    if (!state.employmentType) { alert('Please select employment type.'); return; }
-    var missing = required.filter(function(id){ var el = document.getElementById(id); return el && !el.value.trim(); });
-    if (missing.length) { alert('Please complete all required fields.'); return; }
-
-    profile = {
-      name: document.getElementById('vl_name').value,
-      mobile: document.getElementById('vl_mobile').value,
-      email: document.getElementById('vl_email').value,
-      vehicleCondition: state.vehicleCondition,
-      employmentType: state.employmentType,
-      monthlyIncome: document.getElementById('vl_income').value.replace(/[^0-9.]/g,''),
-      existingEmi: (document.getElementById('vl_emi').value || '0').replace(/[^0-9.]/g,''),
-      loanAmount: document.getElementById('vl_loanAmount').value,
-      cibilBracket: document.getElementById('vl_cibil').value,
-      bounces: document.getElementById('vl_bounces').value,
-      partnerCode: partnerCode,
-      consentGiven: true
-    };
-  } else {
-    var requiredEl = ['el_studentName','el_studentMobile','el_studentEmail','el_courseName','el_universityName','el_loanAmount','el_coName','el_coIncome','el_coCibil','el_coBounces'];
-    if (!state.coEmploymentType) { alert('Please select co-applicant employment type.'); return; }
-    var missingEl = requiredEl.filter(function(id){ var el = document.getElementById(id); return el && !el.value.trim(); });
-    if (missingEl.length) { alert('Please complete all required fields.'); return; }
-
-    profile = {
-      name: document.getElementById('el_studentName').value,
-      mobile: document.getElementById('el_studentMobile').value,
-      email: document.getElementById('el_studentEmail').value,
-      courseName: document.getElementById('el_courseName').value,
-      universityName: document.getElementById('el_universityName').value,
-      courseDuration: document.getElementById('el_courseDuration').value,
-      admissionStatus: document.getElementById('el_admissionStatus').value,
-      loanAmount: document.getElementById('el_loanAmount').value,
-      coApplicantName: document.getElementById('el_coName').value,
-      coApplicantEmploymentType: state.coEmploymentType,
-      coApplicantMonthlyIncome: document.getElementById('el_coIncome').value.replace(/[^0-9.]/g,''),
-      coApplicantExistingEmi: (document.getElementById('el_coEmi').value || '0').replace(/[^0-9.]/g,''),
-      coApplicantCibilBracket: document.getElementById('el_coCibil').value,
-      coApplicantBounces: document.getElementById('el_coBounces').value,
-      partnerCode: partnerCode,
-      consentGiven: true
-    };
+    if (!$('f_consent').checked) bad('f_consent', 'Please tick the consent box to continue.');
+    if (!ok) { VMW.focusFirstError($('formWrap')); return null; }
+    profile.state = state; profile.pincode = pincode; profile.partnerCode = REF; profile.consentGiven = true;
+    return profile;
   }
 
-  var btn = this;
-  btn.disabled = true; btn.textContent = 'Submitting…';
-  document.getElementById('formWrap').classList.add('hidden');
-  document.getElementById('loadingState').style.display = 'block';
+  function backToForm(msg, type) { show(['formWrap']); if (msg) VMW.showMsg($('formError'), msg, type || 'error'); }
 
-  fetch(BACKEND_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action:'submitVlElApplication', product: product, profile: profile })
-  })
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      document.getElementById('loadingState').style.display = 'none';
-      if (!data.success) {
-        alert('Error: ' + (data.message || data.error || 'Unknown error') + ' — please try again.');
-        btn.disabled = false; btn.textContent = 'Submit Application';
-        document.getElementById('formWrap').classList.remove('hidden');
+  $('submitBtn').addEventListener('click', function () {
+    VMW.hideMsg($('formError')); $('dupNotice').classList.add('hidden');
+    var profile = validateAndBuild(); if (!profile) return;
+    show(['loadingState']);
+    VMW.post({ action: 'submitVlElApplication', product: product, profile: profile, forceNew: !!S.forceNew }, { timeout: 90000 }).then(function (data) {
+      if (!data || !data.success) {
+        if (data && data.error === 'duplicate_customer') {
+          S.lastDup = { leadId: data.existingLeadId, product: data.existingProduct, mobile: profile.mobile };
+          $('dupText').textContent = 'A ' + VMW.productLabel(data.existingProduct) + ' application already exists for ' + profile.mobile + '. You can continue it, or start a separate new application.';
+          backToForm(); $('dupNotice').classList.remove('hidden'); $('dupNotice').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+        backToForm((data && (data.message || data.error)) || 'We could not save your application. Please try again.');
         return;
       }
-      state.leadId = data.leadId;
-      goToDocumentUpload();
-    })
-    .catch(function(err){
-      document.getElementById('loadingState').textContent = 'Connection error: ' + err.message;
-      btn.disabled = false; btn.textContent = 'Submit Application';
-      document.getElementById('formWrap').classList.remove('hidden');
-    });
-});
-
-function goToDocumentUpload(){
-  document.getElementById('docWrap').classList.remove('hidden');
-  var c2 = document.getElementById('docContainer2');
-  c2.innerHTML = document.getElementById('docContainer').innerHTML;
-  wireUploadBoxesIn(c2);
-}
-
-function wireUploadBoxesIn(container){
-  container.querySelectorAll('.upload-box input[type=file]').forEach(function(input){
-    input.addEventListener('change', function(){
-      var key = this.dataset.key;
-      if (!this.files || !this.files.length) return;
-      state.uploadedFiles[key] = this.files[0];
-      this.closest('.upload-box').classList.add('filled');
-      this.closest('.upload-box').querySelector('.upload-sub').textContent = this.files[0].name;
-    });
+      S.forceNew = false; S.leadId = data.leadId; S.mobile = profile.mobile;
+      goToDocuments();
+    }).catch(function (err) { backToForm(VMW.errMsg(err) + ' Your details are still filled in — just tap the button again.'); });
   });
-}
-
-document.getElementById('docSubmitBtn').addEventListener('click', async function(){
-  var missingDocs = Array.from(document.querySelectorAll('#docContainer2 .upload-box')).filter(function(box){
-    return !box.classList.contains('filled');
+  $('dupContinue').addEventListener('click', function () {
+    var d = S.lastDup; if (!d || !d.leadId) { location.href = VMW.startLink(d ? d.mobile : '', REF); return; }
+    location.href = VMW.leadLink({ leadId: d.leadId, product: d.product, ref: REF });
   });
-  if (missingDocs.length) { alert('Please upload all required documents before submitting.'); return; }
+  $('dupNew').addEventListener('click', function () { S.forceNew = true; $('dupNotice').classList.add('hidden'); $('submitBtn').click(); });
 
-  var btn = this;
-  btn.disabled = true;
-  var keys = Object.keys(state.uploadedFiles);
-  var failedKeys = [];
-
-  for (var i = 0; i < keys.length; i++) {
-    btn.textContent = 'Uploading ' + (i+1) + ' of ' + keys.length + '…';
-    var file = state.uploadedFiles[keys[i]];
-    try {
-      var base64 = await fileToBase64(file);
-      var res = await fetch(BACKEND_URL, {
-        method:'POST',
-        body: JSON.stringify({
-          action:'vlElUploadSingleDocument', leadId: state.leadId, product: product,
-          fileKey: keys[i], file: { name:file.name, mimeType:file.type, base64: base64 }
-        })
-      });
-      var data = await res.json();
-      if (!data.success) throw new Error(data.error || 'Upload failed');
-    } catch (err) {
-      failedKeys.push(keys[i]);
+  /* ---------- documents ---------- */
+  function renderDocuments() {
+    var IMG = 'JPG, PNG or PDF', ANY = 'image/*,.pdf', box = VMW.docBox, html = '';
+    if (product === 'VL') {
+      html += box('pan', 'PAN card', IMG, ANY) + box('aadhar', 'Aadhaar card', IMG, ANY) + box('selfie', 'Selfie / photo', 'Clear face photo', 'image/*') +
+              box('bankStatement', 'Bank statement — last 6 months', 'Single PDF', 'application/pdf') +
+              '<div class="field"><label for="f_stmtPassword">Bank statement PDF password (if any)</label><input type="password" id="f_stmtPassword" autocomplete="off" placeholder="Leave blank if not password-protected"></div>';
+      if (S.vehicleCondition === 'New') html += box('vehicleQuotation', 'Vehicle quotation / proforma invoice', IMG, ANY);
+      else if (S.vehicleCondition === 'Used') html += box('vehicleRc', 'Vehicle RC (registration certificate)', IMG, ANY);
+    } else {
+      html += box('studentPan', 'Student PAN / ID proof', IMG, ANY) + box('studentAadhar', 'Student Aadhaar card', IMG, ANY) +
+              box('admissionLetter', 'Admission letter', IMG, ANY) + box('feeStructure', 'Fee structure', IMG, ANY) +
+              box('coPan', 'Co-applicant PAN card', IMG, ANY) + box('coAadhar', 'Co-applicant Aadhaar card', IMG, ANY) +
+              box('coBankStatement', 'Co-applicant bank statement — last 6 months', 'Single PDF', 'application/pdf');
     }
+    $('docContainer').innerHTML = html;
+    VMW.wireDocBoxes($('docContainer'), S.docStore);
   }
-
-  if (failedKeys.length > 0) {
-    btn.disabled = false;
-    btn.textContent = 'Retry Failed Uploads';
-    alert('These files could not be uploaded, please try again: ' + failedKeys.join(', '));
-    return;
+  function goToDocuments() {
+    S.warnedMissing = false; VMW.hideMsg($('docMsg')); $('docProgress').classList.add('hidden');
+    renderDocuments(); show(['docWrap']);
   }
+  $('docBack').addEventListener('click', function () { location.href = 'index.html'; });
 
-  btn.textContent = 'Finishing up…';
-  var pwEl = document.getElementById('docContainer2').querySelector('input[type=password]');
-  var stmtPassword = pwEl ? pwEl.value : '';
-
-  fetch(BACKEND_URL, {
-    method:'POST',
-    body: JSON.stringify({ action:'vlElFinalizeDocumentUpload', leadId: state.leadId, product: product, stmtPassword: stmtPassword })
-  }).then(function(){
-    document.getElementById('docWrap').classList.add('hidden');
-    document.getElementById('doneWrap').classList.remove('hidden');
-  }).catch(function(){
-    alert('Connection error while finishing up — please try again.');
-    btn.disabled = false; btn.textContent = 'Submit Documents';
-  });
-});
-
-(function initVlElEntry(){
-  var urlLeadId = params.get('leadId');
-  if (!urlLeadId) return;
-  document.getElementById('formWrap').classList.add('hidden');
-  document.getElementById('loadingState').style.display = 'block';
-  document.getElementById('loadingState').textContent = 'Resuming your application…';
-  
-  fetch(BACKEND_URL + '?action=resumeVlElApplication&leadId=' + encodeURIComponent(urlLeadId) + '&product=' + encodeURIComponent(product))
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      document.getElementById('loadingState').style.display = 'none';
-      if (data.success && data.found) {
-        state.leadId = data.leadId;
-        if (data.vehicleCondition) state.vehicleCondition = data.vehicleCondition;
-        renderDocuments();
-        if (String(data.documentStatus).toUpperCase() === 'SUBMITTED') {
-          document.getElementById('doneWrap').classList.remove('hidden');
-        } else {
-          goToDocumentUpload();
+  $('docSubmitBtn').addEventListener('click', function () {
+    var btn = this, box = $('docContainer'), msg = $('docMsg');
+    var jobs = VMW.collectJobs(box, S.docStore);
+    if (!jobs.length) { VMW.showMsg(msg, 'Please add at least one document before submitting.', 'error'); return; }
+    var missing = VMW.missingDocs(box, S.docStore);
+    if (missing.length && !S.warnedMissing) {
+      S.warnedMissing = true;
+      VMW.showMsg(msg, missing.length + ' document(s) not added yet: ' + missing.slice(0, 4).join(', ') + (missing.length > 4 ? '…' : '') +
+        '. Add them now, or tap “Submit documents” again to send what you have.', 'warn');
+      return;
+    }
+    var pw = $('f_stmtPassword') ? $('f_stmtPassword').value : '';
+    VMW.hideMsg(msg); $('docProgress').classList.remove('hidden');
+    VMW.busy(btn, 'Uploading…', function () {
+      return VMW.uploadAll(jobs, { leadId: S.leadId, product: product, mobile: S.mobile }, 'vlElUploadSingleDocument', function (i, n) {
+        btn.innerHTML = '<span class="spinner sm"></span> Uploading ' + i + ' of ' + n + '…';
+        $('docProgressBar').style.width = Math.round(((i - 1) / n) * 100) + '%';
+      }).then(function (failed) {
+        if (failed.length) {
+          VMW.showMsg(msg, failed.length + ' file(s) could not be uploaded: ' + failed.map(function (f) { return f.label; }).join(', ') + '. Your other files are saved — tap “Submit documents” again to retry only the failed ones.', 'error');
+          return null;
         }
-      } else {
-        document.getElementById('formWrap').classList.remove('hidden');
-      }
-    })
-    .catch(function(){
-      document.getElementById('loadingState').style.display = 'none';
-      document.getElementById('formWrap').classList.remove('hidden');
-    });
-})();
+        $('docProgressBar').style.width = '100%';
+        return VMW.post({ action: 'vlElFinalizeDocumentUpload', leadId: S.leadId, product: product, stmtPassword: pw }, { timeout: 90000 }).then(function (r) {
+          if (r && r.success) { show(['doneWrap']); return; }
+          VMW.showMsg(msg, 'Your files were uploaded but we could not finish the submission. Please tap “Submit documents” again.', 'error');
+        });
+      });
+    }).catch(function (err) { VMW.showMsg(msg, VMW.errMsg(err), 'error'); });
+  });
 
-// #9 — announcement popup
-fetch(BACKEND_URL + '?action=getAnnouncement&audience=Customer').then(function(r){ return r.json(); }).then(function(r){
-  if (!r.success || !r.announcement) return;
-  var a = r.announcement, overlay = document.createElement('div');
-  overlay.style = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:95;display:flex;align-items:center;justify-content:center;";
-  overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--panel-border);border-radius:14px;padding:20px;max-width:340px;width:90%;text-align:center;">' +
-    (a.imageUrl ? '<img src="'+a.imageUrl+'" style="max-width:100%;border-radius:10px;margin-bottom:12px;">' : '') +
-    '<h3 style="color:#fff;margin-bottom:8px;">'+(a.title||'')+'</h3><p style="color:var(--text-onnavy-muted);font-size:13px;margin-bottom:16px;">'+(a.body||'')+'</p>' +
-    (a.buttonText && a.buttonUrl ? '<a href="'+a.buttonUrl+'" target="_blank" style="text-decoration:none;"><button class="btn-submit" style="margin-top:0;">'+a.buttonText+'</button></a>' : '') +
-    '<button onclick="this.closest(\'div\').parentElement.remove()" style="margin-top:10px;background:none;border:none;color:var(--text-onnavy-muted);font-size:12px;cursor:pointer;">Dismiss</button></div>';
-  overlay.onclick = function(e){ if (e.target === overlay) overlay.remove(); };
-  document.body.appendChild(overlay);
-}).catch(function(){});
+  /* ---------- start ---------- */
+  (function boot() {
+    var leadId = params.get('leadId'), mobile = VMW.mobile10(params.get('mobile'));
+    $('otherLoansLink').href = 'apply.html' + (REF ? '?ref=' + encodeURIComponent(REF) : '');
+    if (mobile.length === 10) { $(product === 'VL' ? 'vl_mobile' : 'el_studentMobile').value = mobile; }
+    setTimeout(function () { VMW.showAnnouncement('Customer'); }, 1500);
+    if (!leadId) { show(['formWrap']); return; }
+    $('checkingText').textContent = 'Opening your application…';
+    VMW.get('resumeVlElApplication', { leadId: leadId, product: product }, { tries: 3 }).then(function (d) {
+      if (d && d.success && d.found) {
+        S.leadId = d.leadId; S.mobile = VMW.mobile10(d.mobile);
+        if (d.vehicleCondition) S.vehicleCondition = d.vehicleCondition;
+        if (String(d.documentStatus || '').toLowerCase() === 'submitted') { show(['doneWrap']); return; }
+        goToDocuments();
+      } else {
+        backToForm('We could not find that application link. You can start a new application below.', 'warn');
+      }
+    }).catch(function (err) { backToForm(VMW.errMsg(err), 'error'); });
+  })();
+})();
 </script>
 </body>
 </html>
