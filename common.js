@@ -360,5 +360,13 @@
   /* ---------- offline / installable app ---------- */
   if ('serviceWorker' in navigator) {
     w.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () { /* optional */ }); });
+     // When a new service worker takes over, force one reload so this tab
+  // stops being served by the old cache-first worker immediately.
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (sessionStorage.getItem('vmw_reloaded')) return;
+    sessionStorage.setItem('vmw_reloaded', '1');
+    location.reload();
+  });
+}
   }
 })(window);
