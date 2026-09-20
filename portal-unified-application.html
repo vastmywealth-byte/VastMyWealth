@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opening your application… — VastMyWealth</title>
+<meta http-equiv="refresh" content="0; url=apply.html">
+<link rel="stylesheet" href="style.css">
+<!--
+  RETIRED PAGE. Old links, bookmarks and messages that still point here are
+  forwarded to the ONE live application page (apply.html), keeping everything
+  after the "?" (ref, mobile, leadId, product) so nothing is lost.
+-->
+<script>
+  (function () {
+    var target = 'apply.html' + (location.search || '') + (location.hash || '');
+    location.replace(target);
+  })();
+</script>
+</head>
+<body>
+  <main class="wrap narrow">
+    <div class="card state-box">
+      <div class="spinner"></div>
+      <p>Opening your application…</p>
+      <p class="small mt12">If nothing happens, <a href="apply.html">tap here to continue</a>.</p>
+    </div>
+  </main>
+</body>
+</html>
