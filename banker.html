@@ -3,761 +3,616 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VastMyWealth — Bank Channel CRM</title>
+<title>Banker Portal — VastMyWealth</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0E1B3D">
+<meta name="theme-color" content="#0B1A38">
 <link rel="apple-touch-icon" href="1000550390.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 <style>
-  :root{
-    --navy:#0E1B3D; --navy-mid:#122654; --navy-light:#1B3466;
-    --gold:#D4A741; --gold-light:#EACD86;
-    --card:#FFFFFF; --text:#1B2333; --muted:#5B6478; --line:#EDEFF3;
-    --submitted:#B45309; --submitted-bg:#FEF3C7;
-    --disbursed:#1D4ED8; --disbursed-bg:#DBEAFE;
-    --rejected:#B91C1C; --rejected-bg:#FEE2E2;
-    --pending:#92400E; --pending-bg:#FEF3C7;
-    --radius:14px;
-  }
-  *{box-sizing:border-box;}
-  html,body{height:100%;}
-  body{ margin:0; font-family:'Inter',sans-serif; background:var(--navy); color:var(--text); -webkit-font-smoothing:antialiased; }
-  button{cursor:pointer; border:none; font-family:inherit;}
-  input,select,textarea{font-family:inherit;}
-  button:disabled{opacity:0.6; cursor:not-allowed;}
-
-  /* ---------- Splash / boot screen (#5,#6) ---------- */
-  #bootScreen{position:fixed; inset:0; background:var(--navy); display:flex; align-items:center; justify-content:center; flex-direction:column; z-index:100; color:#fff;}
-  #bootScreen .spinner{width:34px; height:34px; border:3px solid rgba(255,255,255,.25); border-top-color:var(--gold); border-radius:50%; animation:spin .8s linear infinite; margin-bottom:14px;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  #bootScreen p{font-size:13px; color:#AFC0E8;}
-
-  #authScreen{min-height:100vh; display:flex; flex-direction:column; background:var(--navy); position:relative; overflow:hidden;}
-  .splash-top{ background:#fff; border-radius:0 0 40px 40px; padding:26px 24px 18px; text-align:center; box-shadow:0 4px 0 var(--gold); position:relative; z-index:1; }
-  .splash-logo{width:60px; height:60px; margin:0 auto 8px; border-radius:16px; object-fit:contain; display:block;}
-  .splash-logo-fallback{width:60px; height:60px; margin:0 auto 8px; border-radius:50%; background:var(--navy); display:flex; align-items:center; justify-content:center; color:var(--gold); font-weight:800; font-size:20px;}
-  .splash-top h1{font-size:21px; margin:0; color:var(--navy); font-weight:800;}
-  .splash-top .tagline{color:#1B4FB0; font-size:12.5px; font-weight:700; margin-top:2px;}
-  .auth-body{flex:1; padding:22px 20px 40px; max-width:420px; width:100%; margin:0 auto; position:relative; z-index:1;}
-
-  .view{display:none;}
-  .view.active{display:block;}
-
-  .headline{color:#fff; font-size:19px; line-height:1.3; font-weight:800; margin:4px 0 4px;}
-  .headline .accent{color:var(--gold-light);}
-  .subtext{color:#C6D2EE; font-size:13px; margin:0 0 18px; line-height:1.45;}
-
-  .form-group{margin-bottom:13px; position:relative;}
-  label{display:block; margin-bottom:6px; font-weight:700; color:#EAF0FF; font-size:12px;}
-  input[type=text],input[type=email],input[type=tel],input[type=password],input[type=number],select,textarea{
-    width:100%; padding:12px 14px; border:1px solid var(--navy-light); border-radius:10px;
-    font-size:14px; background:var(--navy-mid); color:#fff;
-  }
-  input::placeholder,textarea::placeholder{color:#8FA0CC;}
-  input:focus,select:focus,textarea:focus{outline:2px solid var(--gold); outline-offset:1px;}
-  select option{background:var(--navy-mid); color:#fff;}
-
-  .suggest-list{position:absolute; top:100%; left:0; right:0; background:var(--navy-mid); border:1px solid var(--gold); border-radius:10px; margin-top:4px; max-height:180px; overflow-y:auto; z-index:5; display:none;}
-  .suggest-list div{padding:10px 14px; font-size:13px; color:#fff; cursor:pointer;}
-  .suggest-list div:hover{background:var(--navy-light);}
-  .suggest-list div.no-match{color:#8FA0CC; cursor:default;}
-
-  .checkbox-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;}
-  .checkbox-grid label{display:flex; align-items:center; gap:8px; font-weight:600; font-size:13px; background:var(--navy-mid); border:1px solid var(--navy-light); padding:10px; border-radius:8px; margin:0; color:#EAF0FF;}
-  .checkbox-grid input{width:auto;}
-  .code-hint{font-size:11.5px; color:#C6D2EE; margin:-4px 0 10px 2px; line-height:1.4;}
-.light-form .checkbox-grid label{
-  background:#F8FAFC;
-  border-color:var(--line);
-  color:var(--navy);
-}
-  .bank-chip-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;}
-  .bank-chip{padding:8px 14px; border-radius:20px; font-size:12.5px; font-weight:700; border:1.5px solid var(--navy-light); background:var(--navy-mid); color:#EAF0FF;}
-  .bank-chip.selected{background:var(--gold); color:var(--navy); border-color:var(--gold);}
-  .bank-chip.add-new{border-style:dashed; color:var(--gold-light);}
-
-  .btn-primary{width:100%; background:var(--gold); color:var(--navy); padding:14px; border-radius:10px; font-size:15px; font-weight:800; transition:transform .12s ease; display:flex; align-items:center; justify-content:center; gap:8px;}
-  .btn-primary:active{transform:scale(0.98);}
-  .btn-secondary{width:100%; background:transparent; border:1.5px solid var(--gold); color:var(--gold-light); padding:12px; border-radius:10px; font-size:13.5px; font-weight:700; margin-top:10px;}
-  .link-row{display:flex; justify-content:space-between; margin-top:14px; font-size:12px;}
-  .link-btn{background:none; color:#EACD86; text-decoration:underline; font-weight:700; padding:0; font-size:12px;}
-  .msg-box{margin-top:12px; padding:12px; border-radius:8px; font-size:12.5px; display:none; line-height:1.4;}
-  .msg-box.success{background:rgba(34,197,94,.16); color:#4ADE80; border:1px solid rgba(34,197,94,.4); display:block;}
-  .msg-box.error{background:rgba(248,113,113,.16); color:#F87171; border:1px solid rgba(248,113,113,.45); display:block;}
-  .msg-box.info{background:rgba(212,167,65,.16); color:var(--gold-light); border:1px solid rgba(212,167,65,.4); display:block;}
-  .spin-icon{display:inline-block; width:14px; height:14px; border:2px solid rgba(14,27,61,.3); border-top-color:var(--navy); border-radius:50%; animation:spin .7s linear infinite;}
-  .spin-icon.light{border:2px solid rgba(255,255,255,.35); border-top-color:#fff;}
-
-  /* ---------- Main App ---------- */
-  #app{display:none; min-height:100vh; background:var(--navy); padding-bottom:64px;}
-  header.topbar{background:#fff; padding:12px 16px; position:sticky; top:0; z-index:10; border-radius:0 0 16px 16px; box-shadow:0 4px 0 var(--gold);}
-  .topbar-row{display:flex; align-items:center; justify-content:space-between; gap:8px;}
-  .topbar-brand{display:flex; align-items:center; gap:8px;}
-  .topbar-brand img{width:28px; height:28px; border-radius:7px;}
-  header.topbar h2{font-size:14.5px; margin:0; font-weight:800; color:var(--navy);}
-  .icon-pill{background:var(--navy); color:var(--gold-light); padding:6px 10px; border-radius:6px; font-size:11.5px; font-weight:700; white-space:nowrap;}
-
-  .rm-card{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; padding:7px 12px; background:#F8FAFC; border:1px solid var(--line); border-radius:8px;}
-  .rm-info{font-size:11px; color:var(--muted);}
-  .rm-info b{display:block; font-size:12.5px; color:var(--navy); font-weight:800;}
-  .rm-actions{display:flex; gap:6px;}
-  .rm-actions a{display:flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:50%; background:var(--navy); color:var(--gold-light); font-size:13px; text-decoration:none;}
-
-  .pending-banner{background:var(--pending-bg); color:var(--pending); border-radius:10px; padding:10px 14px; font-size:12px; font-weight:700; margin-bottom:10px;}
-
-  main.content{padding:10px 14px 16px;}
-  .section-card{background:var(--card); border-radius:var(--radius); padding:16px 14px; margin-bottom:12px; box-shadow:0 4px 14px rgba(0,0,0,.15);}
-  .section-card h3{margin:0 0 3px; font-size:14.5px; color:var(--navy); font-weight:800; position:relative; padding-left:12px;}
-  .section-card h3::before{content:""; position:absolute; left:0; top:2px; bottom:2px; width:3px; border-radius:3px; background:var(--gold);}
-  .section-card .desc{font-size:11.5px; color:var(--muted); margin:0 0 12px 12px; line-height:1.4;}
-
-  .light-form label{color:var(--navy); font-size:12px;}
-  .light-form input,.light-form select,.light-form textarea{background:#F8FAFC; border:1px solid var(--line); color:var(--text);}
-  .light-form select option{background:#fff; color:var(--text);}
-  .light-form .suggest-list{background:#fff; border-color:var(--navy);}
-  .light-form .suggest-list div{color:var(--text);}
-  .light-form .suggest-list div:hover{background:#F1F4F9;}
-
-  .code-chip{display:inline-flex; align-items:center; gap:6px; background:var(--gold-light); color:var(--navy); padding:6px 12px; border-radius:20px; font-size:12px; font-weight:700; margin:0 6px 6px 0;}
-  .code-chip.pending{background:var(--pending-bg); color:var(--pending);}
-
-  .business-row{background:#F8FAFC; border:1px solid var(--line); border-radius:10px; padding:11px 13px; margin-bottom:8px;}
-  .business-row-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
-  .business-name{font-weight:700; font-size:13px; color:var(--navy);}
-  .business-meta{font-size:11px; color:var(--muted); margin-top:2px; line-height:1.4;}
-  .status-chip{font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:20px; white-space:nowrap;}
-  .status-chip.submitted{background:var(--submitted-bg); color:var(--submitted);}
-  .status-chip.rejected{background:var(--rejected-bg); color:var(--rejected);}
-  .status-chip.disbursed{background:var(--disbursed-bg); color:var(--disbursed);}
-  .status-chip.active{background:var(--disbursed-bg); color:var(--disbursed);}
-  .row-actions{display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;}
-  .row-actions button{font-size:11px; font-weight:700; padding:7px 10px; border-radius:7px;}
-  .btn-disburse{background:var(--disbursed-bg); color:var(--disbursed);}
-  .btn-reject{background:var(--rejected-bg); color:var(--rejected);}
-  .btn-link-out{background:var(--navy); color:var(--gold-light); text-decoration:none; display:inline-block;}
-
-  .bottom-nav{position:fixed; bottom:0; left:0; right:0; background:#fff; display:flex; overflow-x:auto; box-shadow:0 -4px 14px rgba(0,0,0,.15); z-index:15;}
-  .nav-btn{flex:1 0 auto; min-width:58px; padding:8px 3px; text-align:center; font-size:9.5px; font-weight:700; color:var(--muted); background:none; position:relative;}
-  .nav-btn.active{color:var(--navy);}
-  .nav-btn .nav-icon{display:block; font-size:15px; margin-bottom:1px;}
-  .new-badge{position:absolute; top:2px; right:6px; background:#DC2626; color:#fff; font-size:7.5px; font-weight:800; padding:1px 4px; border-radius:6px; letter-spacing:.3px;}
-
-  .empty-state{text-align:center; padding:20px 10px; color:var(--muted); font-size:12.5px;}
-  .gate-state{text-align:center; padding:20px 14px; color:var(--muted); font-size:12.5px; background:#F8FAFC; border:1px dashed var(--line); border-radius:10px; line-height:1.5;}
-  .slots-note{font-size:11px; color:var(--muted); margin:-4px 0 10px 12px;}
-
-  .sheet-backdrop{display:none; position:fixed; inset:0; background:rgba(6,12,28,.6); z-index:20;}
-  .sheet{position:fixed; left:0; right:0; bottom:0; background:var(--navy); border-radius:20px 20px 0 0; max-height:85vh; overflow-y:auto; z-index:21; padding:18px 16px 28px; box-shadow:0 -6px 0 var(--gold);}
-  .sheet-handle{width:36px; height:4px; background:var(--navy-light); border-radius:3px; margin:0 auto 14px;}
-  .sheet h3{margin:0 0 14px; color:#fff; font-size:15px;}
-    .close-x{position:absolute; top:14px; right:14px; background:none; font-size:18px; color:#EAF0FF; padding:4px;}
-
-  .toast{position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--gold); color:var(--navy); padding:10px 18px; border-radius:24px; font-size:12.5px; font-weight:700; z-index:30; display:none; max-width:90%; text-align:center;}
-  .toast.error{background:var(--rejected); color:#fff;}
+  .view{display:none}.view.active{display:block}
+  .tab-pane{display:none}.tab-pane.active{display:block}
+  .rm-card{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:14px}
+  .rm-card small{display:block;color:var(--muted);font-size:12px}
+  .rm-card b{color:#fff;font-size:14.5px}
 </style>
 </head>
 <body>
-<div class="sheet-backdrop" id="docViewerBackdrop"></div>
-<div class="sheet" id="docViewerSheet" style="display:none;">
-  <div class="sheet-handle"></div>
-  <button class="close-x" onclick="closeSheet('docViewerSheet','docViewerBackdrop')">✕</button>
-  <h3>Documents</h3>
-  <div id="docViewerBody" style="background:var(--card); border-radius:12px; padding:16px;"></div>
-</div>
-<!-- Boot screen — shown while we silently try auto-login, so the
-     person never sees a flash of the request-code form first (#5,#6) -->
-<div id="bootScreen">
-  <div class="spinner"></div>
-  <p>Loading your dashboard…</p>
+
+<div id="bootScreen" class="wrap narrow">
+  <div class="card state-box" style="margin-top:80px;"><div class="spinner"></div><p>Loading your dashboard…</p></div>
 </div>
 
-<div id="authScreen" style="display:none;">
-  <div class="splash-top">
-    <img class="splash-logo" src="1000550390.png" alt="VastMyWealth" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex';">
-    <div id="logoFallback" class="splash-logo-fallback" style="display:none;">VMW</div>
-    <h1>VastMyWealth</h1>
-    <div class="tagline">Bank Channel CRM</div>
-  </div>
-  <div class="auth-body">
+<!-- ===================== SIGN IN / REGISTER ===================== -->
+<div id="authScreen" class="hidden">
+  <header class="app-header"><div class="in">
+    <a class="brand" href="index.html"><img src="1000550390.png" alt="" onerror="this.style.display='none'"><div><b>VastMyWealth</b><small>Banker Portal</small></div></a>
+    <div class="hdr-right"><a class="hdr-link" href="index.html">← Home</a></div>
+  </div></header>
+
+  <main class="wrap narrow">
+
     <div id="requestCodeView" class="view active">
-      <div class="headline">Generate Your <span class="accent">DSA Code</span></div>
-      <div class="subtext">Enter your official bank details to request your verified onboarding kit &amp; PIN.</div>
-
-      <form id="requestCodeForm">
-        <div class="form-group"><label>Full Name</label><input type="text" id="reqName" required placeholder="Your name"></div>
-
-        <div class="form-group">
-          <label>Bank or NBFC Name</label>
-          <input type="text" id="reqBank" required autocomplete="off" placeholder="Start typing your bank/NBFC...">
-          <div class="suggest-list" id="reqBankSuggest"></div>
-        </div>
-
-        <div class="form-group">
-          <label>Official Bank Email ID</label>
-          <input type="email" id="reqEmail" required placeholder="name@bankdomain.com">
-          <small id="emailError" style="color:#F87171; font-size:11.5px; display:none; margin-top:4px;">Personal email addresses (Gmail, Yahoo, etc.) are not allowed. Please use your official bank/corporate email.</small>
-        </div>
-
-        <div class="form-group"><label>Mobile Number</label><input type="tel" id="reqMobile" required pattern="[0-9]{10}" placeholder="9876543210"></div>
-
-        <button type="submit" id="reqBtn" class="btn-primary">Generate DSA Code</button>
-      </form>
-
-      <div id="reqResult" class="msg-box"></div>
-      <button class="btn-secondary" onclick="showView('loginView')">Already Registered? Login</button>
+      <div class="hero"><h1>Register as a banker</h1>
+        <p>Enter your official bank details. Your login PIN and onboarding kit are emailed to your <b>official bank email</b>.</p></div>
+      <div class="card">
+        <form id="requestCodeForm" novalidate>
+          <div class="field"><label for="reqName">Full name<span class="req">*</span></label><input type="text" id="reqName" autocomplete="name" placeholder="Your name"></div>
+          <div class="field"><label for="reqBank">Bank or NBFC name<span class="req">*</span></label><input type="text" id="reqBank" autocomplete="off" placeholder="Start typing your bank / NBFC"></div>
+          <div class="field"><label for="reqState">State<span class="req">*</span></label><input type="text" id="reqState" autocomplete="off" placeholder="Start typing your state"></div>
+          <div class="field"><label for="reqEmail">Official bank email ID<span class="req">*</span></label><input type="email" id="reqEmail" autocomplete="email" placeholder="name@yourbank.com">
+            <div class="hint">Personal emails (Gmail, Yahoo, etc.) are not accepted.</div></div>
+          <div class="field"><label for="reqMobile">Mobile number<span class="req">*</span></label><input type="tel" id="reqMobile" maxlength="10" inputmode="numeric" autocomplete="tel" placeholder="10-digit mobile"></div>
+          <button type="submit" id="reqBtn" class="btn btn-primary btn-block">Register &amp; email my PIN</button>
+        </form>
+        <div id="reqResult" class="alert hidden"></div>
+        <button class="btn btn-outline btn-block mt16" id="toLogin" type="button">Already registered? Log in</button>
+      </div>
     </div>
 
     <div id="loginView" class="view">
-      <div class="headline">Welcome <span class="accent">Back</span></div>
-      <div class="subtext">Login with your registered mobile number and PIN.</div>
-      <form id="loginForm">
-        <div class="form-group"><label>Mobile Number</label><input type="tel" id="loginMobile" required placeholder="Registered mobile"></div>
-        <div class="form-group"><label>4-Digit PIN</label><input type="password" id="loginPin" required maxlength="4" inputmode="numeric" placeholder="••••"></div>
-        <button type="submit" id="loginBtn" class="btn-primary">Login</button>
-      </form>
-      <div id="loginResult" class="msg-box"></div>
-      <div class="link-row"><button class="link-btn" onclick="showView('requestCodeView')">← Back</button><button class="link-btn" onclick="showView('forgotPinView')">Forgot PIN?</button></div>
+      <div class="hero"><h1>Welcome back</h1><p>Log in with your registered mobile number and PIN.</p></div>
+      <div class="card">
+        <form id="loginForm" novalidate>
+          <div class="field"><label for="loginMobile">Mobile number</label><input type="tel" id="loginMobile" maxlength="10" inputmode="numeric" autocomplete="tel" placeholder="Registered mobile"></div>
+          <div class="field"><label for="loginPin">4-digit PIN</label><input type="password" id="loginPin" maxlength="4" inputmode="numeric" autocomplete="current-password" placeholder="••••"></div>
+          <button type="submit" id="loginBtn" class="btn btn-primary btn-block">Log in</button>
+        </form>
+        <div id="loginResult" class="alert hidden"></div>
+        <div class="btn-row mt16" style="justify-content:space-between;">
+          <button class="link-btn" id="toRegister" type="button">← New banker? Register</button>
+          <button class="link-btn" id="toForgot" type="button">Forgot PIN?</button>
+        </div>
+      </div>
     </div>
 
     <div id="forgotPinView" class="view">
-      <div class="headline">Reset Your <span class="accent">PIN</span></div>
-      <form id="forgotPinForm">
-        <div class="form-group"><label>Registered Mobile Number</label><input type="tel" id="fpMobile" required placeholder="Registered mobile"></div>
-        <button type="submit" id="fpBtn" class="btn-primary">Send PIN</button>
-      </form>
-      <div id="fpResult" class="msg-box"></div>
-      <div class="link-row"><button class="link-btn" onclick="showView('loginView')">← Back to Login</button></div>
+      <div class="hero"><h1>Reset your PIN</h1><p>We'll email your PIN to your registered official email.</p></div>
+      <div class="card">
+        <form id="forgotPinForm" novalidate>
+          <div class="field"><label for="fpMobile">Registered mobile number</label><input type="tel" id="fpMobile" maxlength="10" inputmode="numeric" placeholder="Registered mobile"></div>
+          <button type="submit" id="fpBtn" class="btn btn-primary btn-block">Email my PIN</button>
+        </form>
+        <div id="fpResult" class="alert hidden"></div>
+        <button class="link-btn mt16" id="fpBack" type="button">← Back to login</button>
+      </div>
     </div>
-  </div>
+  </main>
 </div>
 
-<div id="app">
-  <header class="topbar">
-    <div class="topbar-row">
-      <div class="topbar-brand">
-        <img src="1000550390.png" alt="" onerror="this.style.display='none';">
-        <h2 id="welcomeName">Bank Channel CRM</h2>
-      </div>
-      <button class="icon-pill" id="logoutBtn">Logout</button>
-    </div>
-    <div id="bankNameLabel" style="font-size:11px; color:var(--muted); margin-top:2px; display:none;"></div>
+<!-- ===================== DASHBOARD ===================== -->
+<div id="app" class="hidden">
+  <header class="app-header"><div class="in">
+    <a class="brand" href="index.html"><img src="1000550390.png" alt="" onerror="this.style.display='none'"><div><b id="welcomeName">Banker Portal</b><small id="bankNameLabel">VastMyWealth</small></div></a>
+    <div class="hdr-right"><button class="btn btn-ghost btn-sm" id="logoutBtn">Log out</button></div>
+  </div></header>
+
+  <main class="wrap">
     <div class="rm-card">
-      <div class="rm-info">Your Relationship Manager<b id="rmNameLabel">Manoj A Prabhu</b></div>
-      <div class="rm-actions">
-        <a id="rmCallLink" href="tel:9594592020" title="Call">📞</a>
-        <a id="rmChatLink" href="https://wa.me/919594592020" target="_blank" title="Chat">💬</a>
-      </div>
+      <div><small>Your relationship manager</small><b id="rmNameLabel">Manoj A Prabhu</b></div>
+      <div class="btn-row"><a class="btn btn-icon" id="rmCallLink" href="tel:9594592020" title="Call" aria-label="Call your RM">📞</a>
+        <a class="btn btn-icon" id="rmChatLink" href="https://wa.me/919594592020" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp your RM">💬</a></div>
     </div>
-  </header>
 
-  <main class="content">
-    <div class="pending-banner" id="pendingBanner" style="display:none;">Your DSA code is under verification. You'll be notified once active.</div>
+    <div id="pendingBanner" class="alert warn hidden">⏳ Your DSA code is being verified. You'll be able to log business and see leads as soon as it's active.</div>
 
-        <div id="tabLog" class="tab-pane">
-      <div class="section-card">
-        <h3>Log New Business</h3>
-        <p class="desc">Enter the customer's mobile number — we'll resume their application if one exists, or take you straight to a fresh one.</p>
-        <div id="logGate" class="gate-state" style="display:none;">Submit and get a DSA code verified before logging business.</div>
+    <!-- LOG BUSINESS -->
+    <div id="tabLog" class="tab-pane active">
+      <div class="card">
+        <div class="card-title">Log new business</div>
+        <p class="card-sub">Type your customer's mobile number. If they already applied you'll see their status and can upload their documents; otherwise a new application opens, credited to you.</p>
+        <div id="logGate" class="alert warn hidden">Add a DSA code and get it verified before logging business.</div>
         <div id="newAppArea">
-          <div class="form-group"><label>Customer Mobile Number</label><input type="tel" id="newAppMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile"></div>
-          <button id="portalLinkBtn" class="btn-primary" style="display:block; width:100%;">＋ Start / Continue Application</button>
+          <div class="field"><label for="newAppMobile">Customer mobile number</label>
+            <input type="tel" id="newAppMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
+          <button id="portalLinkBtn" class="btn btn-primary btn-block">＋ Start / continue application</button>
         </div>
-        <button class="btn-secondary" id="shareLinkBtn" style="color:var(--navy); border-color:var(--navy);">🔗 Copy My Application Link to Share</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Share your application link</div>
+        <p class="card-sub">Anyone who applies through your link is credited to you.</p>
+        <div class="btn-stack">
+          <button class="btn btn-outline btn-block" id="shareLinkBtn">🔗 Copy my application link</button>
+          <a class="btn btn-ghost btn-block" id="shareWaBtn" href="#" target="_blank" rel="noopener">💬 Share on WhatsApp</a>
+        </div>
       </div>
     </div>
-    <div id="tabCodes" class="tab-pane" style="display:none;">
-      <div class="section-card">
-        <h3>Your DSA Codes</h3>
-        <p class="desc">Bank and loan-type combinations you can currently log business under.</p>
+
+    <!-- DSA CODES -->
+    <div id="tabCodes" class="tab-pane">
+      <div class="card">
+        <div class="card-title">Your DSA codes</div>
+        <p class="card-sub">Bank and loan-type combinations you can log business under.</p>
         <div id="codesList"></div>
-        <button class="btn-secondary" style="margin-top:8px; color:var(--navy); border-color:var(--navy);" onclick="openSubmitCodeSheet()">+ Add a Bank / DSA Code</button>
+        <button class="btn btn-primary btn-block mt12" id="addCodeBtn">＋ Add a bank / DSA code</button>
       </div>
     </div>
 
-    <div id="tabTrack" class="tab-pane" style="display:none;">
-      <div class="section-card">
-        <h3>Track Business &amp; Files</h3>
-        <p class="desc">Monitor status of your logged files and client applications.</p>
-        <div id="businessLogList"></div>
+    <!-- TRACK -->
+    <div id="tabTrack" class="tab-pane">
+      <div class="card">
+        <div class="row-top"><div><div class="card-title">Track business &amp; files</div>
+          <p class="card-sub" style="margin-bottom:0;">Status of the files you logged, referred or claimed.</p></div>
+          <button class="btn btn-ghost btn-sm" id="trackRefresh">↻ Refresh</button></div>
+        <div id="trackList" class="mt16"></div>
       </div>
     </div>
 
-    <div id="tabBizLeads" class="tab-pane" style="display:none;">
-      <div class="section-card">
-        <h3>Business Leads</h3>
-        <p class="desc">Customer leads available in the pool. Claim one to receive full details and matching DSA code.</p>
-        <div id="bizLeadsGate" class="gate-state" style="display:none;">Submit and get a DSA code verified to view leads.</div>
-        <div id="bizLeadsBlocked" class="gate-state" style="display:none;">You've reached your rejection limit. Contact your RM.</div>
-        <div id="bizLeadsSlots" class="slots-note"></div>
-        <div id="bizLeadsList"></div>
+    <!-- BUSINESS LEADS -->
+    <div id="tabBizLeads" class="tab-pane">
+      <div class="card">
+        <div class="row-top"><div><div class="card-title">Business leads</div>
+          <p class="card-sub" style="margin-bottom:0;">Customer leads in the pool. Claim one to get the full details and your DSA code.</p></div>
+          <button class="btn btn-ghost btn-sm" id="leadsRefresh">↻ Refresh</button></div>
+        <div id="bizLeadsGate" class="alert warn hidden mt16">Add a DSA code and get it verified to view leads.</div>
+        <div id="bizLeadsBlocked" class="alert error hidden mt16">You've reached your rejection limit for this period. Please contact your RM to unlock leads.</div>
+        <div id="bizLeadsSlots" class="small muted mt12"></div>
+        <div id="bizLeadsList" class="mt12"></div>
       </div>
-      <div class="section-card">
-        <h3>My Claimed Business Leads</h3>
-        <div id="bizMyClaimsList"></div>
+      <div class="card">
+        <div class="card-title">My claimed leads</div>
+        <div id="bizMyClaimsList" class="mt12"></div>
       </div>
     </div>
 
-    <div id="tabBizTool" class="tab-pane" style="display:none;">
-      <div class="section-card">
-        <h3>Business Tool</h3>
-        <p class="desc">Run your own paid campaigns and keep those leads exclusive to you — only sending unfit ones to the shared pool.</p>
-        <div class="gate-state">🚧 Coming soon. This feature is currently under development.</div>
+    <!-- BUSINESS TOOL -->
+    <div id="tabBizTool" class="tab-pane">
+      <div class="card">
+        <div class="card-title">Business tool</div>
+        <p class="card-sub">Run your own paid campaigns and keep those leads exclusive to you — only sending unfit ones to the shared pool.</p>
+        <div class="alert info">🚧 Coming soon. This feature is under development.</div>
       </div>
     </div>
   </main>
 
-  <div class="bottom-nav">
-    <button class="nav-btn active" data-tab="tabLog"><span class="nav-icon">＋</span>Log Business</button>
-    <button class="nav-btn" data-tab="tabCodes"><span class="nav-icon">🔑</span>Add DSA</button>
-    <button class="nav-btn" data-tab="tabTrack"><span class="nav-icon">📊</span>Track</button>
-    <button class="nav-btn" data-tab="tabBizLeads"><span class="nav-icon">👤</span>Biz Leads</button>
-    <button class="nav-btn" data-tab="tabBizTool" style="position:relative;"><span class="nav-icon">🛠️</span>Biz Tool<span class="new-badge">NEW</span></button>
-  </div>
+  <nav class="bottom-nav" aria-label="Sections">
+    <button class="nav-btn active" data-tab="tabLog"><span class="ic">＋</span>Log</button>
+    <button class="nav-btn" data-tab="tabCodes"><span class="ic">🔑</span>DSA codes</button>
+    <button class="nav-btn" data-tab="tabTrack"><span class="ic">📊</span>Track</button>
+    <button class="nav-btn" data-tab="tabBizLeads"><span class="ic">👤</span>Leads</button>
+    <button class="nav-btn" data-tab="tabBizTool"><span class="ic">🛠️</span>Tool<span class="new-badge">NEW</span></button>
+  </nav>
 </div>
 
-<!-- Submit Code Sheet -->
-<div class="sheet-backdrop" id="submitCodeBackdrop"></div>
-<div class="sheet" id="submitCodeSheet" style="display:none;">
-  <div class="sheet-handle"></div>
-  <button class="close-x" onclick="closeSheet('submitCodeSheet','submitCodeBackdrop')">✕</button>
-  <h3>Add a Bank / DSA Code</h3>
-  <form id="submitCodeForm" class="light-form" style="background:var(--card); border-radius:12px; padding:16px;">
-    <div class="form-group">
-      <label>Bank</label>
-      <div class="bank-chip-row" id="scBankChips"></div>
-      <div id="scNewBankFields" style="display:none;">
-        <div class="form-group">
-          <label>New Bank / NBFC Name</label>
-          <input type="text" id="scNewBankName" autocomplete="off" placeholder="Start typing...">
-          <div class="suggest-list" id="scNewBankSuggest"></div>
-        </div>
-        <div class="form-group">
-          <label>Official Email for This Bank</label>
-          <input type="email" id="scNewBankEmail" placeholder="name@newbankdomain.com">
-          <small id="scNewBankEmailError" style="color:#B91C1C; font-size:11px; display:none;">Personal email addresses are not allowed.</small>
-        </div>
-      </div>
+<!-- ===================== SHEETS ===================== -->
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+<div class="sheet" id="submitCodeSheet">
+  <div class="sheet-head"><h3>Add a bank / DSA code</h3><button class="sheet-close" data-close aria-label="Close">✕</button></div>
+  <form id="submitCodeForm" novalidate>
+    <div class="field"><label>Bank</label>
+      <div class="chip-row" id="scBankChips"><span class="muted small">Loading your banks…</span></div>
     </div>
-    <div class="form-group">
-      <label>Loan Type(s)</label>
+    <div id="scNewBankFields" class="hidden">
+      <div class="field"><label for="scNewBankName">New bank / NBFC name</label><input type="text" id="scNewBankName" autocomplete="off" placeholder="Start typing…"></div>
+      <div class="field"><label for="scNewBankEmail">Official email for this bank</label><input type="email" id="scNewBankEmail" placeholder="name@newbank.com"></div>
+    </div>
+    <div class="field"><label>Loan type(s)</label>
       <div class="checkbox-grid">
         <label><input type="checkbox" name="scLoanType" value="PL"> Personal Loan</label>
         <label><input type="checkbox" name="scLoanType" value="BL"> Business Loan</label>
       </div>
     </div>
-    <div class="code-hint" id="scCodeHint"></div>
-    <div class="form-group" id="scCodeGroup"><label>DSA Code</label><input type="text" id="scCode"></div>
-    <button type="submit" id="scBtn" class="btn-primary">Submit Code</button>
+    <div id="scCodeHint" class="alert info hidden"></div>
+    <div class="field" id="scCodeGroup"><label for="scCode">DSA code</label><input type="text" id="scCode" autocomplete="off"></div>
+    <button type="submit" id="scBtn" class="btn btn-primary btn-block">Submit code</button>
   </form>
-  <div id="scResult" class="msg-box"></div>
+  <div id="scResult" class="alert hidden"></div>
 </div>
 
-<!-- Disburse Sheet -->
-<div class="sheet-backdrop" id="disburseBackdrop"></div>
-<div class="sheet" id="disburseSheet" style="display:none;">
-  <div class="sheet-handle"></div>
-  <button class="close-x" onclick="closeSheet('disburseSheet','disburseBackdrop')">✕</button>
-  <h3>Mark as Disbursed</h3>
-  <form id="disburseForm" class="light-form" style="background:var(--card); border-radius:12px; padding:16px;">
+<div class="sheet" id="disburseSheet">
+  <div class="sheet-head"><h3>Mark as disbursed</h3><button class="sheet-close" data-close aria-label="Close">✕</button></div>
+  <form id="disburseForm" novalidate>
     <input type="hidden" id="disburseClaimId">
-    <div class="form-group"><label>Disbursed Amount (₹)</label><input type="number" id="disburseAmount" required min="1" placeholder="e.g. 500000"></div>
-    <button type="submit" id="disburseBtn" class="btn-primary">Confirm Disbursement</button>
+    <div class="field"><label for="disburseAmount">Disbursed amount (₹)</label><input type="text" id="disburseAmount" inputmode="numeric" placeholder="e.g. 5,00,000"></div>
+    <button type="submit" id="disburseBtn" class="btn btn-primary btn-block">Confirm disbursement</button>
   </form>
-  <div id="disburseResult" class="msg-box"></div>
+  <div id="disburseResult" class="alert hidden"></div>
 </div>
 
-<!-- Reject Sheet -->
-<div class="sheet-backdrop" id="rejectBackdrop"></div>
-<div class="sheet" id="rejectSheet" style="display:none;">
-  <div class="sheet-handle"></div>
-  <button class="close-x" onclick="closeSheet('rejectSheet','rejectBackdrop')">✕</button>
-  <h3>Reject This Lead</h3>
-  <form id="rejectForm" class="light-form" style="background:var(--card); border-radius:12px; padding:16px;">
+<div class="sheet" id="rejectSheet">
+  <div class="sheet-head"><h3>Reject this lead</h3><button class="sheet-close" data-close aria-label="Close">✕</button></div>
+  <form id="rejectForm" novalidate>
     <input type="hidden" id="rejectClaimId">
-    <div class="form-group"><label>Reason for Rejection</label><textarea id="rejectReason" required rows="3" placeholder="e.g. CIBIL below policy, bounces too high..."></textarea></div>
-    <button type="submit" id="rejectBtn" class="btn-primary">Confirm Rejection</button>
+    <div class="field"><label for="rejectReason">Reason for rejection</label><textarea id="rejectReason" rows="3" placeholder="e.g. CIBIL below policy, bounces too high…"></textarea></div>
+    <button type="submit" id="rejectBtn" class="btn btn-danger btn-block">Confirm rejection</button>
   </form>
-  <div id="rejectResult" class="msg-box"></div>
+  <div id="rejectResult" class="alert hidden"></div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="sheet" id="docViewerSheet">
+  <div class="sheet-head"><h3>Customer details</h3><button class="sheet-close" data-close aria-label="Close">✕</button></div>
+  <div id="docViewerBody"></div>
+</div>
 
+<script src="config.js"></script>
+<script src="common.js"></script>
 <script>
-var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
-  var LOAN_PORTAL_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec"; // the Loan Portal project's own Web App URL, not the Banker CRM's
-var SESSION = { bankerId: null, bankerEmail: null, mobile: null, pin: null, refCode: null };
-var BANK_LIST = [];
-var AUTH_STORAGE_KEY = "vmw_banker_auth";
-var PORTAL_APPLICATION_URL = "https://loan.vastmywealth.com/portal-unified-application.html";
-function openDocSummary(leadId, loanType){
-  showToast("Loading...");
-  fetch(LOAN_PORTAL_SCRIPT_URL + "?action=getLeadSummary&leadId=" + encodeURIComponent(leadId) + "&product=" + encodeURIComponent(loanType))
-    .then(r => r.json()).then(r => {
-      var body = document.getElementById("docViewerBody");
-      body.innerHTML = (!r.success || !r.fields || !r.fields.length)
-        ? '<div class="empty-state">No details available yet.</div>'
-        : '<table style="width:100%; font-size:12.5px;">' + r.fields.map(f => '<tr><td style="padding:6px 4px; color:var(--muted); white-space:nowrap;">' + escapeHtml(f.field) + '</td><td style="padding:6px 4px; font-weight:600;">' + escapeHtml(f.value) + '</td></tr>').join('') + '</table>';
-      body.innerHTML += '<button class="btn-primary" style="margin-top:14px;" id="emailDocsBtn">📧 Email Me These Documents</button>';
-      document.getElementById("emailDocsBtn").addEventListener("click", function(){
-        withBusyButton(this, "Sending...", function(){
-          return fetch(LOAN_PORTAL_SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "emailLeadDocuments", leadId: leadId, toEmail: SESSION.bankerEmail }) })
-            .then(r2 => r2.json()).then(r2 => showToast(r2.success ? r2.message : r2.error, !r2.success));
-        });
+(function () {
+  'use strict';
+  var $ = VMW.$, esc = VMW.esc;
+  var AUTH_KEY = 'vmw_banker_auth';
+  var SESSION = null;
+  var PERSONAL = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'rediffmail.com', 'icloud.com', 'aol.com', 'live.com', 'ymail.com', 'proton.me', 'protonmail.com'];
+  function isPersonal(email) { var p = String(email).trim().toLowerCase().split('@'); return p.length === 2 && PERSONAL.indexOf(p[1]) !== -1; }
+  function validEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e); }
+
+  /* ---------- sheets ---------- */
+  var SHEETS = ['submitCodeSheet', 'disburseSheet', 'rejectSheet', 'docViewerSheet'];
+  function openSheet(id) { SHEETS.forEach(function (s) { $(s).style.display = 'none'; }); $('sheetBackdrop').style.display = 'block'; $(id).style.display = 'block'; }
+  function closeSheets() { SHEETS.forEach(function (s) { $(s).style.display = 'none'; }); $('sheetBackdrop').style.display = 'none'; }
+  $('sheetBackdrop').addEventListener('click', closeSheets);
+  document.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', closeSheets); });
+
+  /* ---------- auth views ---------- */
+  function showView(id) {
+    document.querySelectorAll('#authScreen .view').forEach(function (v) { v.classList.remove('active'); });
+    $(id).classList.add('active'); window.scrollTo(0, 0);
+  }
+  $('toLogin').onclick = function () { showView('loginView'); };
+  $('toRegister').onclick = function () { showView('requestCodeView'); };
+  $('toForgot').onclick = function () { showView('forgotPinView'); };
+  $('fpBack').onclick = function () { showView('loginView'); };
+  ['reqMobile', 'loginMobile', 'fpMobile', 'newAppMobile'].forEach(function (id) { VMW.wireDigits($(id), 10); });
+  VMW.wireDigits($('loginPin'), 4);
+  VMW.wireAmount($('disburseAmount'));
+
+  // Bank + State suggestions: instant (filtered from the device), refreshed quietly from the sheet
+  VMW.autosuggest($('reqBank'), function () { return VMW.lists.banks; });
+  VMW.autosuggest($('reqState'), function () { return VMW.lists.states; });
+  VMW.loadLists('both');
+
+  $('requestCodeForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var box = $('reqResult'); VMW.hideMsg(box); VMW.clearErrors($('requestCodeForm'));
+    var ok = true; function bad(id, m) { VMW.setErr(id, m); ok = false; }
+    var name = $('reqName').value.trim(), bank = $('reqBank').value.trim(), email = $('reqEmail').value.trim(), mobile = VMW.mobile10($('reqMobile').value);
+    var state = VMW.canonicalState($('reqState').value);
+    if (name.length < 2) bad('reqName', 'Please enter your full name.');
+    if (bank.length < 2) bad('reqBank', 'Please enter your bank or NBFC name.');
+    if (!state) bad('reqState', 'Please pick your state from the list.');
+    if (!validEmail(email)) bad('reqEmail', 'Enter a valid email address.');
+    else if (isPersonal(email)) bad('reqEmail', 'Personal emails are not allowed. Please use your official bank email.');
+    if (!/^[6-9]\d{9}$/.test(mobile)) bad('reqMobile', 'Enter a valid 10-digit mobile number.');
+    if (!ok) { VMW.focusFirstError($('requestCodeForm')); return; }
+    VMW.busy($('reqBtn'), 'Registering…', function () {
+      return VMW.post({ action: 'requestCode', name: name, officialEmail: email, mobileNumber: mobile, bankName: bank, state: state }).then(function (r) {
+        VMW.showMsg(box, r.status === 'success' ? (r.message + ' Check your official email for your PIN, then log in.') : (r.message || 'Registration failed.'), r.status === 'success' ? 'success' : 'error');
+        if (r.status === 'success') { $('loginMobile').value = mobile; }
       });
-      openSheet("docViewerSheet", "docViewerBackdrop");
-    }).catch(() => showToast("Could not load details", true));
-}
-  function fetchJsonSafe(url, options, attemptsLeft){
-  attemptsLeft = (attemptsLeft === undefined) ? 2 : attemptsLeft;
-  return fetch(url, options).then(function(r){ return r.text(); }).then(function(raw){
-    return JSON.parse(raw);
-  }).catch(function(err){
-    if (attemptsLeft > 1) {
-      return new Promise(function(res){ setTimeout(res, 900); }).then(function(){
-        return fetchJsonSafe(url, options, attemptsLeft - 1);
-      });
-    }
-    throw err;
+    }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
   });
-}
-  function apiPost(payload) {
-  return fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
-    .then(r => r.text()).then(raw => {
-      try { return JSON.parse(raw); } catch(e) { throw new Error("Server error."); }
+
+  /* ---------- login ---------- */
+  function performLogin(mobile, pin) {
+    return VMW.post({ action: 'verifyBanker', mobileNumber: mobile, pin: pin }).then(function (r) {
+      if (r.status !== 'success') return r;
+      SESSION = { bankerId: r.bankerId, bankerName: r.bankerName, bankerEmail: r.bankerEmail, mobile: mobile, hasActiveCode: r.hasActiveCode,
+        accountVerified: r.accountVerified, pendingVerification: r.pendingVerification, rmName: r.rmName, rmMobile: r.rmMobile,
+        activeBankNames: r.activeBankNames || [], currentBankName: r.currentBankName, refCode: r.refCode || r.bankerId };
+      VMW.store.set(AUTH_KEY, { mobile: mobile, pin: pin });
+      enterApp();
+      return r;
     });
-}
-function escapeHtml(s){ var d=document.createElement('div'); d.textContent=(s===undefined||s===null)?'':s; return d.innerHTML; }
-function showToast(msg, isError){ var t=document.getElementById("toast"); t.textContent=msg; t.className="toast"+(isError?" error":""); t.style.display="block"; setTimeout(()=>t.style.display="none",3000); }
-function showView(id){ document.querySelectorAll("#authScreen .view").forEach(v => v.classList.remove("active")); document.getElementById(id).classList.add("active"); }
-function closeSheet(s, b){ document.getElementById(s).style.display="none"; document.getElementById(b).style.display="none"; }
-function openSheet(s, b){ document.getElementById(b).style.display="block"; document.getElementById(s).style.display="block"; }
-
-// #4 — generic "busy button" helper: swaps label + disables while a
-// promise is in flight, so every click gives visible feedback.
-function withBusyButton(btn, busyLabel, fn){
-  var original = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spin-icon' + (btn.classList.contains('btn-primary') ? '' : ' light') + '"></span> ' + busyLabel;
-  return fn().finally(function(){ btn.disabled = false; btn.innerHTML = original; });
-}
-
-// ---------------- Bank list + fast client-side autosuggest (#1) ----------------
-function loadBankListOnce(){
-  if (BANK_LIST.length) return Promise.resolve(BANK_LIST);
-  return apiPost({ action:"getBankList" }).then(r => {
-    if (r.status === "success") BANK_LIST = r.banks || [];
-    return BANK_LIST;
-  }).catch(() => []);
-}
-
-function wireBankAutosuggest(inputId, suggestId, onPick){
-  var input = document.getElementById(inputId);
-  var box = document.getElementById(suggestId);
-  input.addEventListener("input", function(){
-    var q = input.value.trim().toLowerCase();
-    if (!q) { box.style.display = "none"; return; }
-    var matches = BANK_LIST.filter(b => b.toLowerCase().indexOf(q) !== -1).slice(0, 8);
-    if (!matches.length) { box.innerHTML = '<div class="no-match">No matches — you can still type this bank name manually.</div>'; box.style.display = "block"; return; }
-    box.innerHTML = matches.map(b => '<div data-bank="' + escapeHtml(b) + '">' + escapeHtml(b) + '</div>').join("");
-    box.style.display = "block";
+  }
+  $('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var box = $('loginResult'); VMW.hideMsg(box);
+    var mobile = VMW.mobile10($('loginMobile').value), pin = $('loginPin').value;
+    if (mobile.length !== 10 || pin.length !== 4) { VMW.showMsg(box, 'Enter your 10-digit mobile number and 4-digit PIN.', 'error'); return; }
+    VMW.busy($('loginBtn'), 'Logging in…', function () {
+      return performLogin(mobile, pin).then(function (r) { if (r.status !== 'success') VMW.showMsg(box, r.message || 'Login failed.', 'error'); });
+    }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
   });
-  box.addEventListener("click", function(e){
-    var el = e.target.closest("[data-bank]");
-    if (!el) return;
-    input.value = el.getAttribute("data-bank");
-    box.style.display = "none";
-    if (onPick) onPick(input.value);
+  $('forgotPinForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var box = $('fpResult'); VMW.hideMsg(box);
+    var m = VMW.mobile10($('fpMobile').value);
+    if (m.length !== 10) { VMW.showMsg(box, 'Enter your registered 10-digit mobile number.', 'error'); return; }
+    VMW.busy($('fpBtn'), 'Sending…', function () {
+      return VMW.post({ action: 'forgotPin', mobileNumber: m }).then(function (r) { VMW.showMsg(box, r.message, r.status === 'success' ? 'success' : 'error'); });
+    }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
   });
-  document.addEventListener("click", function(e){ if (!input.contains(e.target) && !box.contains(e.target)) box.style.display = "none"; });
-}
-
-loadBankListOnce();
-wireBankAutosuggest("reqBank", "reqBankSuggest");
-
-// Personal-domain email validation
-const personalDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'rediffmail.com', 'icloud.com', 'aol.com', 'live.com'];
-function isPersonalDomain(email){
-  var parts = String(email).trim().toLowerCase().split('@');
-  return parts.length === 2 && personalDomains.indexOf(parts[1]) !== -1;
-}
-const emailInput = document.getElementById('reqEmail');
-const emailError = document.getElementById('emailError');
-emailInput.addEventListener('blur', function(){
-  if (isPersonalDomain(this.value)) { emailError.style.display = 'block'; emailInput.style.borderColor = '#F87171'; emailInput.setCustomValidity("Personal emails are not allowed."); }
-  else { emailError.style.display = 'none'; emailInput.style.borderColor = ''; emailInput.setCustomValidity(""); }
-});
-
-document.getElementById("requestCodeForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  if (isPersonalDomain(emailInput.value)) { emailError.style.display = 'block'; emailInput.focus(); return; }
-
-  var btn = document.getElementById("reqBtn");
-  var box = document.getElementById("reqResult");
-  box.style.display = "none";
-  withBusyButton(btn, "Submitting...", function(){
-    return apiPost({
-      action:"requestCode", name:document.getElementById("reqName").value,
-      officialEmail:emailInput.value, mobileNumber:document.getElementById("reqMobile").value,
-      bankName:document.getElementById("reqBank").value
-    }).then(r => {
-      box.className = "msg-box " + (r.status==="success" ? "success":"error");
-      box.textContent = r.message;
-    }).catch(() => { box.className = "msg-box error"; box.textContent = "Submission failed. Please check your network connection."; });
+  $('logoutBtn').addEventListener('click', function () {
+    VMW.store.del(AUTH_KEY); SESSION = null; LOADED = {};
+    $('app').classList.add('hidden'); $('authScreen').classList.remove('hidden'); showView('loginView');
   });
-});
 
-function performLogin(mobile, pin){
-  return apiPost({ action:"verifyBanker", mobileNumber:mobile, pin:pin }).then(r => {
-    if (r.status !== "success") return r;
-    SESSION = {
-      bankerId: r.bankerId, bankerName: r.bankerName, bankerEmail: r.bankerEmail, mobile: mobile, pin: pin,
-      hasActiveCode: r.hasActiveCode, accountVerified: r.accountVerified, pendingVerification: r.pendingVerification,
-      rmName: r.rmName, rmMobile: r.rmMobile, activeBankNames: r.activeBankNames || [], currentBankName: r.currentBankName, refCode: r.refCode
-    };
-    try { localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ mobile: mobile, pin: pin })); } catch(e){}
-    enterApp();
-    return r;
-  });
-}
-
-document.getElementById("loginForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  var btn = document.getElementById("loginBtn");
-  var box = document.getElementById("loginResult");
-  box.style.display = "none";
-  withBusyButton(btn, "Logging in...", function(){
-    return performLogin(document.getElementById("loginMobile").value, document.getElementById("loginPin").value)
-      .then(r => { if (r.status !== "success") { box.className="msg-box error"; box.textContent = r.message; } })
-      .catch(() => { box.className="msg-box error"; box.textContent = "Login failed. Please check your network connection."; });
-  });
-});
-
-document.getElementById("forgotPinForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  var btn = document.getElementById("fpBtn");
-  var box = document.getElementById("fpResult");
-  box.style.display = "none";
-  withBusyButton(btn, "Sending...", function(){
-    return apiPost({ action:"forgotPin", mobileNumber: document.getElementById("fpMobile").value })
-      .then(r => { box.className = "msg-box " + (r.status==="success" ? "success":"error"); box.textContent = r.message; });
-  });
-});
-
-// #5,#6 — silent auto-login on load; boot screen hides only once we
-// know whether we're logging in or need the auth screen.
-(function attemptAutoLogin(){
-  var boot = document.getElementById("bootScreen");
-  var auth = document.getElementById("authScreen");
-  try {
-    var saved = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || "null");
+  (function autoLogin() {
+    var saved = VMW.store.get(AUTH_KEY);
     if (saved && saved.mobile && saved.pin) {
-      performLogin(saved.mobile, saved.pin).then(r => {
-        boot.style.display = "none";
-        if (r.status !== "success") { auth.style.display = "flex"; showView("loginView"); document.getElementById("loginResult").className = "msg-box error"; document.getElementById("loginResult").textContent = "Session expired — please log in again."; document.getElementById("loginResult").style.display = "block"; }
-      }).catch(() => { boot.style.display = "none"; auth.style.display = "flex"; });
+      performLogin(saved.mobile, saved.pin).then(function (r) {
+        $('bootScreen').classList.add('hidden');
+        if (r.status !== 'success') { $('authScreen').classList.remove('hidden'); showView('loginView'); VMW.showMsg($('loginResult'), 'Your session expired — please log in again.', 'info'); }
+      }).catch(function () { $('bootScreen').classList.add('hidden'); $('authScreen').classList.remove('hidden'); showView('loginView'); VMW.showMsg($('loginResult'), 'Could not reach the server. Please log in again.', 'error'); });
       return;
     }
-  } catch(e){}
-  boot.style.display = "none";
-  auth.style.display = "flex";
-})();
+    $('bootScreen').classList.add('hidden'); $('authScreen').classList.remove('hidden');
+  })();
 
-document.getElementById("logoutBtn").addEventListener("click", function(){
-  try { localStorage.removeItem(AUTH_STORAGE_KEY); } catch(e){}
-  document.getElementById("app").style.display = "none";
-  document.getElementById("authScreen").style.display = "flex";
-  showView("requestCodeView");
-});
-
-function buildFollowUpLink(mobile){
-  return PORTAL_APPLICATION_URL + "?ref=" + encodeURIComponent(SESSION.refCode) + "&mobile=" + encodeURIComponent(mobile);
-}
-
-function enterApp(){
-  document.getElementById("authScreen").style.display = "none";
-  document.getElementById("app").style.display = "block";
-  document.getElementById("welcomeName").textContent = SESSION.bankerName ? ("Hi, " + SESSION.bankerName) : "Bank Channel CRM";
-  document.getElementById("pendingBanner").style.display = (SESSION.pendingVerification && !SESSION.hasActiveCode) ? "block" : "none";
-
-  var gated = !SESSION.hasActiveCode;
-  document.getElementById("logGate").style.display = gated ? "block" : "none";
-  document.getElementById("newAppArea").style.display = gated ? "none" : "block";
-
-  Promise.all([loadCodes(), loadBusinessLogs(), loadLeads()]);
-}
-
-document.getElementById("portalLinkBtn").addEventListener("click", function(){
-  var mobile = document.getElementById("newAppMobile").value.replace(/\D/g, "");
-  if (mobile.length !== 10) { showToast("Enter a valid 10-digit mobile number", true); return; }
-  window.open(buildFollowUpLink(mobile), "_blank");
-});
-
-document.getElementById("shareLinkBtn").addEventListener("click", function(){
-  if (!SESSION.refCode) { showToast("Get a verified DSA code first", true); return; }
-  var link = PORTAL_APPLICATION_URL + "?ref=" + encodeURIComponent(SESSION.refCode);
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(link).then(() => showToast("Link copied — share it with your customer")).catch(() => showToast(link));
-  } else {
-    showToast(link);
+  /* ---------- app shell ---------- */
+  var LOADED = {};
+  function enterApp() {
+    $('bootScreen').classList.add('hidden'); $('authScreen').classList.add('hidden'); $('app').classList.remove('hidden');
+    $('welcomeName').textContent = SESSION.bankerName ? 'Hi, ' + SESSION.bankerName : 'Banker Portal';
+    $('bankNameLabel').textContent = SESSION.currentBankName || 'VastMyWealth';
+    $('rmNameLabel').textContent = SESSION.rmName || 'Manoj A Prabhu';
+    var rm = VMW.digits(SESSION.rmMobile || VMW_CONFIG.SUPPORT_MOBILE);
+    $('rmCallLink').href = 'tel:' + rm; $('rmChatLink').href = VMW.waLink('91' + rm.slice(-10));
+    $('pendingBanner').classList.toggle('hidden', !(SESSION.pendingVerification && !SESSION.hasActiveCode));
+    var gated = !SESSION.hasActiveCode;
+    $('logGate').classList.toggle('hidden', !gated); $('newAppArea').classList.toggle('hidden', gated);
+    $('shareWaBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + VMW.refLink(SESSION.refCode));
+    LOADED = {};
+    selectTab('tabLog');
+    loadCodes();
+    setTimeout(function () { VMW.showAnnouncement('Banker'); }, 1500);
   }
-});
-document.querySelectorAll(".nav-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll(".tab-pane").forEach(p => p.style.display = "none");
-    document.getElementById(btn.dataset.tab).style.display = "block";
+  function selectTab(id) {
+    document.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.toggle('active', p.id === id); });
+    document.querySelectorAll('.nav-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === id); });
+    window.scrollTo(0, 0);
+    if (!SESSION) return;
+    if (id === 'tabTrack' && !LOADED.track) loadTrack();
+    if (id === 'tabBizLeads' && !LOADED.leads) loadLeads();
+  }
+  document.querySelectorAll('.nav-btn').forEach(function (b) { b.addEventListener('click', function () { selectTab(b.dataset.tab); }); });
+  $('trackRefresh').onclick = loadTrack;
+  $('leadsRefresh').onclick = loadLeads;
+
+  /* ---------- log business ---------- */
+  $('portalLinkBtn').addEventListener('click', function () {
+    var m = VMW.mobile10($('newAppMobile').value);
+    if (m.length !== 10) { VMW.toast('Enter a valid 10-digit mobile number', 'error'); return; }
+    window.open(VMW.startLink(m, SESSION.refCode), '_blank');
   });
-});
-
-function loadCodes(){ var el = document.getElementById("codesList"); el.innerHTML = '<div class="empty-state">Loading...</div>'; return apiPost({ action:"getBankerCodes", bankerId:SESSION.bankerId }).then(r => { var codes = r.codes || [], pending = r.pending || []; if (!codes.length && !pending.length) { el.innerHTML = '<div class="empty-state">No DSA code submitted yet.</div>'; return; } el.innerHTML = codes.map(c => '<span class="code-chip">' + escapeHtml(c.bankName) + ' · ' + escapeHtml(c.loanType) + '</span>').join("") + pending.map(c => '<span class="code-chip pending">' + escapeHtml(c.bankName) + ' · ' + escapeHtml(c.loanType) + ' (Pending)</span>').join(""); }).catch(() => { el.innerHTML = '<div class="empty-state">Could not load codes — check your connection.</div>'; }); }
-function renderBankChips(banks){
-  var chipsEl = document.getElementById("scBankChips");
-  chipsEl.innerHTML = banks.map(b => '<button type="button" class="bank-chip' + (b === scSelectedBank ? ' selected' : '') + '" data-bank="' + escapeHtml(b) + '">' + escapeHtml(b) + '</button>').join("")
-    + '<button type="button" class="bank-chip add-new" id="scAddNewBankBtn">+ Add new bank</button>';
-  chipsEl.querySelectorAll('.bank-chip:not(.add-new)').forEach(chip => {
-    chip.addEventListener('click', function(){
-      scSelectedBank = this.getAttribute('data-bank');
-      document.getElementById("scNewBankFields").style.display = "none";
-      renderBankChips(banks);
-      refreshCodeHint();
-    });
+  $('shareLinkBtn').addEventListener('click', function () {
+    if (!SESSION || !SESSION.refCode) return;
+    VMW.copy(VMW.refLink(SESSION.refCode)).then(function () { VMW.toast('Link copied — share it with your customer', 'success'); })
+      .catch(function () { VMW.toast(VMW.refLink(SESSION.refCode)); });
   });
-  document.getElementById("scAddNewBankBtn").addEventListener('click', function(){
-    scSelectedBank = "";
-    document.getElementById("scNewBankFields").style.display = "block";
-    renderBankChips(banks);
-    wireBankAutosuggest("scNewBankName", "scNewBankSuggest", function(picked){ scSelectedBank = picked; refreshCodeHint(); });
-  });
-}
-document.getElementById("scNewBankName") && document.getElementById("scNewBankName").addEventListener("input", function(){
-  scSelectedBank = this.value;
-});
 
-function currentSelectedBank(){
-  var newBankField = document.getElementById("scNewBankName");
-  if (document.getElementById("scNewBankFields").style.display === "block") return newBankField.value.trim();
-  return scSelectedBank;
-}
-
-// Live "code already exists" check, wired to loan-type checkboxes (#1)
-function refreshCodeHint(){
-  var bank = currentSelectedBank();
-  var loanTypes = Array.from(document.querySelectorAll('input[name="scLoanType"]:checked')).map(c => c.value);
-  var hintEl = document.getElementById("scCodeHint");
-  var codeGroup = document.getElementById("scCodeGroup");
-  if (!bank || !loanTypes.length) { hintEl.textContent = ""; codeGroup.style.display = "block"; return; }
-
-  hintEl.innerHTML = '<span class="spin-icon light" style="border-color:rgba(212,167,65,.4); border-top-color:var(--gold);"></span> Checking for an existing code...';
-  apiPost({ action:"checkBankCode", bankerId:SESSION.bankerId, bankName: bank, loanTypes: loanTypes }).then(r => {
-    if (r.status !== "success") { hintEl.textContent = ""; return; }
-    var lines = loanTypes.map(lt => r.existing[lt] ? (lt + ": existing code will be reused automatically") : (lt + ": no existing code — enter one below"));
-    hintEl.innerHTML = lines.join("<br>");
-    var allReused = loanTypes.every(lt => !!r.existing[lt]);
-    codeGroup.style.display = allReused ? "none" : "block";
-    document.getElementById("scCode").required = !allReused;
-  });
-}
-document.querySelectorAll('input[name="scLoanType"]').forEach(c => c.addEventListener('change', refreshCodeHint));
-
-document.getElementById("submitCodeForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  var loanTypes = Array.from(document.querySelectorAll('input[name="scLoanType"]:checked')).map(c => c.value);
-  if (!loanTypes.length) { showToast("Select at least one loan type", true); return; }
-  var bank = currentSelectedBank();
-  if (!bank) { showToast("Select or enter a bank name", true); return; }
-
-  var isNewBank = document.getElementById("scNewBankFields").style.display === "block";
-  var newBankEmail = document.getElementById("scNewBankEmail").value;
-  if (isNewBank) {
-    if (!newBankEmail) { showToast("Official email is required for a new bank", true); return; }
-    if (isPersonalDomain(newBankEmail)) { document.getElementById("scNewBankEmailError").style.display = "block"; return; }
+  /* ---------- DSA codes ---------- */
+  function loadCodes() {
+    var el = $('codesList'); el.innerHTML = '<div class="skeleton"></div>';
+    return VMW.post({ action: 'getBankerCodes', bankerId: SESSION.bankerId }).then(function (r) {
+      var codes = r.codes || [], pending = r.pending || [];
+      if (!codes.length && !pending.length) { el.innerHTML = '<div class="empty">No DSA code added yet. Tap the button below to add your first one.</div>'; return; }
+      el.innerHTML = '<div class="chip-row">' +
+        codes.map(function (c) { return '<span class="chip static">' + esc(c.bankName) + ' · ' + esc(c.loanType) + '</span>'; }).join('') +
+        pending.map(function (c) { return '<span class="chip pending">' + esc(c.bankName) + ' · ' + esc(c.loanType) + ' (pending)</span>'; }).join('') + '</div>';
+    }).catch(function (err) { el.innerHTML = '<div class="alert error">' + esc(VMW.errMsg(err)) + '</div>'; });
   }
 
-  var btn = document.getElementById("scBtn");
-  var box = document.getElementById("scResult");
-  box.style.display = "none";
-  withBusyButton(btn, "Submitting...", function(){
-    return apiPost({
-      action:"submitDSACode", bankerId:SESSION.bankerId, bankerEmail:SESSION.bankerEmail,
-      bankName: bank, newBankEmail: isNewBank ? newBankEmail : undefined,
-      loanTypes:loanTypes, vmwCode:document.getElementById("scCode").value
-    }).then(r => {
-      box.className="msg-box "+(r.status==="success"?"success":"error"); box.textContent=r.message;
-      if (r.status === "success") { document.getElementById("submitCodeForm").reset(); loadCodes(); }
-    });
+  var SC = { bank: '', newMode: false, banks: [], token: 0 };
+  $('addCodeBtn').addEventListener('click', openSubmitCodeSheet);
+  function openSubmitCodeSheet() {
+    SC.bank = SESSION.currentBankName || ''; SC.newMode = false; SC.banks = SC.bank ? [SC.bank] : [];
+    $('submitCodeForm').reset(); VMW.hideMsg($('scResult')); VMW.hideMsg($('scCodeHint'));
+    $('scNewBankFields').classList.add('hidden'); $('scCodeGroup').classList.remove('hidden');
+    renderBankChips();
+    openSheet('submitCodeSheet');
+    VMW.post({ action: 'getBankerBanks', bankerId: SESSION.bankerId }).then(function (r) {
+      if (r.status === 'success' && r.banks && r.banks.length) {
+        SC.banks = r.banks;
+        if (!SC.bank || SC.banks.indexOf(SC.bank) === -1) SC.bank = r.primaryBank || r.banks[0];
+        renderBankChips(); refreshCodeHint();
+      }
+    }).catch(function () { /* the chip we already have is enough */ });
+  }
+  function renderBankChips() {
+    var el = $('scBankChips');
+    el.innerHTML = SC.banks.map(function (b) { return '<button type="button" class="chip' + (!SC.newMode && b === SC.bank ? ' selected' : '') + '" data-bank="' + esc(b) + '">' + esc(b) + '</button>'; }).join('') +
+      '<button type="button" class="chip add' + (SC.newMode ? ' selected' : '') + '" data-new="1">＋ Add new bank</button>';
+  }
+  $('scBankChips').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.getAttribute('data-new')) { SC.newMode = true; SC.bank = ''; $('scNewBankFields').classList.remove('hidden'); $('scNewBankName').focus(); }
+    else { SC.newMode = false; SC.bank = b.getAttribute('data-bank'); $('scNewBankFields').classList.add('hidden'); }
+    renderBankChips(); refreshCodeHint();
   });
-});
+  VMW.autosuggest($('scNewBankName'), function () { return VMW.lists.banks; }, function () { refreshCodeHint(); });
+  $('scNewBankName').addEventListener('input', refreshCodeHint);
+  document.querySelectorAll('input[name="scLoanType"]').forEach(function (c) { c.addEventListener('change', refreshCodeHint); });
 
-function renderBusinessRow(l){
-  var actions = l.customerMobile
-    ? '<div class="row-actions"><a class="btn-link-out" href="' + buildFollowUpLink(l.customerMobile) + '" target="_blank">💬 Follow Up</a></div>'
-    : "";
-  var statusClass = (l.fileStatus === "Disbursed") ? "disbursed" : "submitted";
-  return '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(l.customerName) +
-    '</div><div class="business-meta">' + escapeHtml(l.meta) + '</div></div><span class="status-chip ' + statusClass + '">' +
-    escapeHtml(l.fileStatus) + '</span></div>' + actions + '</div>';
-}
-function loadBusinessLogs(){ var el = document.getElementById("businessLogList"); el.innerHTML = '<div class="empty-state">Loading...</div>';
-
-var ownLogs = apiPost({ action:"getLogs", bankerId:SESSION.bankerId }).catch(function(){ return { logs: [] }; }); var portalLeads = SESSION.refCode ? fetch(LOAN_PORTAL_SCRIPT_URL + "?action=getPartnerLeads&partnerCode=" + encodeURIComponent(SESSION.refCode)) .then(function(r){ return r.json(); }).catch(function(){ return { leads: [] }; }) : Promise.resolve({ leads: [] });
-
-return Promise.all([ownLogs, portalLeads]).then(function(results){ var a = results[0] || {}, b = results[1] || {}
- var rows = (a.logs || []).map(function(l){
-      return { customerName: l.customerName, meta: l.meta, fileStatus: l.fileStatus,
-               leadId: l.leadId, loanType: l.loanType, customerMobile: l.customerMobile };
-    }).concat((b.leads || []).map(function(l){
-      return {
-        customerName: l.customerName,
-        meta: l.product + ' · ' + (l.mobile || '') + (l.processingBank ? ' · ' + l.processingBank : ''),
-        fileStatus: l.status, leadId: l.leadId, loanType: l.product, customerMobile: l.mobile
-      };
-    }));
-
-if (!rows.length) { el.innerHTML = '<div class="empty-state">No business logged yet.</div>'; return; }
-el.innerHTML = rows.map(renderBusinessRow).join("");
-
-}).catch(function(err){ console.error('loadBusinessLogs failed', err); el.innerHTML = '<div class="empty-state">Could not load — check your connection.</div>'; }); }
-  // #9,#14 — leads list shows Name / Loan Type / Amount / Pincode;
-// claimed leads get Disburse + Reject action buttons
-function loadLeads(){ var gateEl = document.getElementById("bizLeadsGate"); var blockedEl = document.getElementById("bizLeadsBlocked"); var listEl = document.getElementById("bizLeadsList"); gateEl.style.display = "none"; blockedEl.style.display = "none"; if (!SESSION.hasActiveCode) { gateEl.style.display = "block"; listEl.innerHTML = ""; return Promise.resolve(); }
-
-listEl.innerHTML = '<div class="empty-state">Loading leads...</div>'; var leadsPromise = apiPost({ action:"getLeads", bankerId:SESSION.bankerId }).then(r => { if (r.status === "locked") { gateEl.style.display = "block"; listEl.innerHTML = ""; return; } if (r.status === "blocked") { blockedEl.style.display = "block"; listEl.innerHTML = ""; return; } if (r.status !== "success") { listEl.innerHTML = '<div class="empty-state">Could not load leads.</div>'; return; }
-
-document.getElementById("bizLeadsSlots").textContent = r.slotsRemaining + " of " + (r.activeClaimCount + r.slotsRemaining) + " claim slots available";
-var leads = r.businessLeads || [];
-listEl.innerHTML = leads.length ? leads.map(l => '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(l.customerName) + '</div><div class="business-meta">' + escapeHtml(l.loanType) + ' · ₹' + escapeHtml(l.loanAmount) + (l.pincode ? (' · PIN ' + escapeHtml(l.pincode)) : '') + '</div></div><button class="icon-pill claim-btn" data-lead="' + escapeHtml(l.leadId) + '">Claim</button></div></div>').join("") : '<div class="empty-state">No leads available right now.</div>';
-
-listEl.querySelectorAll(".claim-btn").forEach(btn => {
-  btn.addEventListener("click", function(){
-    var leadId = this.getAttribute("data-lead");
-    withBusyButton(this, "Claiming...", function(){
-      return apiPost({ action:"claimLead", bankerId:SESSION.bankerId, leadId:leadId }).then(r2 => {
-        showToast(r2.status === "success" ? "Lead claimed!" : r2.message, r2.status !== "success");
-        if (r2.status === "success") loadLeads();
+  function currentBank() { return SC.newMode ? $('scNewBankName').value.trim() : SC.bank; }
+  function loanTypesChosen() { return Array.prototype.map.call(document.querySelectorAll('input[name="scLoanType"]:checked'), function (c) { return c.value; }); }
+  function refreshCodeHint() {
+    var bank = currentBank(), lts = loanTypesChosen(), hint = $('scCodeHint');
+    if (!bank || !lts.length) { VMW.hideMsg(hint); $('scCodeGroup').classList.remove('hidden'); return; }
+    var mine = ++SC.token;
+    VMW.showMsg(hint, 'Checking whether a code already exists…', 'info');
+    VMW.post({ action: 'checkBankCode', bankerId: SESSION.bankerId, bankName: bank, loanTypes: lts }).then(function (r) {
+      if (mine !== SC.token) return;
+      if (r.status !== 'success') { VMW.hideMsg(hint); return; }
+      var lines = lts.map(function (lt) { return VMW.productLabel(lt) + ': ' + (r.existing[lt] ? 'an existing code will be reused automatically' : 'no existing code — enter yours below'); });
+      hint.className = 'alert info'; hint.innerHTML = lines.map(esc).join('<br>');
+      $('scCodeGroup').classList.toggle('hidden', lts.every(function (lt) { return !!r.existing[lt]; }));
+    }).catch(function () { if (mine === SC.token) VMW.hideMsg(hint); });
+  }
+  $('submitCodeForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var box = $('scResult'); VMW.hideMsg(box);
+    var lts = loanTypesChosen(), bank = currentBank();
+    if (!bank) { VMW.showMsg(box, 'Please select a bank, or add a new one.', 'error'); return; }
+    if (!lts.length) { VMW.showMsg(box, 'Select at least one loan type.', 'error'); return; }
+    var newEmail = $('scNewBankEmail').value.trim();
+    if (SC.newMode) {
+      if (!validEmail(newEmail)) { VMW.showMsg(box, 'An official email for the new bank is required.', 'error'); return; }
+      if (isPersonal(newEmail)) { VMW.showMsg(box, 'Personal emails are not allowed. Use the official bank email.', 'error'); return; }
+    }
+    var codeHidden = $('scCodeGroup').classList.contains('hidden');
+    if (!codeHidden && !$('scCode').value.trim()) { VMW.showMsg(box, 'Please enter your DSA code.', 'error'); return; }
+    VMW.busy($('scBtn'), 'Submitting…', function () {
+      return VMW.post({ action: 'submitDSACode', bankerId: SESSION.bankerId, bankerEmail: SESSION.bankerEmail, bankName: bank,
+        newBankEmail: SC.newMode ? newEmail : undefined, loanTypes: lts, vmwCode: $('scCode').value.trim() }).then(function (r) {
+        VMW.showMsg(box, r.message, r.status === 'success' ? 'success' : 'error');
+        if (r.status === 'success') { $('scCode').value = ''; loadCodes(); }
       });
-    });
+    }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
   });
-});
 
-}).catch(() => { listEl.innerHTML = '<div class="empty-state">Could not load — check your connection.</div>'; });
+  /* ---------- shared row helpers ---------- */
+  function contactButtons(mobile, name) {
+    var m = VMW.mobile10(mobile); if (m.length !== 10) return '';
+    return '<a class="btn btn-ghost btn-sm" href="tel:' + m + '">📞 Call</a>' +
+      '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(VMW.waLink('91' + m, 'Hi ' + (name || '') + ', this is regarding your loan application with VastMyWealth.')) + '">💬 WhatsApp</a>';
+  }
+  function locTags(r) {
+    var t = [];
+    if (r.state) t.push('<span class="tag">📍 ' + esc(r.state) + '</span>');
+    if (r.pincode) t.push('<span class="tag">Pincode ' + esc(r.pincode) + '</span>');
+    return t.join('');
+  }
 
-return Promise.all([leadsPromise, loadMyClaims()]); }
-function loadMyClaims(){ var el = document.getElementById("bizMyClaimsList"); el.innerHTML = '<div class="empty-state">Loading...</div>'; return apiPost({ action:"getMyLeadClaims", bankerId:SESSION.bankerId }).then(r => { var claims = r.claims || []; if (!claims.length) { el.innerHTML = '<div class="empty-state">No claims yet.</div>'; return; } el.innerHTML = claims.map(c => { var actions = ""; if (c.claimStatus === "Active") { actions = '<div class="row-actions">' + '<button class="btn-disburse" data-claim="' + escapeHtml(c.claimId) + '">✅ Disbursed</button>' + '<button class="btn-reject" data-claim="' + escapeHtml(c.claimId) + '">❌ Reject</button>' + (c.customerMobile ? ('<a class="btn-link-out" href="' + buildFollowUpLink(c.customerMobile) + '" target="_blank">💬 Follow Up</a>') : '')
-  + '</div>'; } else if (c.claimStatus === "Disbursed") { actions = '<div class="business-meta">Disbursed amount: ₹' + escapeHtml(c.disbursedAmount || "—") + '</div>'; } else if (c.claimStatus === "Rejected") { actions = '<div class="business-meta">Reason: ' + escapeHtml(c.rejectionReason || "—") + '</div>'; } return '<div class="business-row"><div class="business-row-top"><div><div class="business-name">' + escapeHtml(c.customerName) + '</div><div class="business-meta">' + escapeHtml(c.customerMobile || "") + ' · ₹' + escapeHtml(c.loanAmount) + '</div></div><span class="status-chip ' + (c.claimStatus==="Disbursed"?"disbursed":c.claimStatus==="Rejected"?"rejected":"active") + '">' + escapeHtml(c.claimStatus) + '</span></div>' + actions + '</div>'; }).join("");
+  /* ---------- track ---------- */
+  function trackRowHtml(r) {
+    var pending = r.docStatus !== undefined && String(r.docStatus).toLowerCase() !== 'submitted';
+    var notElig = String(r.status).toLowerCase() === 'not eligible';
+    var meta = [];
+    if (r.loanType) meta.push(esc(VMW.productLabel(r.loanType)));
+    if (r.amount) meta.push(esc(VMW.inr(r.amount)));
+    if (r.metaText) meta.push(esc(r.metaText));
+    var tags = locTags(r) + (r.processingBank ? '<span class="tag">🏦 ' + esc(r.processingBank) + '</span>' : '') + (r.dsaCode ? '<span class="tag">DSA code ' + esc(r.dsaCode) + '</span>' : '');
+    var main = '';
+    if (r.leadId && !notElig) {
+      var link = VMW.leadLink({ leadId: r.leadId, product: r.loanType, ref: r.kind === 'referral' ? SESSION.refCode : '' });
+      main = pending
+        ? '<a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="' + esc(link) + '">📤 Upload documents</a>'
+        : '<a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="' + esc(link) + '">View status</a>';
+    }
+    return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(r.name || '—') + '</div>' +
+      '<div class="row-meta">' + esc(r.kindLabel) + (meta.length ? ' · ' + meta.join(' · ') : '') + '</div></div>' +
+      '<div class="row-badges">' + VMW.badge(r.status) + (pending && !notElig ? VMW.docBadge('Pending') : '') + '</div></div>' +
+      (tags ? '<div class="row-tags">' + tags + '</div>' : '') +
+      '<div class="row-actions">' + main + contactButtons(r.mobile, r.name) + '</div></div>';
+  }
+  function loadTrack() {
+    LOADED.track = true;
+    var el = $('trackList'); el.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
+    var failed = 0;
+    var logs = VMW.post({ action: 'getLogs', bankerId: SESSION.bankerId }).catch(function () { failed++; return { logs: [] }; });
+    var leads = VMW.get('getPartnerLeads', { partnerCode: SESSION.bankerId }).catch(function () { failed++; return { leads: [] }; });
+    Promise.all([logs, leads]).then(function (res) {
+      var rows = [];
+      (res[0].logs || []).forEach(function (l) {
+        if (l.source === 'submitted') return; // shown (with richer status) from the referral list below
+        if (l.source === 'claimed') rows.push({ kind: 'claimed', kindLabel: 'Claimed lead', name: l.customerName, loanType: l.loanType, amount: l.loanAmount, state: l.state, pincode: l.pincode,
+          mobile: l.customerMobile, status: l.fileStatus, leadId: l.leadId, dsaCode: l.dsaCode, ts: new Date(l.timestamp).getTime() });
+        else rows.push({ kind: 'direct', kindLabel: 'Logged file', name: l.customerName, mobile: l.customerMobile, metaText: l.meta, status: l.fileStatus, ts: new Date(l.timestamp).getTime() });
+      });
+      (res[1].leads || []).forEach(function (l) {
+        rows.push({ kind: 'referral', kindLabel: 'Your referral', name: (l.employmentType === 'Self-Employed' && l.companyName) ? l.companyName : l.customerName,
+          loanType: l.product, amount: l.loanAmount, state: l.state, pincode: l.pincode, mobile: l.mobile, status: l.status, docStatus: l.documentStatus || 'Pending',
+          processingBank: l.processingBank, leadId: l.leadId, ts: l.timestamp });
+      });
+      if (failed === 2) { el.innerHTML = '<div class="alert error">Could not load your files. Please check your connection and tap Refresh.</div>'; LOADED.track = false; return; }
+      rows.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+      el.innerHTML = rows.length ? rows.map(trackRowHtml).join('') : '<div class="empty">Nothing here yet. Log a customer or share your link to get started.</div>';
+    });
+  }
 
-el.querySelectorAll(".btn-disburse").forEach(btn => btn.addEventListener("click", function(){
-  document.getElementById("disburseClaimId").value = this.getAttribute("data-claim");
-  document.getElementById("disburseAmount").value = "";
-  openSheet("disburseSheet", "disburseBackdrop");
-}));
-el.querySelectorAll(".btn-reject").forEach(btn => btn.addEventListener("click", function(){
-  document.getElementById("rejectClaimId").value = this.getAttribute("data-claim");
-  document.getElementById("rejectReason").value = "";
-  openSheet("rejectSheet", "rejectBackdrop");
-}));
+  /* ---------- business leads ---------- */
+  function loadLeads() {
+    LOADED.leads = true;
+    var gate = $('bizLeadsGate'), blocked = $('bizLeadsBlocked'), list = $('bizLeadsList');
+    gate.classList.add('hidden'); blocked.classList.add('hidden'); $('bizLeadsSlots').textContent = '';
+    if (!SESSION.hasActiveCode) { gate.classList.remove('hidden'); list.innerHTML = ''; loadMyClaims(); return; }
+    list.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
+    VMW.post({ action: 'getLeads', bankerId: SESSION.bankerId }).then(function (r) {
+      if (r.status === 'locked') { gate.classList.remove('hidden'); list.innerHTML = ''; return; }
+      if (r.status === 'blocked') { blocked.classList.remove('hidden'); list.innerHTML = ''; return; }
+      if (r.status !== 'success') { list.innerHTML = '<div class="alert error">Could not load leads.</div>'; return; }
+      $('bizLeadsSlots').textContent = r.slotsRemaining + ' of ' + (r.activeClaimCount + r.slotsRemaining) + ' claim slots available';
+      var leads = r.businessLeads || [];
+      list.innerHTML = leads.length ? leads.map(function (l) {
+        return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(l.customerName) + '</div>' +
+          '<div class="row-meta">' + esc(VMW.productLabel(l.loanType)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + '</div></div>' +
+          '<button class="btn btn-primary btn-sm claim-btn" data-lead="' + esc(l.leadId) + '">Claim</button></div>' +
+          '<div class="row-tags">' + (locTags(l) || '<span class="tag">Location not provided</span>') + '</div></div>';
+      }).join('') : '<div class="empty">No leads available right now. Check back soon.</div>';
+    }).catch(function (err) { list.innerHTML = '<div class="alert error">' + esc(VMW.errMsg(err)) + '</div>'; LOADED.leads = false; });
+    loadMyClaims();
+  }
+  $('bizLeadsList').addEventListener('click', function (e) {
+    var b = e.target.closest('.claim-btn'); if (!b) return;
+    var id = b.getAttribute('data-lead');
+    VMW.busy(b, 'Claiming…', function () {
+      return VMW.post({ action: 'claimLead', bankerId: SESSION.bankerId, leadId: id }).then(function (r) {
+        VMW.toast(r.status === 'success' ? 'Lead claimed! Full details are in “My claimed leads”.' : r.message, r.status === 'success' ? 'success' : 'error');
+        if (r.status === 'success') { loadLeads(); LOADED.track = false; }
+      });
+    }).catch(function (err) { VMW.toast(VMW.errMsg(err), 'error'); });
+  });
 
-}).catch(() => { el.innerHTML = '<div class="empty-state">Could not load — check your connection.</div>'; }); }
+  function loadMyClaims() {
+    var el = $('bizMyClaimsList'); el.innerHTML = '<div class="skeleton"></div>';
+    VMW.post({ action: 'getMyLeadClaims', bankerId: SESSION.bankerId }).then(function (r) {
+      var claims = r.claims || [];
+      if (!claims.length) { el.innerHTML = '<div class="empty">No claims yet.</div>'; return; }
+      el.innerHTML = claims.map(function (c) {
+        var actions = '';
+        if (c.claimStatus === 'Active') {
+          actions = '<button class="btn btn-ok btn-sm" data-disburse="' + esc(c.claimId) + '">✅ Disbursed</button>' +
+            '<button class="btn btn-danger btn-sm" data-reject="' + esc(c.claimId) + '">❌ Reject</button>' +
+            '<button class="btn btn-outline btn-sm" data-detail="' + esc(c.leadId) + '" data-lt="' + esc(c.loanType) + '">📄 Details &amp; documents</button>' + contactButtons(c.customerMobile, c.customerName);
+        } else if (c.claimStatus === 'Disbursed') actions = '<div class="row-meta">Disbursed amount: ' + esc(VMW.inr(c.disbursedAmount)) + '</div>';
+        else if (c.claimStatus === 'Rejected') actions = '<div class="row-meta">Reason: ' + esc(c.rejectionReason || '—') + '</div>';
+        return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(c.customerName) + '</div>' +
+          '<div class="row-meta">' + esc(VMW.productLabel(c.loanType)) + ' · ' + esc(VMW.inr(c.loanAmount)) + (c.customerMobile ? ' · 📱 ' + esc(c.customerMobile) : '') + '</div></div>' +
+          VMW.badge(c.claimStatus) + '</div>' + (locTags(c) ? '<div class="row-tags">' + locTags(c) + '</div>' : '') +
+          '<div class="row-actions">' + actions + '</div></div>';
+      }).join('');
+    }).catch(function (err) { el.innerHTML = '<div class="alert error">' + esc(VMW.errMsg(err)) + '</div>'; });
+  }
+  $('bizMyClaimsList').addEventListener('click', function (e) {
+    var d = e.target.closest('[data-disburse]'), r = e.target.closest('[data-reject]'), s = e.target.closest('[data-detail]');
+    if (d) { $('disburseClaimId').value = d.getAttribute('data-disburse'); $('disburseAmount').value = ''; VMW.hideMsg($('disburseResult')); openSheet('disburseSheet'); }
+    else if (r) { $('rejectClaimId').value = r.getAttribute('data-reject'); $('rejectReason').value = ''; VMW.hideMsg($('rejectResult')); openSheet('rejectSheet'); }
+    else if (s) openDetails(s.getAttribute('data-detail'), s.getAttribute('data-lt'));
+  });
+  $('disburseForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var box = $('disburseResult'), amt = $('disburseAmount').value.replace(/[^0-9]/g, '');
+    if (!(parseFloat(amt) > 0)) { VMW.showMsg(box, 'Enter the disbursed amount.', 'error'); return; }
+    VMW.busy($('disburseBtn'), 'Saving…', function () {
+      return VMW.post({ action: 'updateLeadClaimStatus', claimId: $('disburseClaimId').value, status: 'Disbursed', disbursedAmount: amt }).then(function (r) {
+        VMW.showMsg(box, r.message, r.status === 'success' ? 'success' : 'error');
+        if (r.status === 'success') { closeSheets(); loadMyClaims(); LOADED.track = false; VMW.toast('Marked as disbursed', 'success'); }
+      });
+    }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
+  });
+  $('rejectForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var box = $('rejectResult'), reason = $('rejectReason').value.trim();
+    if (reason.length < 3) { VMW.showMsg(box, 'Please give a reason for the rejection.', 'error'); return; }
+    VMW.busy($('rejectBtn'), 'Saving…', function () {
+      return VMW.post({ action: 'updateLeadClaimStatus', claimId: $('rejectClaimId').value, status: 'Rejected', rejectionReason: reason }).then(function (r) {
+        VMW.showMsg(box, r.message, r.status === 'success' ? 'success' : 'error');
+        if (r.status === 'success') { closeSheets(); loadMyClaims(); LOADED.track = false; VMW.toast('Lead rejected', 'success'); }
+      });
+    }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
+  });
+
+  function openDetails(leadId, loanType) {
+    var body = $('docViewerBody');
+    body.innerHTML = '<div class="skeleton"></div>'; openSheet('docViewerSheet');
+    VMW.get('getLeadSummary', { leadId: leadId, product: loanType }).then(function (r) {
+      var rows = (r.success && r.fields) ? r.fields : [];
+      body.innerHTML = (rows.length
+        ? '<table class="kv">' + rows.map(function (f) { return '<tr><td>' + esc(f.field) + '</td><td>' + esc(f.value) + '</td></tr>'; }).join('') + '</table>'
+        : '<div class="empty">No details available yet.</div>') +
+        '<button class="btn btn-primary btn-block mt16" id="emailDocsBtn">📧 Email me these documents</button>';
+      $('emailDocsBtn').addEventListener('click', function () {
+        VMW.busy(this, 'Sending…', function () {
+          return VMW.post({ action: 'emailLeadDocuments', leadId: leadId, toEmail: SESSION.bankerEmail }).then(function (x) { VMW.toast(x.success ? x.message : x.error, x.success ? 'success' : 'error'); });
+        }).catch(function (err) { VMW.toast(VMW.errMsg(err), 'error'); });
+      });
+    }).catch(function (err) { body.innerHTML = '<div class="alert error">' + esc(VMW.errMsg(err)) + '</div>'; });
+  }
+})();
 </script>
 </body>
 </html>
