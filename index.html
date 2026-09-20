@@ -66,20 +66,12 @@
 <script src="config.js"></script>
 <script src="common.js"></script>
 <script>
-  var deferredPrompt;
   var installBtn = document.getElementById('install-btn');
-  window.addEventListener('beforeinstallprompt', function (e) {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBtn.classList.remove('hidden');
-  });
+  function showInstallBtn() { if (VMW.install.ready()) installBtn.classList.remove('hidden'); }
+  document.addEventListener('vmw-install-ready', showInstallBtn);
+  showInstallBtn();
   installBtn.addEventListener('click', function () {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function (choice) {
-      if (choice.outcome === 'accepted') installBtn.classList.add('hidden');
-      deferredPrompt = null;
-    });
+    VMW.install.prompt().then(function (ok) { if (ok) installBtn.classList.add('hidden'); });
   });
 </script>
 </body>
