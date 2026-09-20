@@ -6,7 +6,7 @@
    did not). Now pages, scripts and styles are fetched from the network FIRST
    and the cache is only a fallback for when the phone is offline.
    ============================================================ */
-const CACHE_NAME = 'vmw-cache-v10';
+const CACHE_NAME = 'vmw-cache-v11';
 
 const CORE = [
   './', './index.html', './apply.html', './banker.html', './partner.html',
