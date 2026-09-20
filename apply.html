@@ -3,129 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Find a Banker for Your Loan — VastMyWealth Digital</title>
+<title>Apply for a Loan — VastMyWealth Digital</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0A1730">
+<meta name="theme-color" content="#0B1A38">
 <link rel="apple-touch-icon" href="1000550390.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-<style>
-:root{
-  --navy-1:#0A1730; --navy-2:#122a56; --navy-3:#173768;
-  --panel:#152B54; --panel-border:rgba(212,165,74,.35);
-  --gold:#D9A94E; --gold-deep:#B8863B; --gold-light:#F2DFB0;
-  --ink:#0F1E3D; --white:#FFFFFF;
-  --text-onnavy:#EDF1FA; --text-onnavy-muted:#A9B8DA;
-  --input-bg:#FFFFFF; --input-border:#D8DCE8;
-  --rust:#E4776B; --forest:#3FBE86;
-  --font-display:'Poppins',sans-serif; --font-body:'IBM Plex Sans',sans-serif;
-  --radius:14px;
-}
-*{box-sizing:border-box; margin:0; padding:0;}
-body{
-  font-family:var(--font-body);
-  background:linear-gradient(180deg, var(--navy-1) 0%, var(--navy-2) 45%, var(--navy-3) 100%);
-  color:var(--text-onnavy); line-height:1.5; padding-bottom:60px; min-height:100vh;
-}
-header{ background:rgba(10,23,48,.85); backdrop-filter:blur(6px); border-bottom:1px solid var(--panel-border); position:sticky; top:0; z-index:50; }
-.header-inner{ max-width:680px; margin:0 auto; padding:12px 20px; display:flex; align-items:center; gap:10px; }
-.logo-mark{ width:38px; height:38px; border-radius:50%; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,.3); }
-.logo-text{ font-family:var(--font-display); font-weight:800; font-size:16px; color:#fff; }
-.logo-text .script{ font-family:'Segoe Script','Brush Script MT',cursive; font-weight:400; font-style:italic; color:#7FB0FF; margin-left:4px; }
-.back-to-portal{ margin-left:auto; font-size:12px; color:var(--gold-light); text-decoration:none; white-space:nowrap; }
-.back-to-portal:hover{ text-decoration:underline; }
-main{ max-width:680px; margin:0 auto; padding:24px 20px 0; }
-.loan-toggle{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px; }
-.loan-toggle button{
-  padding:14px 8px; border:1.5px solid var(--panel-border); border-radius:12px; background:rgba(255,255,255,.04);
-  font-family:var(--font-body); font-size:13px; font-weight:700; color:var(--text-onnavy-muted); cursor:pointer; transition:all .15s;
-}
-.loan-toggle button.active{ border-color:var(--gold); background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); }
-.loan-toggle button:disabled{ opacity:.35; cursor:not-allowed; }
-.loan-toggle-hint{ font-size:11.5px; color:var(--text-onnavy-muted); text-align:center; margin:-12px 0 20px; }
-.section{ background:var(--panel); border:1px solid var(--panel-border); border-radius:var(--radius); padding:22px 20px; margin-bottom:16px; box-shadow:0 8px 24px rgba(0,0,0,.2); }
-.section-title{ font-family:var(--font-display); font-size:15px; font-weight:700; margin-bottom:16px; color:#fff; }
-.doc-group-label{ font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--gold-light); margin:20px 0 12px; padding-top:16px; border-top:1px solid rgba(255,255,255,.08); }
-.doc-group-label:first-child{ margin-top:0; padding-top:0; border-top:none; }
-.field{ margin-bottom:16px; }
-.field:last-child{ margin-bottom:0; }
-.field label{ display:block; font-size:11.5px; font-weight:700; color:var(--gold-light); text-transform:uppercase; letter-spacing:.04em; margin-bottom:7px; }
-.field label .req{ color:var(--rust); margin-left:2px; }
-.field input, .field select{ width:100%; padding:12px 13px; border:1.5px solid var(--input-border); border-radius:9px; font-size:14.5px; color:var(--ink); background:var(--input-bg); }
-.field input:focus, .field select:focus{ outline:none; border-color:var(--gold); }
-.field input.locked-field{ background:#EEF1F6; color:#5A6478; cursor:not-allowed; }
-.field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-@media (max-width:480px){ .field-row{ grid-template-columns:1fr; } }
-.select-wrap{ position:relative; }
-.select-wrap select{ appearance:none; -webkit-appearance:none; cursor:pointer; }
-.toggle-row{ display:flex; gap:8px; flex-wrap:wrap; }
-.toggle-btn{ padding:10px 16px; border:1.5px solid var(--panel-border); border-radius:20px; background:rgba(255,255,255,.04); font-size:13px; font-weight:700; color:var(--text-onnavy-muted); cursor:pointer; }
-.toggle-btn.active{ border-color:var(--gold); background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); }
-.upload-box{ border:1.5px dashed var(--panel-border); border-radius:12px; padding:16px; display:flex; align-items:center; gap:14px; cursor:pointer; position:relative; margin-bottom:10px; background:rgba(255,255,255,.02); transition:border-color .15s, background .15s; }
-.upload-box:hover{ border-color:var(--gold); background:rgba(217,169,78,.06); }
-.upload-box.filled{ border-style:solid; border-color:var(--forest); background:rgba(63,190,134,.1); }
-.upload-icon{ width:42px; height:42px; border-radius:10px; background:rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:18px; transition:background .15s, transform .15s; }
-.upload-box:hover .upload-icon{ transform:scale(1.05); }
-.upload-box.filled .upload-icon{ background:var(--forest); color:#fff; }
-.upload-title{ font-size:13.5px; font-weight:700; color:#fff; }
-.upload-sub{ font-size:11.5px; color:var(--text-onnavy-muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.upload-cta{ font-size:11px; font-weight:700; color:var(--gold-light); flex-shrink:0; padding:6px 10px; border:1px solid var(--panel-border); border-radius:20px; }
-.upload-box.filled .upload-cta{ display:none; }
-  .upload-box input[type=file]{
-  position:absolute; inset:0; width:100%; height:100%;
-  opacity:0; cursor:pointer; z-index:2;
-}
-.upload-box input[type=file]::-webkit-file-upload-button{ cursor:pointer; }
-.person-block{ border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:14px; margin-bottom:12px; background:rgba(255,255,255,.02); }
-.person-block-title{ font-size:12px; font-weight:700; color:var(--gold-light); margin-bottom:10px; }
-.btn-submit{ width:100%; padding:16px; background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 6px 16px rgba(217,169,78,.3); }
-.btn-submit:disabled{ background:#4a5578; color:#9aa5c4; cursor:not-allowed; }
-.trust-note{ text-align:center; font-size:11.5px; color:var(--text-onnavy-muted); margin-top:10px; }
-.hidden{ display:none !important; }
-.results-intro{ text-align:center; padding:8px 0 20px; }
-.results-intro h1{ font-family:var(--font-display); font-size:24px; font-weight:800; margin-bottom:8px; color:#fff; }
-.results-intro p{ font-size:13.5px; color:var(--text-onnavy-muted); max-width:480px; margin:0 auto; }
-.retry-note{ background:rgba(217,169,78,.1); border:1px solid var(--panel-border); border-radius:10px; padding:13px 16px; font-size:12.5px; color:var(--gold-light); margin-bottom:20px; line-height:1.5; }
-.lender-card{ background:var(--panel); border:1.5px solid var(--panel-border); border-radius:var(--radius); padding:20px; margin-bottom:14px; display:flex; align-items:center; gap:16px; box-shadow:0 6px 18px rgba(0,0,0,.2); }
-.lender-card.applied{ border-color:var(--forest); background:rgba(63,190,134,.08); }
-.lender-rank{ width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.08); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-weight:700; font-size:13px; color:var(--text-onnavy-muted); }
-.lender-card:nth-child(1) .lender-rank{ background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); }
-.lender-info{ flex:1; min-width:0; display:flex; flex-direction:column; }
-.lender-name{ font-family:var(--font-display); font-size:14px; font-weight:700; color:#fff; }
-.lender-rate{ font-size:12px; color:var(--text-onnavy-muted); margin-top:2px; }
-.lender-apply{ padding:11px 18px; background:linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%); color:var(--ink); border:none; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
-.lender-apply.applied-state{ background:var(--forest); color:#fff; cursor:default; }
-.results-footer{ text-align:center; padding:20px 0 0; font-size:11px; color:var(--text-onnavy-muted); }
-.btn-new-application{ width:100%; padding:15px; margin-top:18px; background:transparent; color:var(--gold-light); border:1.5px solid var(--panel-border); border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; }
-.status-badge{ font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; white-space:nowrap; margin-left:8px; display:inline-block; }
-.status-badge.process{ background:rgba(217,169,78,.15); color:var(--gold-light); }
-.status-badge.approved{ background:rgba(63,190,134,.15); color:var(--forest); }
-.status-badge.disbursed{ background:rgba(127,176,255,.15); color:#7FB0FF; }
-.status-badge.rejected{ background:rgba(228,119,107,.15); color:var(--rust); }
-.loading{ text-align:center; padding:60px 20px; color:var(--text-onnavy-muted); font-size:14px; }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <div class="header-inner">
-    <img class="logo-mark" src="1000550390.png" alt="VastMyWealth" onerror="this.style.display='none'">
-    <div class="logo-text">VastMyWealth<span class="script">Digital</span></div>
-    <a href="index.html" class="back-to-portal">← Back to portal</a>
+<header class="app-header">
+  <div class="in">
+    <a class="brand" href="index.html">
+      <img src="1000550390.png" alt="" onerror="this.style.display='none'">
+      <div><b>VastMyWealth</b><small>Digital</small></div>
+    </a>
+    <div class="hdr-right"><a class="hdr-link" href="index.html">← Home</a></div>
   </div>
 </header>
 
-<main>
-  <div class="section" id="returningCustomerSection">
-  <div class="section-title">Already applied?</div>
-  <div class="field"><input type="text" id="trackMobile" placeholder="Enter your mobile number" maxlength="10" inputmode="numeric"></div>
-  <button class="btn-submit" id="trackBtn">Track Application</button>
-</div>
-  <div id="formWrap">
-    <div style="text-align:center; margin-bottom:20px;">
-      <div style="font-family:var(--font-display); font-weight:800; font-size:20px; color:#fff; margin-bottom:6px;">Same-day processing? Sirf VastMyWealth pe.</div>
-      <div style="font-size:13px; color:var(--text-onnavy-muted); max-width:480px; margin:0 auto;">Tell us a bit about yourself and we'll match you with a banker who will personally process your loan.</div>
+<main class="wrap">
+
+  <!-- Shown first while we check who is visiting (prevents a blank form flashing up) -->
+  <section id="checkingState" class="card state-box">
+    <div class="spinner"></div>
+    <p id="checkingText">Loading…</p>
+  </section>
+
+  <!-- ALREADY APPLIED -->
+  <section id="trackCard" class="card hidden">
+    <div class="card-title">Already applied?</div>
+    <p class="card-sub">Enter your mobile number to see your status or upload your documents.</p>
+    <div class="field">
+      <label for="trackMobile">Mobile number</label>
+      <input type="tel" id="trackMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number" autocomplete="tel">
+    </div>
+    <button class="btn btn-outline btn-block" id="trackBtn">Track my application</button>
+  </section>
+
+  <!-- NEW APPLICATION -->
+  <div id="formWrap" class="hidden">
+    <div class="hero">
+      <h1>Apply for your loan in minutes</h1>
+      <p>Tell us a bit about yourself and we'll match you with a banker who will personally process your loan.</p>
+    </div>
+
+    <div id="dupNotice" class="alert warn hidden">
+      <b>You already have an application with us.</b>
+      <div id="dupText" class="mt8"></div>
+      <div class="btn-row mt12">
+        <button type="button" class="btn btn-primary btn-sm" id="dupContinue">Continue my application</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="dupNew">Start a new one anyway</button>
+      </div>
     </div>
 
     <div class="loan-toggle" id="loanToggle">
@@ -136,524 +67,562 @@ main{ max-width:680px; margin:0 auto; padding:24px 20px 0; }
       <button type="button" data-val="VL">🚗 Vehicle Loan</button>
       <button type="button" data-val="EL">🎓 Education Loan</button>
     </div>
-    <div class="loan-toggle-hint">💡 Personal Loan is for Salaried applicants · Business Loan is for Self-Employed applicants</div>
+    <p class="small muted center" style="margin-bottom:16px;">Personal Loan is for salaried applicants · Business Loan is for self-employed applicants</p>
 
-    <!-- BASIC DETAILS -->
-    <div class="section">
-      <div class="section-title">Basic Details</div>
-      <div class="field"><label>Full Name<span class="req">*</span></label><input type="text" id="f_name"></div>
-      <div class="field-row">
-        <div class="field"><label>Mobile Number<span class="req">*</span></label><input type="text" id="f_mobile" maxlength="10" inputmode="numeric"></div>
-        <div class="field"><label>Email ID<span class="req">*</span></label><input type="email" id="f_email" placeholder="Official email preferred if salaried"></div>
+    <div class="card">
+      <div class="card-title">Basic details</div>
+      <div class="field" style="margin-top:14px;"><label for="f_name">Full name<span class="req">*</span></label><input type="text" id="f_name" autocomplete="name"></div>
+      <div class="row2">
+        <div class="field"><label for="f_mobile">Mobile number<span class="req">*</span></label><input type="tel" id="f_mobile" maxlength="10" inputmode="numeric" autocomplete="tel"></div>
+        <div class="field"><label for="f_email">Email ID<span class="req">*</span></label><input type="email" id="f_email" autocomplete="email" placeholder="Official email if salaried"></div>
       </div>
-      <div class="field" id="pincodeField">
-  <label>Residence / Business Pincode<span class="req">*</span></label>
-  <input type="text" id="f_pincode" maxlength="6" inputmode="numeric">
-</div>
+      <div class="row2">
+        <div class="field"><label for="f_state">State<span class="req">*</span></label><input type="text" id="f_state" autocomplete="off" placeholder="Start typing your state"></div>
+        <div class="field"><label for="f_pincode">Residence / business pincode<span class="req">*</span></label><input type="tel" id="f_pincode" maxlength="6" inputmode="numeric" autocomplete="postal-code"></div>
+      </div>
       <div class="field">
-        <label>Employment Type<span class="req">*</span></label>
+        <label>Employment type<span class="req">*</span></label>
         <div class="toggle-row" id="empToggle">
           <button type="button" class="toggle-btn" data-val="Salaried">Salaried</button>
           <button type="button" class="toggle-btn" data-val="Self-Employed">Self-Employed</button>
         </div>
       </div>
       <div class="field hidden" id="companyTypeField">
-        <label>Type of Company<span class="req">*</span></label>
-        <div class="select-wrap"><select id="f_companyType">
+        <label for="f_companyType">Type of company<span class="req">*</span></label>
+        <select id="f_companyType">
           <option value="">Select</option>
           <option value="Proprietorship">Proprietorship</option>
           <option value="Partnership">Partnership</option>
           <option value="Pvt Ltd">Private Ltd</option>
           <option value="LLP">LLP</option>
-        </select></div>
+        </select>
       </div>
       <div class="field hidden" id="companyNameField">
-        <label>Company / Business Name<span class="req">*</span></label>
-        <input type="text" id="f_companyName" placeholder="Should exactly match name on GST/Udyam certificate">
+        <label for="f_companyName">Company / business name<span class="req">*</span></label>
+        <input type="text" id="f_companyName" placeholder="Exactly as on your GST / Udyam certificate">
       </div>
-      <div class="field-row hidden" id="personCountField">
-        <div class="field">
-          <label id="personCountLabel">Number of Partners<span class="req">*</span></label>
-          <input type="number" id="f_personCount" min="2" max="10" value="2">
-        </div>
+      <div class="field hidden" id="personCountField">
+        <label for="f_personCount" id="personCountLabel">Number of partners<span class="req">*</span></label>
+        <input type="number" id="f_personCount" min="2" max="10" value="2" inputmode="numeric">
       </div>
     </div>
 
-    <!-- FINANCIAL DETAILS -->
-    <div class="section">
-      <div class="section-title">Financial Details</div>
-      <div class="field hidden" id="blOnlyFields1">
-        <div class="field-row">
-          <div class="field">
-            <label>Business Vintage<span class="req">*</span></label>
-            <div class="select-wrap"><select id="f_vintage">
-              <option value="">Select</option><option value="0.5">Less than 1 Year</option>
-              <option value="1">1–2 Years</option><option value="2">2–3 Years</option><option value="3">3+ Years</option>
-            </select></div>
-          </div>
-          <div class="field">
-            <label>GST Vintage</label>
-            <div class="select-wrap"><select id="f_gstVintage">
-              <option value="">Select</option><option value="No GST">No GST</option>
-              <option value="<1 Year">Less than 1 Year</option><option value="1-2 Years">1–2 Years</option><option value="2+ Years">2 Years and more</option>
-            </select></div>
-          </div>
+    <div class="card">
+      <div class="card-title">Financial details</div>
+      <div id="blFields" class="hidden" style="margin-top:14px;">
+        <div class="row2">
+          <div class="field"><label for="f_vintage">Business vintage<span class="req">*</span></label>
+            <select id="f_vintage"><option value="">Select</option><option value="0.5">Less than 1 year</option><option value="1">1–2 years</option><option value="2">2–3 years</option><option value="3">3+ years</option></select></div>
+          <div class="field"><label for="f_gstVintage">GST vintage</label>
+            <select id="f_gstVintage"><option value="">Select</option><option value="No GST">No GST</option><option value="<1 Year">Less than 1 year</option><option value="1-2 Years">1–2 years</option><option value="2+ Years">2 years and more</option></select></div>
         </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Udyam Registration</label>
-            <div class="select-wrap"><select id="f_udyam"><option value="">Select</option><option value="Available">Available</option><option value="Not Available">Not Available</option></select></div>
-          </div>
-          <div class="field">
-            <label>Bank Account Type</label>
-            <div class="select-wrap"><select id="f_bankAccountType"><option value="">Select</option><option value="Current Account">Current Account</option><option value="Savings Account">Savings Account</option></select></div>
-          </div>
+        <div class="row2">
+          <div class="field"><label for="f_udyam">Udyam registration</label>
+            <select id="f_udyam"><option value="">Select</option><option value="Available">Available</option><option value="Not Available">Not available</option></select></div>
+          <div class="field"><label for="f_bankAccountType">Bank account type</label>
+            <select id="f_bankAccountType"><option value="">Select</option><option value="Current Account">Current account</option><option value="Savings Account">Savings account</option></select></div>
         </div>
       </div>
+      <div class="field" style="margin-top:14px;"><label for="f_house">House<span class="req">*</span></label>
+        <select id="f_house"><option value="">Select</option><option value="Self-Owned">Self-owned</option><option value="Rented">Rented</option></select></div>
+      <div class="row2">
+        <div class="field"><label for="f_income" id="incomeLabel">Monthly net income (₹)<span class="req">*</span></label><input type="text" id="f_income" inputmode="numeric"></div>
+        <div class="field"><label for="f_emi">Existing EMI (₹ / month)</label><input type="text" id="f_emi" inputmode="numeric" placeholder="0 if none"></div>
+      </div>
+      <div class="field"><label for="f_loanAmount">Loan amount required (₹)<span class="req">*</span></label><input type="text" id="f_loanAmount" inputmode="numeric"></div>
+      <div class="row2">
+        <div class="field"><label for="f_cibil">Approximate CIBIL score<span class="req">*</span></label>
+          <select id="f_cibil"><option value="">Select</option><option value="Above 750">750+</option><option value="700-749">700–749</option><option value="650-699">650–699</option><option value="Below 650">Below 650</option></select></div>
+        <div class="field"><label for="f_bounces">Bounces (last 6 months)<span class="req">*</span></label>
+          <select id="f_bounces"><option value="">Select</option><option value="No">No</option><option value="1-2">1–2</option></select></div>
+      </div>
+      <div class="field"><label for="f_enquiries">Loan enquiries (last 3 months)</label><input type="text" id="f_enquiries" inputmode="numeric" placeholder="Optional"></div>
+    </div>
 
+    <div class="card hidden" id="propertySection">
+      <div class="card-title">Property details</div>
+      <div class="field" style="margin-top:14px;"><label for="f_propertyAddress">Property address<span class="req">*</span></label><input type="text" id="f_propertyAddress"></div>
+      <div class="row2">
+        <div class="field"><label for="f_propertyPincode">Property pincode<span class="req">*</span></label><input type="tel" id="f_propertyPincode" maxlength="6" inputmode="numeric"></div>
+        <div class="field"><label for="f_marketValue">Market value (₹)<span class="req">*</span></label><input type="text" id="f_marketValue" inputmode="numeric"></div>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="field">
-        <label>House<span class="req">*</span></label>
-        <div class="select-wrap"><select id="f_house"><option value="">Select</option><option value="Self-Owned">Self-Owned</option><option value="Rented">Rented</option></select></div>
-      </div>
-
-      <div class="field-row">
-        <div class="field"><label id="incomeLabel">Monthly Net Income (₹)<span class="req">*</span></label><input type="text" id="f_income" inputmode="numeric"></div>
-        <div class="field"><label>Existing EMI (₹/month)</label><input type="text" id="f_emi" placeholder="0 if none" inputmode="numeric"></div>
-      </div>
-      <div class="field"><label>Loan Amount Required (₹)<span class="req">*</span></label><input type="text" id="f_loanAmount" inputmode="numeric"></div>
-
-      <div class="field">
-        <label>Approximate CIBIL Score<span class="req">*</span></label>
-        <div class="select-wrap"><select id="f_cibil">
-          <option value="">Select</option><option value="Above 750">750+</option><option value="700-749">700–749</option>
-          <option value="650-699">650–699</option><option value="Below 650">Below 650</option>
-        </select></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Bounces (last 6 months)<span class="req">*</span></label>
-          <select id="f_bounces"><option value="">Select</option><option value="No">No</option><option value="1-2">1–2</option></select>
+        <div class="check-row">
+          <input type="checkbox" id="f_consent">
+          <label for="f_consent">I authorise Vast Wealth Advisors Pvt Ltd to share my details with partner banks, NBFCs, and their representatives/agencies for processing this loan application.<span class="req" style="color:var(--bad)"> *</span></label>
         </div>
       </div>
-      <div class="field"><label>Enquiries (last 3 months)</label><input type="text" id="f_enquiries" inputmode="numeric"></div>
     </div>
 
-    <!-- PROPERTY DETAILS — LAP/HL only -->
-    <div class="section hidden" id="propertySection">
-      <div class="section-title">Property Details</div>
-      <div class="field"><label>Property Address<span class="req">*</span></label><input type="text" id="f_propertyAddress"></div>
-      <div class="field-row">
-        <div class="field"><label>Property Pincode<span class="req">*</span></label><input type="text" id="f_propertyPincode" maxlength="6" inputmode="numeric"></div>
-        <div class="field"><label>Market Value (₹)<span class="req">*</span></label><input type="text" id="f_marketValue" inputmode="numeric"></div>
-      </div>
-    </div>
-<div class="field" style="display:flex; gap:10px; align-items:flex-start;">
-  <input type="checkbox" id="f_consent" style="width:auto; margin-top:3px;">
-  <label for="f_consent" style="text-transform:none; font-weight:500; font-size:12.5px; color:var(--text-onnavy-muted);">
-    I authorise Vast Wealth Advisors Pvt Ltd to share my details with partner banks, NBFCs, and their representatives/agencies for processing this loan application.<span class="req">*</span>
-  </label>
-</div>
-    <div style="padding-top:8px;">
-      <button class="btn-submit" id="submitBtn">Find My Matching Lenders</button>
-      <div class="trust-note">🔒 We'll match you with lenders first — documents come next.</div>
-    </div>
+    <div id="formError" class="alert hidden"></div>
+    <button class="btn btn-primary btn-block" id="submitBtn">Find my matching lenders</button>
+    <p class="small muted center mt12">🔒 We match you with lenders first — documents come next.</p>
   </div>
 
-  <div class="loading" id="loadingState" style="display:none;">Submitting your application and matching lenders…</div>
+  <!-- SUBMITTING -->
+  <section id="loadingState" class="card state-box hidden">
+    <div class="spinner"></div>
+    <p id="loadingText">Matching you with lenders…</p>
+  </section>
 
-  <div class="hidden" id="resultsWrap">
-    <div class="results-intro"><h1>Your Matched Lenders</h1><p>Based on your profile, here are your best-fit options.</p></div>
-    <div class="retry-note">💡 Applying with multiple Lenders improves chances of disbursement.</div>
+  <!-- RESULTS / STATUS -->
+  <section id="resultsWrap" class="hidden">
+    <div class="hero" style="padding-bottom:12px;">
+      <h1 id="resultsHeading">Your matched lenders</h1>
+      <p id="resultsSub"></p>
+    </div>
+    <div class="card"><ul class="timeline" id="timeline"></ul></div>
+    <div id="processingNote" class="alert info hidden"></div>
     <div id="lenderCards"></div>
-    <div class="results-footer">Applications will also be sent to other matching lenders internally.</div>
+    <div id="resultsActions" class="btn-stack"></div>
+  </section>
 
-    <div id="resultsActionsPending" class="hidden">
-      <button class="btn-submit" style="margin-top:18px;" onclick="goToDocumentUpload()">Upload Documents Now</button>
-      <button class="btn-new-application" onclick="closeApplication()">I'll Upload Later</button>
+  <!-- DOCUMENTS -->
+  <section id="docWrap" class="hidden">
+    <div class="hero" style="padding-bottom:12px;">
+      <h1>Upload your documents</h1>
+      <p>Upload your documents for same-day processing. Photos or PDFs, up to 10 MB each.</p>
     </div>
-    <div id="resultsActionsSubmitted" class="hidden">
-      <button class="btn-new-application" onclick="closeApplication()">Close</button>
-    </div>
-  </div>
-
-  <div class="hidden" id="docWrap">
-    <div class="results-intro"><h1>Upload Your Documents</h1><p>Upload your documents for same-day processing.</p></div>
-    <div class="section">
+    <div class="card">
       <div id="docContainer"></div>
-      <div style="padding-top:8px;">
-        <button class="btn-submit" id="docSubmitBtn">Submit Documents</button>
-        <a id="waDocLink" href="#" target="_blank" style="text-decoration:none;">
-          <button type="button" class="btn-new-application" style="margin-top:10px;">💬 Send Documents via WhatsApp Instead</button>
-        </a>
-        <div class="trust-note">🔒 Your information and documents are confidential and reviewed only by our underwriting team.</div>
+      <div id="docMsg" class="alert hidden"></div>
+      <div id="docProgress" class="progress hidden"><i id="docProgressBar"></i></div>
+      <div class="btn-stack mt16">
+        <button class="btn btn-primary btn-block" id="docSubmitBtn">Submit documents</button>
+        <a class="btn btn-outline btn-block" id="waDocLink" href="#" target="_blank" rel="noopener">💬 Send documents on WhatsApp instead</a>
+        <button class="btn btn-ghost btn-block" id="docBack" type="button">I'll upload later</button>
       </div>
+      <p class="small muted center mt12">🔒 Your documents are confidential and reviewed only by our underwriting team.</p>
     </div>
-    <button class="btn-new-application" onclick="closeApplication()" style="margin-top:10px;">I'll Upload Later</button>
-  </div>
+  </section>
+
+  <!-- DONE -->
+  <section id="doneWrap" class="hidden">
+    <div class="card center">
+      <div style="font-size:44px;">✅</div>
+      <h2 class="mt8">Documents received</h2>
+      <p class="muted mt8">Thank you! Our team will review your documents and get in touch with you shortly. You can come back any time and use “Already applied?” to check your status.</p>
+      <a class="btn btn-primary btn-block mt16" href="index.html">Back to home</a>
+    </div>
+  </section>
+
+  <!-- LINK PROBLEM -->
+  <section id="blockedWrap" class="hidden">
+    <div class="card center">
+      <div style="font-size:40px;">ℹ️</div>
+      <h2 class="mt8">We need a little help here</h2>
+      <p class="muted mt8" id="blockedText"></p>
+      <a class="btn btn-primary btn-block mt16" id="blockedWa" href="#" target="_blank" rel="noopener">💬 Chat with our team</a>
+      <a class="btn btn-ghost btn-block mt12" href="index.html">Back to home</a>
+    </div>
+  </section>
 </main>
 
+<script src="config.js"></script>
+<script src="common.js"></script>
 <script>
-var WA_NUMBER = "919594592020";
-function buildWhatsAppLink(){
-  var name = (state.profile && state.profile.name) || (document.getElementById('f_name') ? document.getElementById('f_name').value : '') || '';
-  var ref = state.leadId || '';
-  return 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent('Docs for: ' + name + (ref ? (' | Ref: ' + ref) : ''));
-}
+(function () {
+  'use strict';
+  var $ = VMW.$, esc = VMW.esc, C = VMW_CONFIG;
+  var params = new URLSearchParams(location.search);
+  var REF = params.get('ref') || '';
+  var VIEWS = ['checkingState', 'trackCard', 'formWrap', 'loadingState', 'resultsWrap', 'docWrap', 'doneWrap', 'blockedWrap'];
+  var S = { loanType: 'PL', employmentType: null, companyType: null, personCount: 2, residenceType: null,
+            leadId: null, profile: {}, forceNew: false, docStore: {}, warnedMissing: false, trackedMobile: '', lastDup: null };
 
-var HOME_PAGE = "index.html";
-var BACKEND_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
-
-// Auto-resume application if leadId is present in URL (Magic Link)
-(async function initFromUrl(){
-  const urlParams = new URLSearchParams(window.location.search);
-  const leadId = urlParams.get('leadId');
-  const product = urlParams.get('product');
-  if (!leadId) return;
-
-  document.getElementById('formWrap').classList.add('hidden');
-  document.getElementById('loadingState').style.display = 'block';
-  document.getElementById('loadingState').textContent = 'Resuming your application…';
-
-  try {
-    const res = await fetchJsonRetry(BACKEND_URL + '?action=resumeApplication&leadId=' + encodeURIComponent(leadId) + '&product=' + encodeURIComponent(product || ''), {}, 3);
-    document.getElementById('loadingState').style.display = 'none';
-
-    if (res.success && res.found) {
-      state.leadId = res.leadId; state.loanType = product;
-      state.profile = { name: res.name, mobile: res.mobile, email: res.email };
-
-      if (String(res.documentStatus).toUpperCase() === 'SUBMITTED') {
-        const statusRes = await fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(res.mobile), {}, 3);
-        if (statusRes.success && statusRes.found && !statusRes.isVlEl) { renderTrackingDashboard(statusRes); return; }
-      }
-      renderDocuments();
-      goToDocumentUpload();
-    } else if (res.allocated) {
-      alert(res.error);
-      document.getElementById('formWrap').classList.remove('hidden');
-    } else {
-      document.getElementById('formWrap').classList.remove('hidden');
-    }
-  } catch (err) {
-    document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('formWrap').classList.remove('hidden');
+  function show(ids) {
+    VIEWS.forEach(function (v) { $(v).classList.toggle('hidden', ids.indexOf(v) === -1); });
+    window.scrollTo(0, 0);
   }
-})();
+  function showForm() { show(['trackCard', 'formWrap']); }
+  function val(id) { var el = $(id); return el ? String(el.value).trim() : ''; }
+  function num(id) { return val(id).replace(/[^0-9.]/g, ''); }
+  function waTeam(text) { return VMW.waLink(C.WHATSAPP_NUMBER, text); }
 
-var state = { loanType:"PL", employmentType:null, companyType:null, house:null, uploadedFiles:{} };
-var partnerCode = new URLSearchParams(window.location.search).get('ref') || '';
-if (partnerCode) {
-  document.querySelectorAll('#loanToggle button[data-val="HL"], #loanToggle button[data-val="LAP"]').forEach(b => b.style.display = 'none');
-}
+  /* ---------- form behaviour ---------- */
+  VMW.wireAmount($('f_income')); VMW.wireAmount($('f_emi')); VMW.wireAmount($('f_loanAmount')); VMW.wireAmount($('f_marketValue'));
+  VMW.wireDigits($('f_mobile'), 10); VMW.wireDigits($('trackMobile'), 10); VMW.wireDigits($('f_pincode'), 6); VMW.wireDigits($('f_propertyPincode'), 6);
+  VMW.autosuggest($('f_state'), function () { return VMW.lists.states; });
+  VMW.loadLists('states');
 
-function fetchJsonRetry(url, options, attemptsLeft){
-  attemptsLeft = (attemptsLeft === undefined) ? 3 : attemptsLeft;
-  return fetch(url, options).then(r => r.text()).then(raw => JSON.parse(raw)).catch(err => {
-    if (attemptsLeft > 1) return new Promise(r => setTimeout(r, (4 - attemptsLeft) * 1200)).then(() => fetchJsonRetry(url, options, attemptsLeft - 1));
-    throw err;
-  });
-}
+  if (REF) {
+    // partner / banker links only offer the loan types they handle
+    document.querySelectorAll('#loanToggle button[data-val="HL"], #loanToggle button[data-val="LAP"]').forEach(function (b) { b.style.display = 'none'; });
+  }
 
-document.querySelectorAll('#loanToggle button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    var chosen = btn.dataset.val;
-    if (chosen === 'VL' || chosen === 'EL') {
-      window.location.href = "vl-el-application.html?product=" + encodeURIComponent(chosen) + (partnerCode ? "&ref=" + encodeURIComponent(partnerCode) : "");
-      return;
-    }
-    document.querySelectorAll('#loanToggle button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.loanType = chosen;
-    document.getElementById('propertySection').classList.toggle('hidden', state.loanType !== 'LAP' && state.loanType !== 'HL');
+  function setActiveLoanButton() {
+    document.querySelectorAll('#loanToggle button').forEach(function (b) { b.classList.toggle('active', b.dataset.val === S.loanType); });
+  }
+  function updateIncomeLabel() {
+    $('incomeLabel').innerHTML = (S.employmentType === 'Self-Employed' ? 'Monthly business income / turnover (₹)' : 'Monthly net income (₹)') + '<span class="req">*</span>';
+  }
+  function setEmployment(val, fromLoanType) {
+    S.employmentType = val;
+    document.querySelectorAll('#empToggle .toggle-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.val === val); });
+    var SE = val === 'Self-Employed';
+    $('companyTypeField').classList.toggle('hidden', !SE);
+    $('companyNameField').classList.toggle('hidden', !SE);
+    $('blFields').classList.toggle('hidden', !SE);
+    if (!SE) { S.companyType = null; $('f_companyType').value = ''; $('personCountField').classList.add('hidden'); }
+    if (!fromLoanType && (S.loanType === 'PL' || S.loanType === 'BL')) { S.loanType = SE ? 'BL' : 'PL'; setActiveLoanButton(); }
     updateIncomeLabel();
-    renderDocuments();
-  });
-});
-
-document.querySelectorAll('#empToggle .toggle-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#empToggle .toggle-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.employmentType = btn.dataset.val;
-    var isSE = state.employmentType === 'Self-Employed';
-    document.getElementById('companyTypeField').classList.toggle('hidden', !isSE);
-    document.getElementById('companyNameField').classList.toggle('hidden', !isSE);
-    document.getElementById('blOnlyFields1').classList.toggle('hidden', !isSE);
-    if (!isSE) { document.getElementById('personCountField').classList.add('hidden'); state.companyType = null; }
-    if (state.loanType === 'PL' || state.loanType === 'BL') state.loanType = isSE ? 'BL' : 'PL';
-    document.querySelectorAll('#loanToggle button').forEach(b => b.classList.toggle('active', b.dataset.val === state.loanType));
-    updateIncomeLabel();
-    renderDocuments();
-  });
-});
-
-document.getElementById('f_companyType').addEventListener('change', function(){
-  state.companyType = this.value;
-  var needsCount = ['Partnership', 'LLP', 'Pvt Ltd'].includes(this.value);
-  document.getElementById('personCountField').classList.toggle('hidden', !needsCount);
-  document.getElementById('personCountLabel').innerHTML = (this.value === 'Pvt Ltd' ? 'Number of Directors' : 'Number of Partners') + '<span class="req">*</span>';
-  renderDocuments();
-});
-
-function updateIncomeLabel(){
-  document.getElementById('incomeLabel').innerHTML = (state.employmentType === 'Self-Employed' ? 'Monthly Business Income / Turnover (₹)' : 'Monthly Net Income (₹)') + '<span class="req">*</span>';
-}
-
-function uploadBoxHtml(key, title, sub, accept, multiple){
-  return '<div class="upload-box" id="box_'+key+'"><div class="upload-icon">📄</div><div class="upload-text"><div class="upload-title">'+title+'</div><div class="upload-sub">'+sub+'</div></div><span class="upload-cta">Tap to upload</span><input type="file" accept="'+accept+'" '+(multiple?'multiple':'')+' data-key="'+key+'"></div>';
-}
-
-function renderDocuments(){
-  var c = document.getElementById('docContainer'), isSE = state.employmentType === 'Self-Employed', ct = state.companyType, html = '';
-  if (!isSE || ct === 'Proprietorship') {
-    html += '<div class="doc-group-label">Identity</div>';
-    if (!isSE) {
-      html += uploadBoxHtml('pan','PAN Card','JPG, PNG or PDF','image/*,.pdf',false);
-      html += uploadBoxHtml('aadhar','Aadhaar Card','JPG, PNG or PDF','image/*,.pdf',false);
-      html += uploadBoxHtml('selfieApplicant','Your Selfie / Photo','Clear face photo — JPG or PNG','image/*',false);
-    } else {
-      html += '<div class="doc-group-label" style="margin-top:0;padding-top:0;border-top:none;">Applicant</div>';
-      html += uploadBoxHtml('pan','Applicant PAN Card','JPG, PNG or PDF','image/*,.pdf',false);
-      html += uploadBoxHtml('aadhar','Applicant Aadhaar Card','JPG, PNG or PDF','image/*,.pdf',false);
-      html += uploadBoxHtml('selfieApplicant','Applicant Selfie / Photo','Clear face photo — JPG or PNG','image/*',false);
-      html += '<div class="doc-group-label">Co-Applicant</div>';
-      html += uploadBoxHtml('panCoApplicant','Co-Applicant PAN Card','JPG, PNG or PDF','image/*,.pdf',false);
-      html += uploadBoxHtml('aadharCoApplicant','Co-Applicant Aadhaar Card','JPG, PNG or PDF','image/*,.pdf',false);
-      html += uploadBoxHtml('selfieCoApplicant','Co-Applicant Selfie / Photo','Clear face photo — JPG or PNG','image/*',false);
-    }
   }
-  if (!isSE) {
-    html += '<div class="doc-group-label">Income Proof</div>';
-    html += uploadBoxHtml('salarySlips','Salary Slips — last 3 months','Multiple files','image/*,.pdf',true);
-    html += uploadBoxHtml('bankStatement','Bank Statement — last 6 months','Single PDF file only','application/pdf',false);
-    html += '<div class="hint" style="margin:-4px 0 12px;">📅 Upload your latest statement.</div>';
-    html += '<div class="field"><label>Statement PDF Password (if any)</label><input type="password" id="f_stmtPassword"></div>';
-    html += '<div class="doc-group-label">Residence Proof</div><div class="field"><div class="toggle-row" id="residenceToggle"><button type="button" class="toggle-btn" data-val="Utility Bill">Utility Bill</button><button type="button" class="toggle-btn" data-val="Rent Agreement">Rent Agreement</button></div></div>';
-    html += uploadBoxHtml('residenceProof','Upload document','Matches proof type above','image/*,.pdf',false);
-  } else {
-    html += '<div class="doc-group-label">Business Registration & Financials</div>';
-    html += uploadBoxHtml('gst','GST Certificate','JPG, PNG or PDF','image/*,.pdf',false);
-    html += uploadBoxHtml('bankStatement','Current Account Statement — last 6 months','Single PDF file only','application/pdf',false);
-    html += '<div class="field"><label>Statement PDF Password (if any)</label><input type="password" id="f_stmtPassword"></div>';
+  function setLoanType(v) {
+    S.loanType = v;
+    setActiveLoanButton();
+    $('propertySection').classList.toggle('hidden', v !== 'LAP' && v !== 'HL');
+    if (v === 'PL') setEmployment('Salaried', true);
+    else if (v === 'BL') setEmployment('Self-Employed', true);
   }
-  c.innerHTML = html;
-  document.querySelectorAll('.upload-box input[type=file]').forEach(input => {
-    input.addEventListener('change', function(){
-      var key = this.dataset.key, box = document.getElementById('box_'+key);
-      if (!this.files.length) return;
-      box.classList.add('filled'); box.querySelector('.upload-sub').textContent = Array.from(this.files).map(f => f.name).join(', ');
-      state.uploadedFiles[key] = this.files.length > 1 ? Array.from(this.files) : this.files[0];
-    });
-  });
-}
-
-document.getElementById('submitBtn').addEventListener('click', async function(){
-  var required = ['f_name','f_mobile','f_email','f_house','f_income','f_loanAmount','f_cibil','f_bounces'];
-  if (!state.employmentType) { alert('Please select employment type.'); return; }
-  if (!document.getElementById('f_consent').checked) { alert('Please provide consent to proceed.'); return; }
- 
-  for (var i=0; i<required.length; i++){
-    var el = document.getElementById(required[i]);
-    if (!el || !el.value.trim()) {
-      alert('Please fill in all required fields.');
-      if(el) el.focus();
-      return;
-    }
-  }
- 
-  var btn = this;
-  btn.disabled = true;
-  btn.textContent = 'Matching lenders…';
-  document.getElementById('formWrap').classList.add('hidden');
-  document.getElementById('loadingState').style.display = 'block';
- 
-  var profile = {
-    name: document.getElementById('f_name').value.trim(),
-    mobile: document.getElementById('f_mobile').value.replace(/\D/g,'').slice(-10),
-    email: document.getElementById('f_email').value.trim(),
-    employmentType: state.employmentType,
-    companyType: state.companyType || '',
-    companyName: (document.getElementById('f_companyName')||{}).value || '',
-    personCount: (document.getElementById('f_personCount')||{}).value || '',
-    house: document.getElementById('f_house').value,
-    monthlyIncome: document.getElementById('f_income').value.replace(/[^0-9.]/g,''),
-    existingEmi: document.getElementById('f_emi').value.replace(/[^0-9.]/g,''),
-    loanAmount: document.getElementById('f_loanAmount').value.replace(/[^0-9.]/g,''),
-    cibilBracket: document.getElementById('f_cibil').value,
-    bounces: document.getElementById('f_bounces').value,
-    enquiries: document.getElementById('f_enquiries').value,
-    vintageYears: (document.getElementById('f_vintage')||{}).value || '',
-    gstVintage: (document.getElementById('f_gstVintage')||{}).value || '',
-    udyam: (document.getElementById('f_udyam')||{}).value || '',
-    bankAccountType: (document.getElementById('f_bankAccountType')||{}).value || '',
-    pincode: document.getElementById('f_pincode').value.replace(/\D/g,''),
-    propertyAddress: (document.getElementById('f_propertyAddress')||{}).value || '',
-    propertyPincode: (document.getElementById('f_propertyPincode')||{}).value || '',
-    marketValue: (document.getElementById('f_marketValue')||{}).value || '',
-    consentGiven: document.getElementById('f_consent').checked,
-    partnerCode: partnerCode
-  };
- 
-  try {
-    const data = await fetchJsonRetry(BACKEND_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'submitProfileOnly', product: state.loanType, profile: profile, forceNew: !!state.forceNew })
-    });
-    document.getElementById('loadingState').style.display = 'none';
- 
-    if (!data.success) {
-      if (data.error === 'duplicate_customer') {
-        var proceed = confirm('You already have an application on file (Lead ' + data.existingLeadId + ', ' + data.existingProduct + '). Click OK to check its status, or Cancel to start a brand-new application anyway.');
-        btn.disabled = false; btn.textContent = 'Find My Matching Lenders';
-        if (proceed) {
-          document.getElementById('trackMobile').value = profile.mobile;
-          document.getElementById('returningCustomerSection').classList.remove('hidden');
-          document.getElementById('trackBtn').click();
-        } else {
-          state.forceNew = true;
-          document.getElementById('submitBtn').click();
-        }
+  document.querySelectorAll('#loanToggle button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var v = btn.dataset.val;
+      if (v === 'VL' || v === 'EL') {
+        var q = '?product=' + v + (REF ? '&ref=' + encodeURIComponent(REF) : '');
+        var m = VMW.mobile10(val('f_mobile')); if (m.length === 10) q += '&mobile=' + m;
+        location.href = 'vl-el-application.html' + q;
         return;
       }
-      alert('Error: ' + (data.message || data.error));
-      btn.disabled = false;
-      btn.textContent = 'Find My Matching Lenders';
-      document.getElementById('formWrap').classList.remove('hidden');
+      setLoanType(v);
+    });
+  });
+  document.querySelectorAll('#empToggle .toggle-btn').forEach(function (b) {
+    b.addEventListener('click', function () { setEmployment(b.dataset.val, false); });
+  });
+  $('f_companyType').addEventListener('change', function () {
+    S.companyType = this.value || null;
+    var needs = ['Partnership', 'LLP', 'Pvt Ltd'].indexOf(this.value) !== -1;
+    $('personCountField').classList.toggle('hidden', !needs);
+    $('personCountLabel').innerHTML = (this.value === 'Pvt Ltd' ? 'Number of directors' : 'Number of partners') + '<span class="req">*</span>';
+  });
+
+  /* ---------- validation ---------- */
+  function validateAndBuild() {
+    VMW.clearErrors($('formWrap'));
+    var ok = true;
+    function bad(id, msg) { VMW.setErr(id, msg); ok = false; }
+
+    var name = val('f_name'); if (name.length < 2) bad('f_name', 'Please enter your full name.');
+    var mobile = VMW.mobile10(val('f_mobile')); if (!/^[6-9]\d{9}$/.test(mobile)) bad('f_mobile', 'Enter a valid 10-digit mobile number.');
+    var email = val('f_email'); if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) bad('f_email', 'Enter a valid email address.');
+    var state = VMW.canonicalState(val('f_state')); if (!state) bad('f_state', 'Please pick your state from the list.');
+    var pincode = VMW.digits(val('f_pincode')); if (!/^[1-9]\d{5}$/.test(pincode)) bad('f_pincode', 'Enter a valid 6-digit pincode.');
+    if (!S.employmentType) bad('empToggle', 'Please choose Salaried or Self-Employed.');
+    var SE = S.employmentType === 'Self-Employed';
+    var needsCount = ['Partnership', 'LLP', 'Pvt Ltd'].indexOf(S.companyType) !== -1;
+    if (SE) {
+      if (!S.companyType) bad('f_companyType', 'Please select your type of company.');
+      if (val('f_companyName').length < 2) bad('f_companyName', 'Please enter your company / business name.');
+      if (needsCount) { var pc = parseInt(val('f_personCount'), 10); if (!(pc >= 2 && pc <= 10)) bad('f_personCount', 'Enter a number between 2 and 10.'); }
+      if (!val('f_vintage')) bad('f_vintage', 'Please select your business vintage.');
+    }
+    if (!val('f_house')) bad('f_house', 'Please select your house type.');
+    if (!(parseFloat(num('f_income')) > 0)) bad('f_income', 'Enter your monthly income.');
+    if (!(parseFloat(num('f_loanAmount')) > 0)) bad('f_loanAmount', 'Enter the loan amount you need.');
+    if (!val('f_cibil')) bad('f_cibil', 'Please select your approximate CIBIL score.');
+    if (!val('f_bounces')) bad('f_bounces', 'Please select an option.');
+    var secured = S.loanType === 'LAP' || S.loanType === 'HL';
+    if (secured) {
+      if (val('f_propertyAddress').length < 5) bad('f_propertyAddress', 'Please enter the property address.');
+      if (!/^[1-9]\d{5}$/.test(VMW.digits(val('f_propertyPincode')))) bad('f_propertyPincode', 'Enter a valid 6-digit pincode.');
+      if (!(parseFloat(num('f_marketValue')) > 0)) bad('f_marketValue', 'Enter the property market value.');
+    }
+    if (!$('f_consent').checked) bad('f_consent', 'Please tick the consent box to continue.');
+
+    if (!ok) { VMW.focusFirstError($('formWrap')); return null; }
+    return {
+      name: name, mobile: mobile, email: email, state: state, pincode: pincode,
+      employmentType: S.employmentType, companyType: S.companyType || '',
+      companyName: SE ? val('f_companyName') : '', personCount: (SE && needsCount) ? val('f_personCount') : '',
+      house: val('f_house'), monthlyIncome: num('f_income'), existingEmi: num('f_emi'), loanAmount: num('f_loanAmount'),
+      cibilBracket: val('f_cibil'), bounces: val('f_bounces'), enquiries: val('f_enquiries'),
+      vintageYears: SE ? val('f_vintage') : '', gstVintage: SE ? val('f_gstVintage') : '',
+      udyam: SE ? val('f_udyam') : '', bankAccountType: SE ? val('f_bankAccountType') : '',
+      propertyAddress: secured ? val('f_propertyAddress') : '', propertyPincode: secured ? VMW.digits(val('f_propertyPincode')) : '',
+      marketValue: secured ? num('f_marketValue') : '',
+      consentGiven: true, partnerCode: REF
+    };
+  }
+
+  /* ---------- submit ---------- */
+  function backToForm(msg, type) {
+    showForm();
+    if (msg) VMW.showMsg($('formError'), msg, type || 'error');
+  }
+  $('submitBtn').addEventListener('click', function () {
+    VMW.hideMsg($('formError'));
+    $('dupNotice').classList.add('hidden');
+    var profile = validateAndBuild();
+    if (!profile) return;
+    show(['loadingState']);
+    $('loadingText').textContent = 'Matching you with lenders… this usually takes a few seconds.';
+    VMW.post({ action: 'submitProfileOnly', product: S.loanType, profile: profile, forceNew: !!S.forceNew }, { timeout: 90000 })
+      .then(function (data) {
+        if (!data || !data.success) {
+          if (data && data.error === 'duplicate_customer') { showDuplicate(data, profile); return; }
+          backToForm((data && (data.message || data.error)) || 'We could not save your application. Please try again.');
+          return;
+        }
+        S.forceNew = false;
+        S.leadId = data.leadId; S.profile = profile; S.trackedMobile = profile.mobile;
+        S.employmentType = profile.employmentType; S.companyType = profile.companyType || null;
+        S.personCount = parseInt(profile.personCount, 10) || 2;
+        renderFresh(data, profile);
+      })
+      .catch(function (err) { backToForm(VMW.errMsg(err) + ' Your details are still filled in — just tap the button again.'); });
+  });
+
+  function showDuplicate(data, profile) {
+    S.lastDup = { leadId: data.existingLeadId, product: data.existingProduct, mobile: profile.mobile };
+    $('dupText').textContent = 'A ' + VMW.productLabel(data.existingProduct) + ' application already exists for ' + profile.mobile + '. You can continue it (and upload documents), or start a separate new application.';
+    showForm();
+    $('dupNotice').classList.remove('hidden');
+    $('dupNotice').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  $('dupContinue').addEventListener('click', function () {
+    var d = S.lastDup; if (!d) return;
+    if (d.leadId) location.href = VMW.leadLink({ leadId: d.leadId, product: d.existingProduct || d.product, ref: REF });
+    else runTrack(d.mobile);
+  });
+  $('dupNew').addEventListener('click', function () {
+    S.forceNew = true;
+    $('dupNotice').classList.add('hidden');
+    $('submitBtn').click();
+  });
+
+  /* ---------- results & status screens ---------- */
+  function timeline(steps) {
+    $('timeline').innerHTML = steps.map(function (s, i) {
+      return '<li class="' + s.state + '"><span class="dot">' + (s.state === 'done' ? '✓' : (i + 1)) + '</span>' + esc(s.text) + '</li>';
+    }).join('');
+  }
+  function actionsHtml(items) { $('resultsActions').innerHTML = items.join(''); }
+  function waDocHref() {
+    var p = S.profile || {};
+    return waTeam('Docs for: ' + (p.name || '') + (S.leadId ? ' | Ref: ' + S.leadId : ''));
+  }
+
+  function renderFresh(data, profile) {
+    $('resultsHeading').textContent = 'Your matched lenders';
+    $('resultsSub').textContent = 'Based on your profile, here are your best-fit options.';
+    timeline([
+      { text: 'Details submitted', state: 'done' }, { text: 'Lenders matched', state: 'done' },
+      { text: 'Upload your documents', state: 'current' }, { text: 'Banker reviews your file', state: '' }
+    ]);
+    var note = $('processingNote');
+    note.className = 'alert info';
+    note.textContent = data.isFallback
+      ? 'Our team will personally find the best lender for your profile. Upload your documents to get started.'
+      : 'Applying with multiple lenders improves your chances of disbursement. We\'ve also emailed you a secure link so you can continue any time.';
+    $('lenderCards').innerHTML = (data.lenders || []).map(function (l, i) {
+      return '<div class="lender-card"><div class="lender-rank">' + (i + 1) + '</div><div class="lender-info"><div class="lender-name">' + esc(l.name) + '</div>' +
+        (l.rateBand ? '<div class="lender-rate">' + esc(l.rateBand) + '</div>' : '') + '</div>' +
+        '<button class="btn btn-primary btn-sm lender-apply" data-name="' + esc(l.name) + '" data-utm="' + (l.hasUtm ? '1' : '') + '">Apply now →</button></div>';
+    }).join('');
+    actionsHtml([
+      '<button class="btn btn-primary btn-block" data-act="docs">Upload documents now</button>',
+      '<button class="btn btn-ghost btn-block" data-act="later">I\'ll upload later</button>'
+    ]);
+    show(['resultsWrap']);
+  }
+
+  function renderStatus(d) {
+    S.leadId = d.leadId; S.loanType = d.product;
+    S.profile = { name: d.name, email: d.email, mobile: S.trackedMobile };
+    S.employmentType = d.employmentType || null; S.companyType = d.companyType || null; S.personCount = parseInt(d.personCount, 10) || 2;
+    var docsDone = String(d.documentStatus || '').toLowerCase() === 'submitted';
+    $('resultsHeading').textContent = 'Your application status';
+    $('resultsSub').textContent = (d.name ? d.name + ' · ' : '') + VMW.productLabel(d.product);
+    timeline([
+      { text: 'Details submitted', state: 'done' },
+      { text: 'Lenders matched', state: 'done' },
+      { text: docsDone ? 'Documents received' : 'Upload your documents', state: docsDone ? 'done' : 'current' },
+      { text: d.processingBank ? 'With ' + d.processingBank + ' for processing' : 'Banker reviews your file', state: d.processingBank ? 'done' : (docsDone ? 'current' : '') }
+    ]);
+    var note = $('processingNote');
+    if (d.processingBank) { note.className = 'alert success'; note.textContent = '🏦 Your application is currently being processed by a banker at ' + d.processingBank + '.'; }
+    else if (docsDone) { note.className = 'alert info'; note.textContent = 'Your documents are with our team. We will assign a banker and update your status here.'; }
+    else { note.className = 'alert warn'; note.textContent = 'Your documents are still pending. Upload them to move your application forward.'; }
+    $('lenderCards').innerHTML = (d.lenders || []).map(function (l, i) {
+      return '<div class="lender-card"><div class="lender-rank">' + (i + 1) + '</div><div class="lender-info"><div class="lender-name">' + esc(l.name) + '</div>' +
+        (l.rateBand ? '<div class="lender-rate">' + esc(l.rateBand) + '</div>' : '') + '</div>' + VMW.badge(l.status) + '</div>';
+    }).join('');
+    var items = [];
+    if (!docsDone) {
+      items.push('<button class="btn btn-primary btn-block" data-act="docs">Upload documents</button>');
+      items.push('<a class="btn btn-outline btn-block" target="_blank" rel="noopener" href="' + esc(waDocHref()) + '">💬 Send documents on WhatsApp</a>');
+    }
+    items.push('<button class="btn btn-ghost btn-block" data-act="new">Start a new application</button>');
+    items.push('<a class="btn btn-ghost btn-block" href="index.html">Back to home</a>');
+    actionsHtml(items);
+    show(['resultsWrap']);
+  }
+
+  $('resultsActions').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]'); if (!b) return;
+    var act = b.getAttribute('data-act');
+    if (act === 'docs') goToDocuments();
+    else if (act === 'later') location.href = 'index.html';
+    else if (act === 'new') { S.forceNew = true; $('trackMobile').value = ''; showForm(); }
+  });
+  $('lenderCards').addEventListener('click', function (e) {
+    var b = e.target.closest('.lender-apply'); if (!b || b.disabled) return;
+    b.textContent = '✓ Applied'; b.disabled = true;
+    b.classList.remove('btn-primary'); b.classList.add('btn-ok');
+    b.closest('.lender-card').classList.add('applied');
+    VMW.get('logLenderApplication', { mobile: (S.profile || {}).mobile || '', lenderName: b.getAttribute('data-name'), loanType: S.loanType, hasUtm: b.getAttribute('data-utm') ? 'Yes' : 'No' }, { tries: 1 }).catch(function () { });
+  });
+
+  /* ---------- tracking / resuming ---------- */
+  function runTrack(mobile, fromLink) {
+    S.trackedMobile = mobile;
+    $('checkingText').textContent = 'Checking your application…';
+    show(['checkingState']);
+    VMW.get('getApplicationStatus', { mobile: mobile }).then(function (d) {
+      if (!d || !d.success || !d.found) {
+        showForm();
+        $('f_mobile').value = mobile;
+        VMW.showMsg($('formError'), fromLink
+          ? 'No earlier application found for ' + mobile + '. Fill in the details below to start a new application' + (REF ? ' — it will be credited to your partner code.' : '.')
+          : 'No application found for ' + mobile + '. You can start a new one below.', 'info');
+        return;
+      }
+      if (d.isVlEl) { location.replace(VMW.leadLink({ leadId: d.leadId, product: d.product, ref: REF })); return; }
+      renderStatus(d);
+      try { history.replaceState(null, '', VMW.leadLink({ leadId: d.leadId, product: d.product, ref: REF }).replace(C.APPLY_URL, location.pathname)); } catch (e) { /* ignore */ }
+    }).catch(function (err) {
+      showForm();
+      $('trackMobile').value = mobile;
+      VMW.showMsg($('formError'), VMW.errMsg(err) + ' Tap “Track my application” to try again.', 'error');
+    });
+  }
+  $('trackBtn').addEventListener('click', function () {
+    var m = VMW.mobile10(val('trackMobile'));
+    if (m.length !== 10) { VMW.toast('Enter your 10-digit mobile number', 'error'); return; }
+    runTrack(m, false);
+  });
+
+  function resume(leadId, product) {
+    if (product === 'VL' || product === 'EL') { location.replace(VMW.leadLink({ leadId: leadId, product: product, ref: REF })); return; }
+    $('checkingText').textContent = 'Opening your application…';
+    show(['checkingState']);
+    VMW.get('resumeApplication', { leadId: leadId, product: product || '' }, { tries: 3 }).then(function (res) {
+      if (res && res.success && res.found) {
+        S.leadId = res.leadId; S.loanType = product || 'PL'; S.trackedMobile = VMW.mobile10(res.mobile);
+        S.profile = { name: res.name, mobile: res.mobile, email: res.email };
+        S.employmentType = res.employmentType || null; S.companyType = res.companyType || null; S.personCount = parseInt(res.personCount, 10) || 2;
+        if (String(res.documentStatus || '').toLowerCase() === 'submitted') { runTrack(S.trackedMobile, false); return; }
+        goToDocuments();
+      } else if (res && res.allocated) {
+        $('blockedText').textContent = res.error || 'This application is already being processed by our team.';
+        $('blockedWa').href = waTeam('Hi, I need help with my application ' + leadId);
+        show(['blockedWrap']);
+      } else {
+        showForm();
+        VMW.showMsg($('formError'), 'We could not find that application link. You can track it with your mobile number above, or start a new application.', 'warn');
+      }
+    }).catch(function (err) {
+      showForm();
+      VMW.showMsg($('formError'), VMW.errMsg(err), 'error');
+    });
+  }
+
+  /* ---------- documents ---------- */
+  function renderDocuments() {
+    var SE = S.employmentType === 'Self-Employed', ct = S.companyType, html = '';
+    var IMG = 'JPG, PNG or PDF', ANY = 'image/*,.pdf', box = VMW.docBox;
+    function h(t) { return '<div class="group-label">' + esc(t) + '</div>'; }
+    var pwd = '<div class="field"><label for="f_stmtPassword">Bank statement PDF password (if any)</label><input type="password" id="f_stmtPassword" autocomplete="off" placeholder="Leave blank if not password-protected"></div>';
+
+    if (!SE) {
+      html += h('Identity') + box('pan', 'PAN card', IMG, ANY) + box('aadhar', 'Aadhaar card', IMG, ANY) + box('selfieApplicant', 'Your selfie / photo', 'Clear face photo — JPG or PNG', 'image/*');
+      html += h('Income proof') + box('salarySlips', 'Salary slips — last 3 months', 'You can select more than one file', ANY, true) +
+              box('bankStatement', 'Bank statement — last 6 months', 'Single PDF file', 'application/pdf') + pwd;
+      html += h('Residence proof') + '<div class="field"><label>Type of proof</label><div class="toggle-row" id="residenceToggle">' +
+              '<button type="button" class="toggle-btn' + (S.residenceType === 'Utility Bill' ? ' active' : '') + '" data-val="Utility Bill">Utility bill</button>' +
+              '<button type="button" class="toggle-btn' + (S.residenceType === 'Rent Agreement' ? ' active' : '') + '" data-val="Rent Agreement">Rent agreement</button></div></div>' +
+              box('residenceProof', 'Residence proof document', 'Matches the type chosen above', ANY);
+    } else if (ct === 'Partnership' || ct === 'LLP' || ct === 'Pvt Ltd') {
+      var n = Math.min(10, Math.max(1, S.personCount || 2)), noun = ct === 'Pvt Ltd' ? 'Director' : 'Partner';
+      for (var i = 1; i <= n; i++) {
+        html += h(noun + ' ' + i) + box('pan_' + i, noun + ' ' + i + ' — PAN card', IMG, ANY) + box('aadhar_' + i, noun + ' ' + i + ' — Aadhaar card', IMG, ANY) +
+                box('selfie_' + i, noun + ' ' + i + ' — selfie / photo', 'Clear face photo — JPG or PNG', 'image/*');
+      }
+      html += h('Business documents') + box('gst', 'GST certificate', IMG, ANY) + box('bankStatement', 'Current account statement — last 6 months', 'Single PDF file', 'application/pdf') + pwd;
+    } else {
+      html += h('Applicant') + box('pan', 'Applicant PAN card', IMG, ANY) + box('aadhar', 'Applicant Aadhaar card', IMG, ANY) + box('selfieApplicant', 'Applicant selfie / photo', 'Clear face photo — JPG or PNG', 'image/*');
+      html += h('Co-applicant') + box('panCoApplicant', 'Co-applicant PAN card', IMG, ANY) + box('aadharCoApplicant', 'Co-applicant Aadhaar card', IMG, ANY) + box('selfieCoApplicant', 'Co-applicant selfie / photo', 'Clear face photo — JPG or PNG', 'image/*');
+      html += h('Business documents') + box('gst', 'GST certificate', IMG, ANY) + box('bankStatement', 'Current account statement — last 6 months', 'Single PDF file', 'application/pdf') + pwd;
+    }
+    $('docContainer').innerHTML = html;
+    VMW.wireDocBoxes($('docContainer'), S.docStore);
+    var rt = $('residenceToggle');
+    if (rt) rt.querySelectorAll('.toggle-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        S.residenceType = b.dataset.val;
+        rt.querySelectorAll('.toggle-btn').forEach(function (x) { x.classList.toggle('active', x === b); });
+      });
+    });
+  }
+  function goToDocuments() {
+    S.warnedMissing = false;
+    VMW.hideMsg($('docMsg'));
+    $('docProgress').classList.add('hidden');
+    renderDocuments();
+    $('waDocLink').href = waDocHref();
+    show(['docWrap']);
+  }
+  $('docBack').addEventListener('click', function () { location.href = 'index.html'; });
+
+  $('docSubmitBtn').addEventListener('click', function () {
+    var btn = this, box = $('docContainer'), msg = $('docMsg');
+    var jobs = VMW.collectJobs(box, S.docStore);
+    if (!jobs.length) { VMW.showMsg(msg, 'Please add at least one document before submitting.', 'error'); return; }
+    var missing = VMW.missingDocs(box, S.docStore);
+    if (missing.length && !S.warnedMissing) {
+      S.warnedMissing = true;
+      VMW.showMsg(msg, missing.length + ' document(s) not added yet: ' + missing.slice(0, 4).join(', ') + (missing.length > 4 ? '…' : '') +
+        '. Add them now, or tap “Submit documents” again to send what you have — you can send the rest later on WhatsApp.', 'warn');
       return;
     }
- 
-    state.forceNew = false;
-    state.leadId = data.leadId;
-    state.profile = profile;
-    localStorage.setItem('vmw_lead_id', data.leadId);
-    localStorage.setItem('vmw_lead_product', state.loanType);
-    localStorage.setItem('vmw_active_lead_id', data.leadId);
-    localStorage.setItem('vmw_active_product', state.loanType);
-    renderResults(data, profile, true);
- 
-  } catch (err) {
-    console.error('submit failed', err);
-    document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('formWrap').classList.remove('hidden');
-    btn.disabled = false;
-    btn.textContent = 'Find My Matching Lenders';
-    alert('Could not reach the server: ' + (err && err.message ? err.message : err));
-  }
-});
-function goToDocumentUpload(){ 
-  document.getElementById('resultsWrap').classList.add('hidden'); 
-  document.getElementById('docWrap').classList.remove('hidden'); 
-  renderDocuments(); 
-  document.getElementById('waDocLink').href = buildWhatsAppLink(); 
-}
-
-function closeApplication(){ 
-  localStorage.removeItem('vmw_lead_id'); 
-  window.location.href = HOME_PAGE; 
-}
-
-document.getElementById('docSubmitBtn').addEventListener('click', async function(){
-  var btn = this; btn.disabled = true;
-  var jobs = [];
-  Object.keys(state.uploadedFiles).forEach(key => {
-    var val = state.uploadedFiles[key];
-    if (Array.isArray(val)) val.forEach((f, idx) => jobs.push({ key: key+'_'+idx, file: f }));
-    else jobs.push({ key: key, file: val });
+    // remember the residence proof type in the file name so bankers can read it
+    if (S.residenceType) jobs.forEach(function (j) { if (j.key === 'residenceProof') j.label = 'Residence proof (' + S.residenceType + ')'; });
+    var pw = $('f_stmtPassword') ? $('f_stmtPassword').value : '';
+    VMW.hideMsg(msg);
+    $('docProgress').classList.remove('hidden');
+    VMW.busy(btn, 'Uploading…', function () {
+      return VMW.uploadAll(jobs, { leadId: S.leadId, product: S.loanType, mobile: (S.profile || {}).mobile || '' }, 'uploadSingleDocument', function (i, n, label) {
+        btn.innerHTML = '<span class="spinner sm"></span> Uploading ' + i + ' of ' + n + '…';
+        $('docProgressBar').style.width = Math.round(((i - 1) / n) * 100) + '%';
+      }).then(function (failed) {
+        if (failed.length) {
+          // NOTHING is marked "submitted" unless every file really arrived
+          VMW.showMsg(msg, failed.length + ' file(s) could not be uploaded: ' + failed.map(function (f) { return f.label; }).join(', ') + '. Your other files are saved — tap “Submit documents” again to retry only the failed ones.', 'error');
+          return null;
+        }
+        $('docProgressBar').style.width = '100%';
+        var prof = {}; for (var k in (S.profile || {})) prof[k] = S.profile[k];
+        prof.stmtPassword = pw;
+        return VMW.post({ action: 'finalizeDocumentUpload', leadId: S.leadId, product: S.loanType, profile: prof }, { timeout: 90000 }).then(function (r) {
+          if (r && r.success) { show(['doneWrap']); return; }
+          VMW.showMsg(msg, 'Your files were uploaded but we could not finish the submission. Please tap “Submit documents” again.', 'error');
+        });
+      });
+    }).catch(function (err) { VMW.showMsg(msg, VMW.errMsg(err), 'error'); });
   });
-  for (var i = 0; i < jobs.length; i++) {
-    btn.textContent = 'Uploading ' + (i+1) + ' of ' + jobs.length + '…';
-    var b64 = await new Promise(res => { var r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.readAsDataURL(jobs[i].file); });
-    await fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action: 'uploadSingleDocument', leadId: state.leadId, product: state.loanType, mobile: state.profile.mobile, fileKey: jobs[i].key, file: { name: jobs[i].file.name, mimeType: jobs[i].file.type, base64: b64 } }) });
-  }
-  fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action:'finalizeDocumentUpload', leadId: state.leadId, product: state.loanType, profile: state.profile }) })
-    .then(() => { document.getElementById('docWrap').innerHTML = '<div class="results-intro"><h1>✅ Documents Received</h1><p>Our team will review shortly.</p></div><button class="btn-new-application" onclick="closeApplication()">Close</button>'; });
-});
 
-function runTrack(mobile, silent, btn){
-  var original = btn ? btn.textContent : null;
-  if (btn) { btn.disabled = true; btn.textContent = 'Checking...'; }
-  return fetchJsonRetry(BACKEND_URL + '?action=getApplicationStatus&mobile=' + encodeURIComponent(mobile), {}, 2)
-    .then(data => {
-      if (btn) { btn.disabled = false; btn.textContent = original; }
-      if (!data.success || !data.found) {
-        document.getElementById('f_mobile').value = mobile;
-        if (!silent) alert('No application found for this number. You can start a new one below.');
-        return false;
-      }
-      if (data.isVlEl) {
-        window.location.href = 'vl-el-application.html?leadId=' + encodeURIComponent(data.leadId) + '&product=' + encodeURIComponent(data.product);
-        return true;
-      }
-      state.profile = { name: data.name, email: data.email, mobile: mobile };
-      state.leadId = data.leadId; state.loanType = data.product;
-      renderTrackingDashboard(data);
-      history.replaceState(null, '', '?leadId=' + encodeURIComponent(data.leadId) + '&product=' + encodeURIComponent(data.product));
-      return true;
-    }).catch(() => {
-      if (btn) { btn.disabled = false; btn.textContent = original; }
-      if (!silent) alert('Still having trouble reaching the server — please check your connection and try again.');
-      return false;
-    });
-}
-
-document.getElementById('trackBtn').addEventListener('click', function(){
-  var mobile = document.getElementById('trackMobile').value.trim();
-  if (!mobile) { alert('Enter your mobile number'); return; }
-  runTrack(mobile, false, this);
-});
-function renderTrackingDashboard(data){
-  document.getElementById('returningCustomerSection').classList.add('hidden');
-  document.getElementById('formWrap').classList.add('hidden');
-  var container = document.getElementById('lenderCards'); container.innerHTML = '';
-  if (data.hasMatching === false) {
-    container.innerHTML = '<div class="retry-note">Your ' +
-      (data.product === 'VL' ? 'Vehicle' : 'Education') +
-      ' Loan application is with our team. We will contact you shortly.</div>';
-  }
-  if (data.processingBank) {
-    var note = document.createElement('div'); note.className = 'retry-note';
-    note.textContent = '🏦 Your application is currently being processed by a banker at ' + data.processingBank + '.';
-    container.parentNode.insertBefore(note, container);
-  }
-  (data.lenders || []).forEach((lender, idx) => {
-    var statusClass = { 'In Process':'process','Approved':'approved','Disbursed':'disbursed','Rejected':'rejected' }[lender.status] || 'process';
-    var card = document.createElement('div'); card.className = 'lender-card';
-    card.innerHTML = '<div class="lender-rank">'+(idx+1)+'</div><div class="lender-info"><div class="lender-name">'+lender.name+'<span class="status-badge '+statusClass+'">'+(lender.status||'')+'</span></div></div>';
-    container.appendChild(card);
-  });
-  document.getElementById('resultsWrap').classList.remove('hidden');
-  document.getElementById('resultsActionsPending').classList.toggle('hidden', data.documentStatus === 'Submitted');
-  document.getElementById('resultsActionsSubmitted').classList.toggle('hidden', data.documentStatus !== 'Submitted');
-
-  var startNewBtn = document.createElement('button');
-  startNewBtn.className = 'btn-new-application';
-  startNewBtn.textContent = '+ Start a New Application';
-  startNewBtn.onclick = function(){
-    document.getElementById('resultsWrap').classList.add('hidden');
-    document.getElementById('formWrap').classList.remove('hidden');
-    state.forceNew = true;
-  };
-  document.getElementById('resultsWrap').appendChild(startNewBtn);
-}
-
-function renderResults(data, profile, showUploadPrompt){
-  var container = document.getElementById('lenderCards'); container.innerHTML = '';
-  data.lenders.forEach((lender, idx) => {
-    var card = document.createElement('div'); card.className = 'lender-card';
-    card.innerHTML = '<div class="lender-rank">'+(idx+1)+'</div><div class="lender-info"><div class="lender-name">'+lender.name+'</div></div><button class="lender-apply">Apply Now →</button>';
-    card.querySelector('button').addEventListener('click', function(){ this.textContent = '✓ Applied'; this.disabled = true; });
-    container.appendChild(card);
-  });
-  document.getElementById('resultsWrap').classList.remove('hidden');
-  document.getElementById('resultsActionsPending').classList.toggle('hidden', !showUploadPrompt);
-}
-  (function initFromMobileParam(){
-  var urlParams = new URLSearchParams(window.location.search);
-  var prefillMobile = urlParams.get('mobile');
-  var leadId = urlParams.get('leadId');
-  if (!prefillMobile || leadId) return;
-  document.getElementById('trackMobile').value = prefillMobile;
-  document.getElementById('f_mobile').value = prefillMobile;
-  runTrack(prefillMobile, true, document.getElementById('trackBtn'));
+  /* ---------- start ---------- */
+  (function boot() {
+    var leadId = params.get('leadId'), product = params.get('product'), mobile = VMW.mobile10(params.get('mobile'));
+    if (leadId) { resume(leadId, product); }
+    else if (mobile.length === 10) { $('trackMobile').value = mobile; $('f_mobile').value = mobile; runTrack(mobile, true); }
+    else { showForm(); }
+    setLoanType('PL');
+    setTimeout(function () { VMW.showAnnouncement('Customer'); }, 1500);
+  })();
 })();
 </script>
 </body>
