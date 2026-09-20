@@ -3,156 +3,84 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VastMyWealth — Connecting Customers, DSAs & Bankers</title>
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#EFF5FF">
+<title>VastMyWealth Digital — Loans for Customers, Bankers &amp; Partners</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0B1A38">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="apple-touch-icon" href="./1000550390.png">
-<link rel="stylesheet" href="./style.css">
+<link rel="apple-touch-icon" href="1000550390.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="shell">
-  <div class="brand-row">
-    <img src="1000550390.png" alt="" class="brand-mark" onerror="this.style.display='none'">
-    <span class="brand-name">VastMyWealth</span>
-    <span class="brand-script">Digital</span>
-  </div>
-
-  <div class="hero-text">
-    <h1>Loans, Leads &amp; Growth<br>— All in One App.</h1>
-    <p class="lede">One platform for Customers, Bankers &amp; DSA Partners.</p>
-  </div>
-
-  <!-- PWA Install Prompt Button -->
-  <button id="install-btn" style="display: none; background: #2563EB; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; margin: 0 20px 15px; cursor: pointer; align-items: center; justify-content: center; gap: 8px;">
-    📲 Install Loan App
-  </button>
-
-  <div class="stack">
-    <!-- CUSTOMER -->
-    <a href="apply.html" class="role-card customer">
-      <div class="role-visual">
-        <svg viewBox="0 0 100 100" fill="none">
-          <circle cx="36" cy="34" r="13" fill="#BFD6FF"/>
-          <path d="M16 76c2-15 12-23 20-23s18 8 20 23" fill="#BFD6FF"/>
-          <circle cx="64" cy="30" r="10" fill="#8FB4FF"/>
-          <path d="M48 74c1.5-12 9-18 16-18s14.5 6 16 18" fill="#8FB4FF"/>
-          <rect x="52" y="46" width="20" height="30" rx="4" fill="#2563EB"/>
-          <rect x="56" y="52" width="12" height="16" rx="1.5" fill="#EAF1FF"/>
-        </svg>
-      </div>
-      <div class="role-content">
-        <div class="role-eyebrow">For</div>
-        <div class="role-title">Customers</div>
-        <ul class="role-checks">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>Apply for Personal &amp; Business Loans</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>Get connected with verified bankers</li>
-        </ul>
-        <span class="role-btn">Customer Login
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </span>
-      </div>
-    </a>
-
-    <!-- BANKER -->
-    <a href="banker.html" class="role-card banker">
-      <div class="role-visual">
-        <svg viewBox="0 0 100 100" fill="none">
-          <path d="M50 18L82 34H18L50 18Z" fill="#16A34A"/>
-          <rect x="22" y="38" width="8" height="30" fill="#16A34A"/>
-          <rect x="38" y="38" width="8" height="30" fill="#16A34A"/>
-          <rect x="54" y="38" width="8" height="30" fill="#16A34A"/>
-          <rect x="70" y="38" width="8" height="30" fill="#16A34A"/>
-          <rect x="16" y="70" width="68" height="8" rx="2" fill="#0F7A3B"/>
-        </svg>
-      </div>
-      <div class="role-content">
-        <div class="role-eyebrow">For</div>
-        <div class="role-title">Bankers</div>
-        <ul class="role-checks">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>Receive quality PL &amp; BL leads</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>Get DSA recruitment leads</li>
-        </ul>
-        <span class="role-btn">Banker Login
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </span>
-      </div>
-    </a>
-
-    <!-- DSA PARTNER -->
-    <a href="partner.html" class="role-card dsa">
-      <div class="role-visual">
-        <svg viewBox="0 0 100 100" fill="none">
-          <circle cx="35" cy="32" r="11" fill="#C7A8F7"/>
-          <path d="M18 70c1.6-13 8.6-20 17-20s15.4 7 17 20" fill="#C7A8F7"/>
-          <circle cx="65" cy="32" r="11" fill="#7C3AED"/>
-          <path d="M48 70c1.6-13 8.6-20 17-20s15.4 7 17 20" fill="#7C3AED"/>
-          <path d="M40 46l10 8 10-8" stroke="#4C1D95" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div class="role-content">
-        <div class="role-eyebrow">For</div>
-        <div class="role-title">DSA Partners</div>
-        <ul class="role-checks">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>Submit customer details easily</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>Auto-match with the right bank</li>
-        </ul>
-        <span class="role-btn">DSA Partner Login
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </span>
-      </div>
+<header class="app-header">
+  <div class="in">
+    <a class="brand" href="index.html">
+      <img src="1000550390.png" alt="" onerror="this.style.display='none'">
+      <div><b>VastMyWealth</b><small>Digital</small></div>
     </a>
   </div>
+</header>
 
-  <svg class="footer-wave" viewBox="0 0 480 60" preserveAspectRatio="none">
-    <path d="M0,30 C120,60 360,0 480,30 L480,60 L0,60 Z" fill="#0B1E3D"/>
-  </svg>
-  <p class="footer-note" style="color:#AFC0E8; background:#0B1E3D; margin-top:-1px; padding-top:0;">Secured with 256-bit encryption.<br>A VastMyWealth Digital product.</p>
-</div>
+<main class="wrap">
+  <div class="hero" style="padding-top:14px;">
+    <h1>Loans, leads &amp; growth<br>— all in one app.</h1>
+    <p>One platform for customers, bankers and DSA partners. Choose how you want to continue.</p>
+  </div>
 
+  <button id="install-btn" class="btn btn-primary btn-block hidden" style="margin-bottom:16px;">📲 Install the app on your phone</button>
+
+  <a href="apply.html" class="role-card">
+    <div class="role-ic" style="background:rgba(134,182,255,.16);">🧑‍💼</div>
+    <div>
+      <h2>Customers</h2>
+      <p>Apply for a loan, get matched with lenders, upload documents and track your application.</p>
+      <span class="role-go">Apply or track my loan →</span>
+    </div>
+  </a>
+
+  <a href="banker.html" class="role-card">
+    <div class="role-ic" style="background:rgba(63,190,134,.16);">🏦</div>
+    <div>
+      <h2>Bankers</h2>
+      <p>Get your DSA code, receive quality Personal &amp; Business Loan leads and track your files.</p>
+      <span class="role-go">Banker login / register →</span>
+    </div>
+  </a>
+
+  <a href="partner.html" class="role-card">
+    <div class="role-ic" style="background:rgba(217,169,78,.18);">🤝</div>
+    <div>
+      <h2>DSA Partners</h2>
+      <p>Submit customer applications with your own link and follow their progress.</p>
+      <span class="role-go">Partner login / register →</span>
+    </div>
+  </a>
+
+  <p class="center muted small mt24">🔒 Your details are protected and shared only with partner banks for processing.<br>A VastMyWealth Digital product.</p>
+</main>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
 <script>
-  let deferredPrompt;
-  const installBtn = document.getElementById('install-btn');
-
-  // 1. Service Worker Registration
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service worker registered successfully:', reg.scope))
-        .catch(err => console.error('Service worker registration failed. Ensure sw.js is in the root directory:', err));
-    });
-  }
-
-  // 2. Capture the install prompt event
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); // Prevents the browser's automatic mini-infobar
+  var deferredPrompt;
+  var installBtn = document.getElementById('install-btn');
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
     deferredPrompt = e;
-    if (installBtn) {
-      installBtn.style.display = 'flex'; // Shows your custom install button
-    }
+    installBtn.classList.remove('hidden');
   });
-
-  // 3. Handle click on your custom install button
-  if (installBtn) {
-    installBtn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      
-      // Trigger the browser's native installation dialog
-      deferredPrompt.prompt();
-      
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response to install prompt: ${outcome}`);
-      
-      if (outcome === 'accepted') {
-        installBtn.style.display = 'none';
-      }
-      
+  installBtn.addEventListener('click', function () {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function (choice) {
+      if (choice.outcome === 'accepted') installBtn.classList.add('hidden');
       deferredPrompt = null;
     });
-  }
+  });
 </script>
 </body>
 </html>
