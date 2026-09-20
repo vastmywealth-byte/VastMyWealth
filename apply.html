@@ -41,6 +41,7 @@
       <input type="tel" id="trackMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number" autocomplete="tel">
     </div>
     <button class="btn btn-outline btn-block" id="trackBtn">Track my application</button>
+    <div id="trackMsg" class="alert hidden"></div>
   </section>
 
   <!-- NEW APPLICATION -->
@@ -479,13 +480,14 @@
   /* ---------- tracking / resuming ---------- */
   function runTrack(mobile, fromLink) {
     S.trackedMobile = mobile;
+    VMW.hideMsg($('trackMsg'));
     $('checkingText').textContent = 'Checking your application…';
     show(['checkingState']);
     VMW.get('getApplicationStatus', { mobile: mobile }).then(function (d) {
       if (!d || !d.success || !d.found) {
         showForm();
         $('f_mobile').value = mobile;
-        VMW.showMsg($('formError'), fromLink
+        VMW.showMsg($('trackMsg'), fromLink
           ? 'No earlier application found for ' + mobile + '. Fill in the details below to start a new application' + (REF ? ' — it will be credited to your partner code.' : '.')
           : 'No application found for ' + mobile + '. You can start a new one below.', 'info');
         return;
@@ -496,12 +498,12 @@
     }).catch(function (err) {
       showForm();
       $('trackMobile').value = mobile;
-      VMW.showMsg($('formError'), VMW.errMsg(err) + ' Tap “Track my application” to try again.', 'error');
+      VMW.showMsg($('trackMsg'), VMW.errMsg(err) + ' Tap “Track my application” to try again.', 'error');
     });
   }
   $('trackBtn').addEventListener('click', function () {
     var m = VMW.mobile10(val('trackMobile'));
-    if (m.length !== 10) { VMW.toast('Enter your 10-digit mobile number', 'error'); return; }
+    if (m.length !== 10) { VMW.showMsg($('trackMsg'), 'Please enter your 10-digit mobile number.', 'error'); return; }
     runTrack(m, false);
   });
 
@@ -522,11 +524,11 @@
         show(['blockedWrap']);
       } else {
         showForm();
-        VMW.showMsg($('formError'), 'We could not find that application link. You can track it with your mobile number above, or start a new application.', 'warn');
+        VMW.showMsg($('trackMsg'), 'We could not find that application link. Enter your mobile number above to track it, or start a new application below.', 'warn');
       }
     }).catch(function (err) {
       showForm();
-      VMW.showMsg($('formError'), VMW.errMsg(err), 'error');
+      VMW.showMsg($('trackMsg'), VMW.errMsg(err), 'error');
     });
   }
 
