@@ -45,7 +45,7 @@
           <div class="field"><label for="reqEmail">Official bank email ID<span class="req">*</span></label><input type="email" id="reqEmail" autocomplete="email" placeholder="name@yourbank.com">
             <div class="hint">Personal emails (Gmail, Yahoo, etc.) are not accepted.</div></div>
           <div class="field"><label for="reqMobile">Mobile number<span class="req">*</span></label><input type="tel" id="reqMobile" maxlength="10" inputmode="numeric" autocomplete="tel" placeholder="10-digit mobile"></div>
-          <button type="submit" id="reqBtn" class="btn btn-primary btn-block">Register &amp; email my PIN</button>
+          <button type="submit" id="reqBtn" class="btn btn-primary btn-block">Log in to &amp; Banker Portal</button>
         </form>
         <div id="reqResult" class="alert hidden"></div>
         <button class="btn btn-outline btn-block mt16" id="toLogin" type="button">Already registered? Log in</button>
@@ -96,14 +96,14 @@
         <a class="btn btn-icon" id="rmChatLink" href="https://wa.me/919594592020" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp your RM">💬</a></div>
     </div>
 
-    <div id="pendingBanner" class="alert warn hidden">⏳ Your DSA code is being verified. You'll be able to log business and see leads as soon as it's active.</div>
+    <div id="pendingBanner" class="alert warn hidden">⏳ DSA code is being verified. You'll be able to log business and see leads as soon as it's active.</div>
 
     <!-- LOG BUSINESS -->
     <div id="tabLog" class="tab-pane active">
       <div class="card">
         <div class="card-title">Log new business</div>
         <p class="card-sub">Type your customer's mobile number. If they already applied you'll see their status and can upload their documents; otherwise a new application opens, credited to you.</p>
-        <div id="logGate" class="alert warn hidden">Add a DSA code and get it verified before logging business.</div>
+        <div id="logGate" class="alert warn hidden">Add our DSA code before logging business.</div>
         <div id="newAppArea">
           <div class="field"><label for="newAppMobile">Customer mobile number</label>
             <input type="tel" id="newAppMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
@@ -126,7 +126,7 @@
         <div class="card-title">Your DSA codes</div>
         <p class="card-sub">Bank and loan-type combinations you can log business under.</p>
         <div id="codesList"></div>
-        <button class="btn btn-primary btn-block mt12" id="addCodeBtn">＋ Add a bank / DSA code</button>
+        <button class="btn btn-primary btn-block mt12" id="addCodeBtn">＋ Generate DSA code</button>
       </div>
     </div>
 
@@ -144,9 +144,9 @@
     <div id="tabBizLeads" class="tab-pane">
       <div class="card">
         <div class="row-top"><div><div class="card-title">Business leads</div>
-          <p class="card-sub" style="margin-bottom:0;">Customer leads in the pool. Claim one to get the full details and your DSA code.</p></div>
+          <p class="card-sub" style="margin-bottom:0;">Customer leads in the pool. Claim one to get the full details and our DSA code.</p></div>
           <button class="btn btn-ghost btn-sm" id="leadsRefresh">↻ Refresh</button></div>
-        <div id="bizLeadsGate" class="alert warn hidden mt16">Add a DSA code and get it verified to view leads.</div>
+        <div id="bizLeadsGate" class="alert warn hidden mt16">Add our DSA code to view leads.</div>
         <div id="bizLeadsBlocked" class="alert error hidden mt16">You've reached your rejection limit for this period. Please contact your RM to unlock leads.</div>
         <div id="bizLeadsSlots" class="small muted mt12"></div>
         <div id="bizLeadsList" class="mt12"></div>
@@ -437,7 +437,7 @@
     VMW.post({ action: 'checkBankCode', bankerId: SESSION.bankerId, bankName: bank, loanTypes: lts }).then(function (r) {
       if (mine !== SC.token) return;
       if (r.status !== 'success') { VMW.hideMsg(hint); return; }
-      var lines = lts.map(function (lt) { return VMW.productLabel(lt) + ': ' + (r.existing[lt] ? 'an existing code will be reused automatically' : 'no existing code — enter yours below'); });
+      var lines = lts.map(function (lt) { return VMW.productLabel(lt) + ': ' + (r.existing[lt] ? 'Already we have code with your Bank' : 'No existing code — Kindly generate our DSA code'); });
       hint.className = 'alert info'; hint.innerHTML = lines.map(esc).join('<br>');
       $('scCodeGroup').classList.toggle('hidden', lts.every(function (lt) { return !!r.existing[lt]; }));
     }).catch(function () { if (mine === SC.token) VMW.hideMsg(hint); });
