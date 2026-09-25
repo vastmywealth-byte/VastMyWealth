@@ -382,9 +382,9 @@
     bar.setAttribute('role', 'dialog');
     bar.setAttribute('aria-label', 'Install the app');
     bar.innerHTML = '<img src="1000550390.png" alt="" onerror="this.style.display=\'none\'">' +
-      '<div class="ib-text"><b>Install & unlock all features</b><span>' + (iosHelp
+      '<div class="ib-text"><b>Install the VastMyWealth app</b><span>' + (iosHelp
         ? 'Tap <b>Share</b> (the square with an arrow), then <b>Add to Home Screen</b>.'
-        : 'it works just like an app on your phone.') + '</span></div>' +
+        : 'Faster access — it works just like an app on your phone.') + '</span></div>' +
       (iosHelp ? '' : '<button type="button" class="btn btn-primary btn-sm" id="vmwInstallBtn">Install</button>') +
       '<button type="button" class="ib-x" aria-label="Not now">✕</button>';
     document.body.insertBefore(bar, document.body.firstChild);
