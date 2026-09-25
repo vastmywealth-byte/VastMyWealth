@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Refund &amp; Cancellation Policy — VastMyWealth</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header"><div class="in">
+  <a class="brand" href="index.html"><img src="1000550390.png" alt="" onerror="this.style.display='none'"><div><b>VastMyWealth</b><small>Digital</small></div></a>
+  <div class="hdr-right"><a class="hdr-link" href="index.html">← Home</a></div>
+</div></header>
+<main class="wrap" style="max-width:720px;">
+  <div class="card">
+    <h1 style="font-size:22px;margin-bottom:6px;">Refund &amp; Cancellation Policy</h1>
+    <p class="muted small">Last updated: <span id="d"></span></p>
+
+    <div class="alert warn mt16"><b>All payments made on this platform are final and non-refundable.</b></div>
+
+    <h2 style="font-size:16px;margin-top:20px;">Subscriptions</h2>
+    <p class="mt8">Where VastMyWealth offers a paid subscription to bankers or DSA partners (for example, time-limited exclusive access to leads), the subscription fee is charged upfront for the plan period you select. Once payment is confirmed, the fee is not refundable — including if you choose to stop using the subscription before the period ends, if fewer leads than expected are received in a given period, or if your account is suspended for a policy violation.</p>
+
+    <h2 style="font-size:16px;margin-top:20px;">Cancellation</h2>
+    <p class="mt8">You may choose not to renew a subscription at any time — it will simply lapse at the end of the paid period and revert to standard access. There is no cancellation fee, but no partial refund is given for the unused portion of a period.</p>
+
+    <h2 style="font-size:16px;margin-top:20px;">Failed or duplicate payments</h2>
+    <p class="mt8">If a payment is deducted from your account but your subscription was not activated due to a technical error, or if you were charged more than once for the same period by mistake, contact us with your payment reference and we will investigate and correct the account or arrange a reversal for that specific error — this is not a discretionary refund, only a correction of a payment processing mistake.</p>
+
+    <h2 style="font-size:16px;margin-top:20px;">Payment processing</h2>
+    <p class="mt8">Payments are processed securely by Razorpay. Any payment-gateway-level dispute (such as an unauthorised transaction on your card) should also be reported to your bank or card issuer per their process.</p>
+
+    <h2 style="font-size:16px;margin-top:20px;">Contact</h2>
+    <p class="mt8">For a payment correction request, WhatsApp us at <a href="https://wa.me/919594592020" target="_blank" rel="noopener">+91 95945 92020</a> with your payment reference number.</p>
+
+    <p class="small muted mt16">This page is a plain-language starting draft and has not been reviewed by a lawyer. Please have it checked against applicable law and Razorpay's requirements before relying on it.</p>
+  </div>
+</main>
+<script>document.getElementById('d').textContent = new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });</script>
+</body>
+</html>
