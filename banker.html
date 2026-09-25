@@ -45,7 +45,7 @@
           <div class="field"><label for="reqEmail">Official bank email ID<span class="req">*</span></label><input type="email" id="reqEmail" autocomplete="email" placeholder="name@yourbank.com">
             <div class="hint">Personal emails (Gmail, Yahoo, etc.) are not accepted.</div></div>
           <div class="field"><label for="reqMobile">Mobile number<span class="req">*</span></label><input type="tel" id="reqMobile" maxlength="10" inputmode="numeric" autocomplete="tel" placeholder="10-digit mobile"></div>
-          <button type="submit" id="reqBtn" class="btn btn-primary btn-block">Log in to &amp; Banker Portal</button>
+          <button type="submit" id="reqBtn" class="btn btn-primary btn-block">Register &amp; email my PIN</button>
         </form>
         <div id="reqResult" class="alert hidden"></div>
         <button class="btn btn-outline btn-block mt16" id="toLogin" type="button">Already registered? Log in</button>
@@ -96,14 +96,14 @@
         <a class="btn btn-icon" id="rmChatLink" href="https://wa.me/919594592020" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp your RM">💬</a></div>
     </div>
 
-    <div id="pendingBanner" class="alert warn hidden">⏳ DSA code is being verified. You'll be able to log business and see leads as soon as it's active.</div>
+    <div id="pendingBanner" class="alert warn hidden">⏳ Your DSA code is being verified. You'll be able to log business and see leads as soon as it's active.</div>
 
     <!-- LOG BUSINESS -->
     <div id="tabLog" class="tab-pane active">
       <div class="card">
         <div class="card-title">Log new business</div>
         <p class="card-sub">Type your customer's mobile number. If they already applied you'll see their status and can upload their documents; otherwise a new application opens, credited to you.</p>
-        <div id="logGate" class="alert warn hidden">Add our DSA code before logging business.</div>
+        <div id="logGate" class="alert warn hidden">Add a DSA code and get it verified before logging business.</div>
         <div id="newAppArea">
           <div class="field"><label for="newAppMobile">Customer mobile number</label>
             <input type="tel" id="newAppMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
@@ -126,7 +126,7 @@
         <div class="card-title">Your DSA codes</div>
         <p class="card-sub">Bank and loan-type combinations you can log business under.</p>
         <div id="codesList"></div>
-        <button class="btn btn-primary btn-block mt12" id="addCodeBtn">＋ Generate DSA code</button>
+        <button class="btn btn-primary btn-block mt12" id="addCodeBtn">＋ Add a bank / DSA code</button>
       </div>
     </div>
 
@@ -144,9 +144,9 @@
     <div id="tabBizLeads" class="tab-pane">
       <div class="card">
         <div class="row-top"><div><div class="card-title">Business leads</div>
-          <p class="card-sub" style="margin-bottom:0;">Customer leads in the pool. Claim one to get the full details.</p></div>
+          <p class="card-sub" style="margin-bottom:0;">Customer leads in the pool. Claim one to get the full details and your DSA code.</p></div>
           <button class="btn btn-ghost btn-sm" id="leadsRefresh">↻ Refresh</button></div>
-        <div id="bizLeadsGate" class="alert warn hidden mt16">Add our DSA code to view leads.</div>
+        <div id="bizLeadsGate" class="alert warn hidden mt16">Add a DSA code and get it verified to view leads.</div>
         <div id="bizLeadsBlocked" class="alert error hidden mt16">You've reached your rejection limit for this period. Please contact your RM to unlock leads.</div>
         <div id="bizLeadsSlots" class="small muted mt12"></div>
         <div id="bizLeadsList" class="mt12"></div>
@@ -195,15 +195,16 @@
       <div class="field"><label for="scNewBankName">New bank / NBFC name</label><input type="text" id="scNewBankName" autocomplete="off" placeholder="Start typing…"></div>
       <div class="field"><label for="scNewBankEmail">Official email for this bank</label><input type="email" id="scNewBankEmail" placeholder="name@newbank.com"></div>
     </div>
-    <div class="field"><label>Loan type(s)</label>
-      <div class="checkbox-grid">
-        <label><input type="checkbox" name="scLoanType" value="PL"> Personal Loan</label>
-        <label><input type="checkbox" name="scLoanType" value="BL"> Business Loan</label>
-        <label><input type="checkbox" name="scLoanType" value="HL"> Home Loan</label>
-        <label><input type="checkbox" name="scLoanType" value="LAP"> Loan Against Property</label>
-        <label><input type="checkbox" name="scLoanType" value="VL"> Vehicle Loan</label>
-        <label><input type="checkbox" name="scLoanType" value="EL"> Education Loan</label>
+    <div class="field"><label>Loan type</label>
+      <div class="chip-row" id="scLoanTypeChips">
+        <button type="button" class="chip" data-lt="PL">Personal Loan</button>
+        <button type="button" class="chip" data-lt="BL">Business Loan</button>
+        <button type="button" class="chip" data-lt="HL">Home Loan</button>
+        <button type="button" class="chip" data-lt="LAP">Loan Against Property</button>
+        <button type="button" class="chip" data-lt="VL">Vehicle Loan</button>
+        <button type="button" class="chip" data-lt="EL">Education Loan</button>
       </div>
+      <div class="hint">One code covers one loan type. Pick the type this code is for.</div>
     </div>
     <div id="scCodeHint" class="alert info hidden"></div>
     <div class="field" id="scCodeGroup"><label for="scCode">DSA code</label><input type="text" id="scCode" autocomplete="off"></div>
@@ -396,13 +397,13 @@
     }).catch(function (err) { el.innerHTML = '<div class="alert error">' + esc(VMW.errMsg(err)) + '</div>'; });
   }
 
-  var SC = { bank: '', newMode: false, banks: [], token: 0 };
+  var SC = { bank: '', newMode: false, banks: [], token: 0, loanType: '' };
   $('addCodeBtn').addEventListener('click', openSubmitCodeSheet);
   function openSubmitCodeSheet() {
-    SC.bank = SESSION.currentBankName || ''; SC.newMode = false; SC.banks = SC.bank ? [SC.bank] : [];
+    SC.bank = SESSION.currentBankName || ''; SC.newMode = false; SC.banks = SC.bank ? [SC.bank] : []; SC.loanType = '';
     $('submitCodeForm').reset(); VMW.hideMsg($('scResult')); VMW.hideMsg($('scCodeHint'));
     $('scNewBankFields').classList.add('hidden'); $('scCodeGroup').classList.remove('hidden');
-    renderBankChips();
+    renderBankChips(); renderLoanTypeChips();
     openSheet('submitCodeSheet');
     VMW.post({ action: 'getBankerBanks', bankerId: SESSION.bankerId }).then(function (r) {
       if (r.status === 'success' && r.banks && r.banks.length) {
@@ -425,10 +426,21 @@
   });
   VMW.autosuggest($('scNewBankName'), function () { return VMW.lists.banks; }, function () { refreshCodeHint(); });
   $('scNewBankName').addEventListener('input', refreshCodeHint);
-  document.querySelectorAll('input[name="scLoanType"]').forEach(function (c) { c.addEventListener('change', refreshCodeHint); });
+  $('scLoanTypeChips').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    SC.loanType = (SC.loanType === b.getAttribute('data-lt')) ? '' : b.getAttribute('data-lt');
+    renderLoanTypeChips(); refreshCodeHint();
+  });
+  function renderLoanTypeChips() {
+    document.querySelectorAll('#scLoanTypeChips .chip').forEach(function (b) {
+      var mine = b.getAttribute('data-lt') === SC.loanType;
+      b.classList.toggle('selected', mine);
+      b.classList.toggle('hidden', !!SC.loanType && !mine); // once one is picked, the rest step out of the way
+    });
+  }
 
   function currentBank() { return SC.newMode ? $('scNewBankName').value.trim() : SC.bank; }
-  function loanTypesChosen() { return Array.prototype.map.call(document.querySelectorAll('input[name="scLoanType"]:checked'), function (c) { return c.value; }); }
+  function loanTypesChosen() { return SC.loanType ? [SC.loanType] : []; }
   function refreshCodeHint() {
     var bank = currentBank(), lts = loanTypesChosen(), hint = $('scCodeHint');
     if (!bank || !lts.length) { VMW.hideMsg(hint); $('scCodeGroup').classList.remove('hidden'); return; }
@@ -437,7 +449,7 @@
     VMW.post({ action: 'checkBankCode', bankerId: SESSION.bankerId, bankName: bank, loanTypes: lts }).then(function (r) {
       if (mine !== SC.token) return;
       if (r.status !== 'success') { VMW.hideMsg(hint); return; }
-      var lines = lts.map(function (lt) { return VMW.productLabel(lt) + ': ' + (r.existing[lt] ? 'Already we have code with your Bank' : 'No existing code — Kindly generate our DSA code'); });
+      var lines = lts.map(function (lt) { return VMW.productLabel(lt) + ': ' + (r.existing[lt] ? 'an existing code will be reused automatically' : 'no existing code — enter yours below'); });
       hint.className = 'alert info'; hint.innerHTML = lines.map(esc).join('<br>');
       $('scCodeGroup').classList.toggle('hidden', lts.every(function (lt) { return !!r.existing[lt]; }));
     }).catch(function () { if (mine === SC.token) VMW.hideMsg(hint); });
@@ -447,7 +459,7 @@
     var box = $('scResult'); VMW.hideMsg(box);
     var lts = loanTypesChosen(), bank = currentBank();
     if (!bank) { VMW.showMsg(box, 'Please select a bank, or add a new one.', 'error'); return; }
-    if (!lts.length) { VMW.showMsg(box, 'Select at least one loan type.', 'error'); return; }
+    if (!lts.length) { VMW.showMsg(box, 'Please choose a loan type for this code.', 'error'); return; }
     var newEmail = $('scNewBankEmail').value.trim();
     if (SC.newMode) {
       if (!validEmail(newEmail)) { VMW.showMsg(box, 'An official email for the new bank is required.', 'error'); return; }
