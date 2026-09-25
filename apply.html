@@ -401,9 +401,17 @@
     }).join('');
   }
   function actionsHtml(items) { $('resultsActions').innerHTML = items.join(''); }
+  // Prefilled with what the banker/team needs at a glance: who it's for (business
+  // name for self-employed applicants, since that is how they are billed and tracked),
+  // the loan type, and the amount — exactly as requested, nothing more.
   function waDocHref() {
     var p = S.profile || {};
-    return waTeam('Docs for: ' + (p.name || '') + (S.leadId ? ' | Ref: ' + S.leadId : ''));
+    var isSE = S.employmentType === 'Self-Employed';
+    var who = (isSE && p.companyName) ? p.companyName : (p.name || '');
+    var parts = ['Documents for: ' + who, 'Loan Type: ' + VMW.productLabel(S.loanType)];
+    if (p.loanAmount) parts.push('Amount: ' + VMW.inr(p.loanAmount));
+    if (S.leadId) parts.push('Ref: ' + S.leadId);
+    return waTeam(parts.join(' | '));
   }
 
   function renderFresh(data, profile) {
@@ -432,7 +440,7 @@
 
   function renderStatus(d) {
     S.leadId = d.leadId; S.loanType = d.product;
-    S.profile = { name: d.name, email: d.email, mobile: S.trackedMobile };
+    S.profile = { name: d.name, email: d.email, mobile: S.trackedMobile, loanAmount: d.loanAmount || '', companyName: d.companyName || '' };
     S.employmentType = d.employmentType || null; S.companyType = d.companyType || null; S.personCount = parseInt(d.personCount, 10) || 2;
     var docsDone = String(d.documentStatus || '').toLowerCase() === 'submitted';
     $('resultsHeading').textContent = 'Your application status';
@@ -514,7 +522,7 @@
     VMW.get('resumeApplication', { leadId: leadId, product: product || '' }, { tries: 3 }).then(function (res) {
       if (res && res.success && res.found) {
         S.leadId = res.leadId; S.loanType = product || 'PL'; S.trackedMobile = VMW.mobile10(res.mobile);
-        S.profile = { name: res.name, mobile: res.mobile, email: res.email };
+        S.profile = { name: res.name, mobile: res.mobile, email: res.email, loanAmount: res.loanAmount || '', companyName: res.companyName || '' };
         S.employmentType = res.employmentType || null; S.companyType = res.companyType || null; S.personCount = parseInt(res.personCount, 10) || 2;
         if (String(res.documentStatus || '').toLowerCase() === 'submitted') { runTrack(S.trackedMobile, false); return; }
         goToDocuments();
