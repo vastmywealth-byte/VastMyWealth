@@ -88,7 +88,7 @@
 <div id="dashboardView" class="hidden">
   <header class="app-header"><div class="in">
     <a class="brand" href="index.html"><img src="1000550390.png" alt="" onerror="this.style.display='none'"><div><b>VastMyWealth</b><small>DSA Partner</small></div></a>
-    <div class="hdr-right"><button class="btn btn-ghost btn-sm" id="logoutBtn">Log out</button></div>
+    <div class="hdr-right"><a class="btn btn-outline btn-sm hidden" id="adminLink" href="admin.html" target="_blank" rel="noopener">Admin</a><button class="btn btn-ghost btn-sm" id="logoutBtn">Log out</button></div>
   </div></header>
 
   <main class="wrap">
@@ -116,9 +116,10 @@
     </div>
 
     <div class="card">
-      <div class="card-title">Business tool</div>
-      <p class="card-sub">Run your own campaigns and keep those leads exclusive to you.</p>
-      <div class="alert info" style="margin-bottom:0;">🚧 Coming soon.</div>
+      <div class="card-title">Biz Tool — exclusive leads</div>
+      <p class="card-sub">Subscribe for 7-day exclusive access to matching leads in your chosen state, before they reach the shared pool.</p>
+      <div id="bizToolSummary" class="alert info" style="margin-bottom:0;">Loading…</div>
+      <a class="btn btn-primary btn-block mt12" id="bizToolLink" href="#">Open Biz Tool</a>
     </div>
   </main>
 </div>
@@ -129,7 +130,7 @@
 (function () {
   'use strict';
   var $ = VMW.$, esc = VMW.esc, C = VMW_CONFIG;
-  var CODE_KEY = 'vmw_partner_code', NAME_KEY = 'vmw_partner_name';
+  var CODE_KEY = 'vmw_partner_code', NAME_KEY = 'vmw_partner_name', MOBILE_KEY = 'vmw_partner_mobile';
   $('termsLink').href = C.PARTNER_TERMS_URL;
   ['loginMobile', 'fpMobile', 'mobile', 'newAppMobile'].forEach(function (id) { VMW.wireDigits($(id), 10); });
   VMW.wireDigits($('loginPin'), 4); VMW.wireDigits($('pin'), 4);
@@ -157,7 +158,7 @@
     if (mobile.length !== 10 || pin.length !== 4) { VMW.showMsg(box, 'Enter your 10-digit mobile number and 4-digit PIN.', 'error'); return; }
     VMW.busy($('loginSubmitBtn'), 'Logging in…', function () {
       return VMW.post({ action: 'loginPartner', mobile: mobile, pin: pin }).then(function (d) {
-        if (d.success) { VMW.store.set(CODE_KEY, d.partnerCode); VMW.store.set(NAME_KEY, d.name); showDashboard(); }
+        if (d.success) { VMW.store.set(CODE_KEY, d.partnerCode); VMW.store.set(NAME_KEY, d.name); VMW.store.set(MOBILE_KEY, mobile); showDashboard(); }
         else VMW.showMsg(box, d.error || 'Login failed.', 'error');
       });
     }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
@@ -220,14 +221,36 @@
     var link = VMW.refLink(CODE);
     $('refLink').textContent = link;
     $('waShareBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + link);
+    $('bizToolLink').href = 'biztool.html?holderType=Partner&holderCode=' + encodeURIComponent(CODE) + '&holderName=' + encodeURIComponent(pname || '');
+    loadBizToolSummary();
+
+    // Shown ONLY when logging in with this exact mobile number — a convenience shortcut for
+    // whoever owns that number, not a security boundary. admin.html's own password is the
+    // real gate; the underlying admin URL is never listed anywhere public.
+    var loginMobile = VMW.store.get(MOBILE_KEY);
+    $('adminLink').classList.toggle('hidden', loginMobile !== VMW_CONFIG.ADMIN_ACCESS_MOBILE);
+
     loadLeads();
     setTimeout(function () { VMW.showAnnouncement('Partner'); }, 1500);
+  }
+  function loadBizToolSummary() {
+    var el = $('bizToolSummary');
+    VMW.post({ action: 'getMySubscription', holderCode: CODE }).then(function (r) {
+      if (r.subscription) {
+        var days = Math.max(0, Math.ceil((r.subscription.endDate - Date.now()) / 86400000));
+        el.className = 'alert success'; el.style.marginBottom = '0';
+        el.textContent = 'Active — ' + r.subscription.plan + ' plan, ' + days + ' day' + (days === 1 ? '' : 's') + ' left.';
+      } else {
+        el.className = 'alert info'; el.style.marginBottom = '0';
+        el.textContent = 'No active subscription yet.';
+      }
+    }).catch(function () { el.className = 'alert info'; el.style.marginBottom = '0'; el.textContent = 'Open Biz Tool to subscribe or check your status.'; });
   }
   $('copyBtn').onclick = function () {
     VMW.copy(VMW.refLink(CODE)).then(function () { VMW.toast('Link copied — share it with your customer', 'success'); })
       .catch(function () { VMW.toast('Could not copy. Long-press the link to copy it.', 'error'); });
   };
-  $('logoutBtn').onclick = function () { VMW.store.del(CODE_KEY); VMW.store.del(NAME_KEY); CODE = ''; showAuth('loginView'); VMW.toast('Logged out'); };
+  $('logoutBtn').onclick = function () { VMW.store.del(CODE_KEY); VMW.store.del(NAME_KEY); VMW.store.del(MOBILE_KEY); CODE = ''; showAuth('loginView'); VMW.toast('Logged out'); };
   $('newAppBtn').onclick = function () {
     var m = VMW.mobile10($('newAppMobile').value);
     if (m.length !== 10) { VMW.toast('Enter a valid 10-digit mobile number', 'error'); return; }
