@@ -26,6 +26,13 @@
 
     WHATSAPP_NUMBER: "919594592020",
     SUPPORT_MOBILE: "9594592020",
-    PARTNER_TERMS_URL: "https://loan.vastmywealth.com/partner-terms.pdf"
+    PARTNER_TERMS_URL: "https://loan.vastmywealth.com/partner-terms.pdf",
+
+    // Shows a hidden "Admin" shortcut on the partner dashboard ONLY when that
+    // account's login mobile matches this number. This is a convenience for
+    // whoever owns that phone, not a security control — admin.html's own
+    // password is the real gate, and this number is never shown or linked
+    // anywhere else in the app.
+    ADMIN_ACCESS_MOBILE: "9594592020"
   };
 })();
