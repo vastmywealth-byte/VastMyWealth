@@ -166,9 +166,10 @@
     <!-- BUSINESS TOOL -->
     <div id="tabBizTool" class="tab-pane">
       <div class="card">
-        <div class="card-title">Business tool</div>
-        <p class="card-sub">Run your own paid campaigns and keep those leads exclusive to you — only sending unfit ones to the shared pool.</p>
-        <div class="alert info">🚧 Coming soon. This feature is under development.</div>
+        <div class="card-title">Biz Tool — exclusive leads</div>
+        <p class="card-sub">Subscribe for 7-day exclusive access to matching leads in your chosen state, before they reach the shared pool.</p>
+        <div id="bizToolSummary" class="alert info">Loading…</div>
+        <a class="btn btn-primary btn-block mt12" id="bizToolLink" href="#">Open Biz Tool</a>
       </div>
     </div>
   </main>
@@ -356,11 +357,27 @@
     var gated = !SESSION.hasActiveCode;
     $('logGate').classList.toggle('hidden', !gated); $('newAppArea').classList.toggle('hidden', gated);
     $('shareWaBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + VMW.refLink(SESSION.refCode));
+    $('bizToolLink').href = 'biztool.html?holderType=Banker&holderCode=' + encodeURIComponent(SESSION.bankerId) + '&holderName=' + encodeURIComponent(SESSION.bankerName || '') + '&bankName=' + encodeURIComponent(SESSION.currentBankName || '');
+    loadBizToolSummary();
     LOADED = {};
     selectTab('tabLog');
     loadCodes();
     setTimeout(function () { VMW.showAnnouncement('Banker'); }, 1500);
   }
+  function loadBizToolSummary() {
+    var el = $('bizToolSummary');
+    VMW.post({ action: 'getMySubscription', holderCode: SESSION.bankerId }).then(function (r) {
+      if (r.subscription) {
+        var days = Math.max(0, Math.ceil((r.subscription.endDate - Date.now()) / 86400000));
+        el.className = 'alert success';
+        el.textContent = 'Active — ' + r.subscription.plan + ' plan, ' + days + ' day' + (days === 1 ? '' : 's') + ' left.';
+      } else {
+        el.className = 'alert info';
+        el.textContent = 'No active subscription yet.';
+      }
+    }).catch(function () { el.className = 'alert info'; el.textContent = 'Open Biz Tool to subscribe or check your status.'; });
+  }
+
   function selectTab(id) {
     document.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.toggle('active', p.id === id); });
     document.querySelectorAll('.nav-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === id); });
@@ -569,6 +586,7 @@
     if (h.otherLoanType) parts.push(h.otherLoanType + ' in loan types you have no DSA code for');
     if (h.alreadyClaimed) parts.push(h.alreadyClaimed + ' already claimed by you');
     if (h.closed) parts.push(h.closed + ' already closed');
+    if (h.exclusive) parts.push(h.exclusive + ' currently exclusive to a Biz Tool subscriber');
     if (!parts.length) { el.classList.add('hidden'); return; }
     el.textContent = 'Not shown here: ' + parts.join(' · ') + '.';
     el.classList.remove('hidden');
