@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biz Tool — VastMyWealth</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0B1A38">
+<link rel="apple-touch-icon" href="1000550390.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header"><div class="in">
+  <a class="brand" href="index.html">
+    <img src="1000550390.png" alt="" onerror="this.style.display='none'">
+    <div><b>VastMyWealth</b><small>Biz Tool</small></div>
+  </a>
+  <div class="hdr-right"><a class="hdr-link" id="backLink" href="banker.html">← Back</a></div>
+</div></header>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>Biz Tool — exclusive leads</h1>
+    <p>Get first access to matching customer leads in your chosen state, exclusively yours for 7 days before they go to the shared pool.</p>
+  </div>
+
+  <div id="statusCard" class="card">
+    <div class="card-title">Your subscription</div>
+    <div id="statusBody" class="mt8">Loading…</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Your exclusive leads</div>
+    <p class="card-sub">Only visible to you. After 7 days — or if you release one early — it moves to the shared pool.</p>
+    <div id="exclusiveLeadsList" class="mt12"><div class="skeleton"></div></div>
+  </div>
+
+  <div id="subscribeCard" class="card">
+    <div class="card-title">Subscribe</div>
+    <p class="card-sub">Choose a plan and the state(s) you want leads from.</p>
+
+    <div class="field">
+      <label>Plan</label>
+      <div class="toggle-row" id="planToggle">
+        <button type="button" class="toggle-btn" data-plan="Monthly">Monthly — ₹7,000<br><span class="small">min. 6 leads expected</span></button>
+        <button type="button" class="toggle-btn" data-plan="Quarterly">Quarterly — ₹18,000<br><span class="small">min. 22 leads expected</span></button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>State(s)</label>
+      <div class="checkbox-grid" id="stateChecks" style="grid-template-columns:1fr 1fr;max-height:220px;overflow-y:auto;"></div>
+    </div>
+
+    <div class="field">
+      <label for="cityInput">City (optional — leave blank for the whole state)</label>
+      <input type="text" id="cityInput" placeholder="e.g. Pune">
+    </div>
+
+    <div id="subMsg" class="alert hidden"></div>
+    <button class="btn btn-primary btn-block" id="payBtn">Pay &amp; subscribe</button>
+    <p class="small muted center mt12">🔒 Payment is handled securely by Razorpay. It usually activates within moments — in rare cases (a dropped connection, for example) it can take up to 4 hours to reflect here.</p>
+  </div>
+</main>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = VMW.$, esc = VMW.esc;
+  var params = new URLSearchParams(location.search);
+  var HOLDER = {
+    type: params.get('holderType') === 'Partner' ? 'Partner' : 'Banker',
+    code: params.get('holderCode') || '',
+    name: params.get('holderName') || '',
+    bankName: params.get('bankName') || ''
+  };
+  $('backLink').href = HOLDER.type === 'Partner' ? 'partner.html' : 'banker.html';
+
+  if (!HOLDER.code) {
+    $('statusBody').innerHTML = '<div class="alert error">This page needs to be opened from your dashboard\'s Biz Tool card.</div>';
+    $('subscribeCard').classList.add('hidden');
+  } else {
+    boot();
+  }
+
+  var PLAN = '';
+  document.querySelectorAll('#planToggle .toggle-btn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('#planToggle .toggle-btn').forEach(function (x) { x.classList.remove('active'); });
+      b.classList.add('active'); PLAN = b.getAttribute('data-plan');
+    });
+  });
+
+  function renderStateChecks() {
+    var el = $('stateChecks');
+    el.innerHTML = VMW.lists.states.map(function (s) {
+      return '<label><input type="checkbox" name="stState" value="' + esc(s) + '"> ' + esc(s) + '</label>';
+    }).join('');
+  }
+  VMW.loadLists('states').then(renderStateChecks);
+  renderStateChecks();
+
+  function chosenStates() { return Array.prototype.map.call(document.querySelectorAll('input[name="stState"]:checked'), function (c) { return c.value; }); }
+
+  function renderStatus(sub) {
+    var box = $('statusBody');
+    if (sub) {
+      var daysLeft = Math.max(0, Math.ceil((sub.endDate - Date.now()) / 86400000));
+      box.innerHTML = '<span class="badge ok">Active</span> ' + esc(sub.plan) + ' plan · ' + esc((sub.states || []).join(', ')) + (sub.city ? (' · ' + esc(sub.city)) : '') +
+        '<div class="small muted mt8">Renews or expires in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + '.</div>';
+      $('subscribeCard').querySelector('.card-title').textContent = 'Add another state or renew early';
+    } else {
+      box.innerHTML = '<span class="badge warn">No active subscription</span>';
+    }
+  }
+
+  function loadExclusiveLeads() {
+    var el = $('exclusiveLeadsList');
+    VMW.post({ action: 'getMyBizToolLeads', holderCode: HOLDER.code }).then(function (r) {
+      var leads = (r.leads || []);
+      if (!leads.length) { el.innerHTML = '<div class="empty">No exclusive leads right now.</div>'; return; }
+      el.innerHTML = leads.map(function (l) {
+        var link = esc(VMW.leadLink({ leadId: l.leadId, product: l.product }));
+        return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(l.name || '—') + '</div>' +
+          '<div class="row-meta">' + esc(VMW.productLabel(l.product)) + (l.loanAmount ? (' · ' + esc(VMW.inr(l.loanAmount))) : '') + (l.state ? (' · ' + esc(l.state)) : '') + '</div></div>' +
+          '<span class="badge ' + (l.daysLeft <= 2 ? 'warn' : 'info') + '">' + l.daysLeft + ' day' + (l.daysLeft === 1 ? '' : 's') + ' left</span></div>' +
+          '<div class="row-actions">' +
+          '<a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="' + link + '">View / follow up</a>' +
+          '<button class="btn btn-ghost btn-sm" data-push="' + esc(l.leadId) + '" data-product="' + esc(l.product) + '">Release to pool early</button>' +
+          '</div></div>';
+      }).join('');
+    }).catch(function () { el.innerHTML = '<div class="alert error">Could not load your exclusive leads.</div>'; });
+  }
+  $('exclusiveLeadsList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-push]'); if (!b) return;
+    if (!confirm('Release this lead to the shared pool now? Any banker will then be able to claim it.')) return;
+    VMW.busy(b, 'Releasing…', function () {
+      return VMW.post({ action: 'pushBizToolLead', leadId: b.getAttribute('data-push'), product: b.getAttribute('data-product'), holderCode: HOLDER.code, status: 'PushToPool' })
+        .then(function (r) { VMW.toast(r.success ? 'Released to the pool' : (r.error || 'Could not release'), !r.success); if (r.success) loadExclusiveLeads(); });
+    }).catch(function (err) { VMW.toast(VMW.errMsg(err), 'error'); });
+  });
+
+  function boot() {
+    VMW.post({ action: 'getMySubscription', holderCode: HOLDER.code }).then(function (r) { renderStatus(r.subscription); }).catch(function () { $('statusBody').textContent = 'Could not load your subscription.'; });
+    loadExclusiveLeads();
+  }
+
+  $('payBtn').addEventListener('click', function () {
+    var box = $('subMsg'); VMW.hideMsg(box);
+    var states = chosenStates(), city = $('cityInput').value.trim();
+    if (!PLAN) { VMW.showMsg(box, 'Please choose a plan.', 'error'); return; }
+    if (!states.length) { VMW.showMsg(box, 'Please select at least one state.', 'error'); return; }
+
+    var btn = this;
+    VMW.busy(btn, 'Starting payment…', function () {
+      return VMW.post({ action: 'createRazorpayOrder', holderType: HOLDER.type, holderCode: HOLDER.code, holderName: HOLDER.name, bankName: HOLDER.bankName, plan: PLAN, states: states, city: city })
+        .then(function (r) {
+          if (!r.success) { VMW.showMsg(box, r.error || 'Could not start the payment.', 'error'); return; }
+          openRazorpay(r);
+        });
+    }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
+  });
+
+  function openRazorpay(order) {
+    var rzp = new Razorpay({
+      key: order.keyId, amount: order.amount, currency: order.currency, name: 'VastMyWealth',
+      description: PLAN + ' Biz Tool subscription', order_id: order.orderId,
+      prefill: { name: HOLDER.name },
+      theme: { color: '#D9A94E' },
+      handler: function (resp) {
+        VMW.post({ action: 'confirmRazorpayPayment', orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature, holderCode: HOLDER.code })
+          .then(function (r) {
+            if (r.success) { VMW.toast('Subscribed!', 'success'); boot(); }
+            else VMW.showMsg($('subMsg'), r.error || 'Payment could not be confirmed automatically — if the amount was deducted, it will be corrected within a few hours.', 'warn');
+          }).catch(function () { VMW.showMsg($('subMsg'), 'Payment made, but we could not confirm it immediately — it will be corrected automatically within a few hours.', 'warn'); });
+      },
+      modal: { ondismiss: function () { VMW.toast('Payment cancelled'); } }
+    });
+    rzp.open();
+  }
+})();
+</script>
+</body>
+</html>
