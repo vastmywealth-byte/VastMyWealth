@@ -223,6 +223,32 @@
   };
 
   /* ---------- links ---------- */
+  // Document checklist per loan / employment / company type — the same lists the
+  // customer sees on the upload screens, so a banker or partner can ask for exactly
+  // the right documents over WhatsApp.
+  VMW.docChecklist = function (product, employmentType, companyType) {
+    if (product === 'VL') return ['PAN card', 'Aadhaar card', 'Selfie / photo', 'Bank statement — last 6 months (PDF, with password if any)', 'Vehicle quotation / proforma invoice (new vehicle) or RC (used vehicle)'];
+    if (product === 'EL') return ['Student PAN / ID proof', 'Student Aadhaar card', 'Admission letter', 'Fee structure', 'Co-applicant PAN card', 'Co-applicant Aadhaar card', 'Co-applicant bank statement — last 6 months'];
+    if (employmentType !== 'Self-Employed') {
+      return ['PAN card', 'Aadhaar card', 'Selfie / photo', 'Salary slips — last 3 months', 'Bank statement — last 6 months (PDF, with password if any)', 'Residence proof (utility bill or rent agreement)'];
+    }
+    if (companyType === 'Partnership' || companyType === 'LLP' || companyType === 'Pvt Ltd') {
+      var noun = companyType === 'Pvt Ltd' ? 'each director' : 'each partner';
+      return ['PAN card, Aadhaar card and selfie of ' + noun, 'GST certificate', 'Current account statement — last 6 months (PDF, with password if any)'];
+    }
+    return ['Applicant PAN card, Aadhaar card and selfie', 'Co-applicant PAN card, Aadhaar card and selfie', 'GST certificate', 'Current account statement — last 6 months (PDF, with password if any)'];
+  };
+  // opts: { name, companyName, product, employmentType, companyType, loanAmount }
+  VMW.docChecklistWaLink = function (mobile10, opts) {
+    var isSE = opts.employmentType === 'Self-Employed';
+    var who = (isSE && opts.companyName) ? opts.companyName : (opts.name || '');
+    var lines = VMW.docChecklist(opts.product, opts.employmentType, opts.companyType).map(function (d) { return '• ' + d; });
+    var text = 'Hi ' + who + ', this is regarding your ' + VMW.productLabel(opts.product) + (opts.loanAmount ? ' of ' + VMW.inr(opts.loanAmount) : '') +
+      ' application with VastMyWealth. To move it forward, please share these documents here on WhatsApp:\n' + lines.join('\n');
+    return VMW.waLink('91' + mobile10, text);
+  };
+
+  /* ---------- links (continued) ---------- */
   // Link that opens a lead in the RIGHT live page (never an old/trial page)
   VMW.leadLink = function (o) {
     var base = (o.product === 'VL' || o.product === 'EL') ? C.VL_EL_URL : C.APPLY_URL;
