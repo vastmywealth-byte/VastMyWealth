@@ -251,6 +251,11 @@
       .catch(function () { VMW.toast('Could not copy. Long-press the link to copy it.', 'error'); });
   };
   $('logoutBtn').onclick = function () { VMW.store.del(CODE_KEY); VMW.store.del(NAME_KEY); VMW.store.del(MOBILE_KEY); CODE = ''; showAuth('loginView'); VMW.toast('Logged out'); };
+  $('adminLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    var w = window.open('admin.html', '_blank', 'noopener,noreferrer');
+    if (!w) location.href = 'admin.html'; // pop-up blocked — fall back to normal navigation rather than doing nothing
+  });
   $('newAppBtn').onclick = function () {
     var m = VMW.mobile10($('newAppMobile').value);
     if (m.length !== 10) { VMW.toast('Enter a valid 10-digit mobile number', 'error'); return; }
@@ -273,7 +278,7 @@
                      : '<a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="' + href + '">View status</a>';
     }
     if (m.length === 10) contact = '<a class="btn btn-ghost btn-sm" href="tel:' + m + '">📞 Call</a>' +
-      '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(VMW.waLink('91' + m, 'Hi ' + (l.customerName || '') + ', this is regarding your loan application with VastMyWealth.')) + '">💬 WhatsApp</a>';
+      '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(VMW.docChecklistWaLink(m, { name: l.customerName, companyName: l.companyName, product: l.product, employmentType: l.employmentType, companyType: l.companyType, loanAmount: l.loanAmount })) + '">💬 Ask for documents</a>';
     return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(name) + '</div>' +
       '<div class="row-meta">' + esc(VMW.productLabel(l.product)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + (m ? ' · 📱 ' + esc(m) : '') + '</div></div>' +
       '<div class="row-badges">' + VMW.badge(l.status) + (pending && !notElig ? VMW.docBadge('Pending') : '') + '</div></div>' +
