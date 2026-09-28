@@ -494,10 +494,20 @@
   });
 
   /* ---------- shared row helpers ---------- */
-  function contactButtons(mobile, name) {
+  // opts (optional): { product, employmentType, companyType, companyName, loanAmount } — when given,
+  // the WhatsApp button opens pre-filled with the document checklist for that loan / employment type.
+  function contactButtons(mobile, name, opts) {
     var m = VMW.mobile10(mobile); if (m.length !== 10) return '';
+    var href, label;
+    if (opts && opts.product) {
+      href = VMW.docChecklistWaLink(m, { name: name, companyName: opts.companyName, product: opts.product, employmentType: opts.employmentType, companyType: opts.companyType, loanAmount: opts.loanAmount });
+      label = '💬 Ask for documents';
+    } else {
+      href = VMW.waLink('91' + m, 'Hi ' + (name || '') + ', this is regarding your loan application with VastMyWealth.');
+      label = '💬 WhatsApp';
+    }
     return '<a class="btn btn-ghost btn-sm" href="tel:' + m + '">📞 Call</a>' +
-      '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(VMW.waLink('91' + m, 'Hi ' + (name || '') + ', this is regarding your loan application with VastMyWealth.')) + '">💬 WhatsApp</a>';
+      '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(href) + '">' + label + '</a>';
   }
   function locTags(r) {
     var t = [];
@@ -526,7 +536,7 @@
       '<div class="row-meta">' + esc(r.kindLabel) + (meta.length ? ' · ' + meta.join(' · ') : '') + '</div></div>' +
       '<div class="row-badges">' + VMW.badge(r.status) + (pending && !notElig ? VMW.docBadge('Pending') : '') + '</div></div>' +
       (tags ? '<div class="row-tags">' + tags + '</div>' : '') +
-      '<div class="row-actions">' + main + contactButtons(r.mobile, r.name) + '</div></div>';
+      '<div class="row-actions">' + main + contactButtons(r.mobile, r.name, r.loanType ? { product: r.loanType, employmentType: r.employmentType, companyType: r.companyType, companyName: r.companyName, loanAmount: r.amount } : null) + '</div></div>';
   }
   function loadTrack() {
     LOADED.track = true; LOADED.trackAt = Date.now();
@@ -539,13 +549,15 @@
       (res[0].logs || []).forEach(function (l) {
         if (l.source === 'submitted') return; // shown (with richer status) from the referral list below
         if (l.source === 'claimed') rows.push({ kind: 'claimed', kindLabel: 'Claimed lead', name: l.customerName, loanType: l.loanType, amount: l.loanAmount, state: l.state, pincode: l.pincode,
-          mobile: l.customerMobile, status: l.fileStatus, leadId: l.leadId, dsaCode: l.dsaCode, ts: new Date(l.timestamp).getTime() });
+          mobile: l.customerMobile, status: l.fileStatus, leadId: l.leadId, dsaCode: l.dsaCode, ts: new Date(l.timestamp).getTime(),
+          employmentType: l.employmentType, companyType: l.companyType, companyName: l.companyName });
         else rows.push({ kind: 'direct', kindLabel: 'Logged file', name: l.customerName, mobile: l.customerMobile, metaText: l.meta, status: l.fileStatus, ts: new Date(l.timestamp).getTime() });
       });
       (res[1].leads || []).forEach(function (l) {
         rows.push({ kind: 'referral', kindLabel: 'Your referral', name: (l.employmentType === 'Self-Employed' && l.companyName) ? l.companyName : l.customerName,
           loanType: l.product, amount: l.loanAmount, state: l.state, pincode: l.pincode, mobile: l.mobile, status: l.status, docStatus: l.documentStatus || 'Pending',
-          processingBank: l.processingBank, leadId: l.leadId, ts: l.timestamp });
+          processingBank: l.processingBank, leadId: l.leadId, ts: l.timestamp,
+          employmentType: l.employmentType, companyType: l.companyType, companyName: l.companyName });
       });
       if (failed === 2) { el.innerHTML = '<div class="alert error">Could not load your files. Please check your connection and tap Refresh.</div>'; LOADED.track = false; return; }
       rows.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
@@ -633,7 +645,7 @@
         if (c.claimStatus === 'Active') {
           actions = '<button class="btn btn-ok btn-sm" data-disburse="' + esc(c.claimId) + '">✅ Disbursed</button>' +
             '<button class="btn btn-danger btn-sm" data-reject="' + esc(c.claimId) + '">❌ Reject</button>' +
-            '<button class="btn btn-outline btn-sm" data-detail="' + esc(c.leadId) + '" data-lt="' + esc(c.loanType) + '">📄 Details &amp; documents</button>' + contactButtons(c.customerMobile, c.customerName);
+            '<button class="btn btn-outline btn-sm" data-detail="' + esc(c.leadId) + '" data-lt="' + esc(c.loanType) + '">📄 Details &amp; documents</button>' + contactButtons(c.customerMobile, c.customerName, { product: c.loanType, employmentType: c.employmentType, companyType: c.companyType, companyName: c.companyName, loanAmount: c.loanAmount });
         } else if (c.claimStatus === 'Disbursed') actions = '<div class="row-meta">Disbursed amount: ' + esc(VMW.inr(c.disbursedAmount)) + '</div>';
         else if (c.claimStatus === 'Rejected') actions = '<div class="row-meta">Reason: ' + esc(c.rejectionReason || '—') + '</div>';
         return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(c.customerName) + '</div>' +
