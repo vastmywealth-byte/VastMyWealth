@@ -105,6 +105,8 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
 .field label{display:block;font-size:11.5px;font-weight:700;color:var(--gold-light);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
 .field input,.field select,.field textarea{width:100%;padding:11px 12px;border-radius:9px;border:1px solid var(--line);background:var(--panel-2);color:#fff;font-size:14px}
 .danger-zone{border:1px solid rgba(240,102,94,.4);border-radius:10px;padding:12px;margin-top:14px}
+.linkbox{display:flex;gap:8px;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:7px 7px 7px 10px}
+.linkbox span{flex:1;min-width:0;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .danger-zone .section-label{color:var(--bad)}
 
 /* ---------- modal / sheet ---------- */
@@ -194,6 +196,7 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
 
       <div class="section-label" style="margin-top:20px;">All bankers</div>
       <div class="toolbar"><input type="text" id="bankerSearchBox" placeholder="Search banker name or mobile…">
+        <label><input type="checkbox" id="showAllBankers"> Show all bankers (incl. inactive)</label>
         <button class="btn btn-gold btn-sm" id="addBankerCodeBtn">+ Add DSA code</button>
       </div>
       <div id="bankersContainer"><div class="empty">Loading bankers…</div></div>
@@ -201,7 +204,8 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
 
     <!-- ============ PARTNERS ============ -->
     <div id="tabPartners" class="tab-pane hidden">
-      <div class="toolbar"><input type="text" id="partnerSearchBox" placeholder="Search partner name or mobile…"></div>
+      <div class="toolbar"><input type="text" id="partnerSearchBox" placeholder="Search partner name or mobile…">
+        <label><input type="checkbox" id="showAllPartners"> Show all partners (incl. inactive)</label></div>
       <div id="partnersContainer"><div class="empty">Loading partners…</div></div>
     </div>
 
@@ -297,10 +301,20 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
 // (the Bank Channel CRM was merged into this same project, so there is
 // no separate URL any more).
 var API_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
+// admin.html is deployed in the same folder as apply.html — build referral links relative to wherever THIS page is hosted.
+var SITE_BASE = String(location.href).split('#')[0].split('?')[0].replace(/[^\/]*$/, '');
+function refLinkFor(code) { return SITE_BASE + "apply.html?ref=" + encodeURIComponent(code); }
+function copyText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+  return new Promise(function (res, rej) {
+    try { var t = document.createElement('textarea'); t.value = text; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); var ok = document.execCommand('copy'); document.body.removeChild(t); ok ? res() : rej(new Error('copy failed')); }
+    catch (e) { rej(e); }
+  });
+}
 
 var ADMIN_PASSWORD = "";
-var ALL_LEADS = [], ACTIVE_LENDERS = [], ACTIVE_DSAS = [], ALL_PARTNERS = [], ALL_BANKERS = [];
-var CURRENT_LEAD = null;
+var ALL_LEADS = [], ACTIVE_LENDERS = [], ACTIVE_DSAS = [], ALL_PARTNERS = [], ALL_BANKERS = [], ALL_SUBS = [];
+var CURRENT_LEAD = null, SUBS_LOADED = false;
 var $ = function (id) { return document.getElementById(id); };
 function esc(s) { var d = document.createElement('div'); d.textContent = (s === undefined || s === null) ? '' : s; return d.innerHTML; }
 function inr(n) { var v = parseFloat(String(n || '').replace(/[^0-9.]/g, '')); return isNaN(v) ? '—' : '₹' + v.toLocaleString('en-IN'); }
@@ -365,7 +379,7 @@ function applyDashboardData(result) {
   ALL_LEADS = result.leads || []; ACTIVE_LENDERS = result.lenders || []; ACTIVE_DSAS = result.dsas || []; ALL_PARTNERS = result.partners || [];
   renderLeads(); renderPartners();
 }
-function loadBankerTabData() { loadBankers(); loadPendingCodes(); loadBlockedBankers(); }
+function loadBankerTabData() { loadBankers(); loadPendingCodes(); loadBlockedBankers(); SUBS_LOADED = true; loadSubscriptions(); }
 
 function refreshAll() {
   $("leadsContainer").innerHTML = '<div class="empty">Loading leads…</div>';
@@ -380,7 +394,6 @@ function refreshAll() {
 }
 
 /* ---------------- TABS ---------------- */
-var SUBS_LOADED = false;
 document.querySelectorAll('.tab-btn').forEach(function (b) {
   b.addEventListener('click', function () {
     document.querySelectorAll('.tab-btn').forEach(function (x) { x.classList.toggle('active', x === b); });
@@ -589,13 +602,33 @@ function loadBankers() {
     else $('bankersContainer').innerHTML = '<div class="error-box">' + esc(r.error || 'Failed to load bankers') + '</div>';
   }).catch(function (err) { $('bankersContainer').innerHTML = '<div class="error-box">' + esc(err.message) + '</div>'; });
 }
+// A banker/partner counts as ACTIVE when they have at least one lead still in flight
+// (stage not finished, or documents pending) — whether self-sourced, claimed or via a
+// subscription — or a live Biz Tool subscription. Everyone else is hidden unless
+// "Show all" is ticked, so the default view stays short.
+function activeHolderCodes() {
+  var set = {};
+  ALL_LEADS.forEach(function (l) {
+    var inFlight = (l.stage === 'In process' || l.stage === 'Approved' || l.documentStatus === 'Pending');
+    if (!inFlight) return;
+    if (l.partnerCode) set[l.partnerCode] = true;
+    (l.claims || []).forEach(function (c) { if (c.claimStatus === 'Active') set[c.bankerCode] = true; });
+  });
+  (ALL_SUBS || []).forEach(function (sub) { if (sub.status === 'Active') set[sub.holderCode] = true; });
+  return set;
+}
+
 function renderBankers() {
   var q = ($('bankerSearchBox').value || '').toLowerCase();
-  var list = ALL_BANKERS.filter(function (b) { return !q || String(b.name || '').toLowerCase().indexOf(q) !== -1 || String(b.mobile || '').indexOf(q) !== -1; });
+  var showAll = $('showAllBankers') && $('showAllBankers').checked, activeSet = activeHolderCodes();
+  var list = ALL_BANKERS.filter(function (b) {
+    if (!showAll && !q && !activeSet[b.bankerId]) return false; // searching always looks at everyone
+    return !q || String(b.name || '').toLowerCase().indexOf(q) !== -1 || String(b.mobile || '').indexOf(q) !== -1;
+  });
   $('bankersStats').innerHTML = ['<div class="stat-box"><b>' + ALL_BANKERS.length + '</b><span>Registered bankers</span></div>',
     '<div class="stat-box"><b>' + ALL_BANKERS.filter(function (b) { return b.accountVerified; }).length + '</b><span>Verified</span></div>'].join('');
   var el = $('bankersContainer');
-  if (!list.length) { el.innerHTML = '<div class="empty">No bankers found.</div>'; return; }
+  if (!list.length) { el.innerHTML = '<div class="empty">' + (showAll || q ? 'No bankers found.' : 'No bankers with leads in process right now. Tick “Show all bankers” to see everyone.') + '</div>'; return; }
   el.innerHTML = list.map(function (b) {
     var codes = (b.codes || []).map(function (c) { return '<span class="tag ' + (c.status === 'Active' ? 'ok' : 'warn') + '">' + esc(c.bankName) + ' · ' + esc(c.loanType) + (c.status !== 'Active' ? ' (pending)' : '') + '</span>'; }).join(' ');
     return '<div class="card"><div class="card-row" onclick="toggleDetail(this)"><div><div class="name">' + esc(b.name || '—') + (b.accountVerified ? '' : ' <span class="tag warn">unverified</span>') + '</div><div class="sub">' + esc(b.bankName || '—') + ' · ' + esc(b.mobile || '') + '</div></div><span class="caret">▼</span></div>' +
@@ -608,6 +641,7 @@ function populateBankerPicker() {
   sel.innerHTML = '<option value="">Select a banker…</option>' + ALL_BANKERS.map(function (b) { return '<option value="' + esc(b.bankerId) + '">' + esc(b.name || b.bankerId) + ' — ' + esc(b.mobile || '') + '</option>'; }).join('');
 }
 $('bankerSearchBox').addEventListener('input', renderBankers);
+$('showAllBankers').addEventListener('change', renderBankers);
 
 function loadPendingCodes() {
   $('pendingCodesContainer').innerHTML = '<div class="empty">Loading…</div>';
@@ -674,8 +708,12 @@ $('acSubmitBtn').addEventListener('click', function () {
 function renderPartners() {
   var q = ($('partnerSearchBox') ? $('partnerSearchBox').value : '').toLowerCase();
   var container = $('partnersContainer');
-  var partners = ALL_PARTNERS.filter(function (p) { return !q || String(p.name || '').toLowerCase().indexOf(q) !== -1 || String(p.mobile || '').indexOf(q) !== -1; });
-  if (!partners.length) { container.innerHTML = '<div class="empty">No partners found.</div>'; return; }
+  var showAllP = $('showAllPartners') && $('showAllPartners').checked, activeSetP = activeHolderCodes();
+  var partners = ALL_PARTNERS.filter(function (p) {
+    if (!showAllP && !q && !activeSetP[p.partnerCode]) return false;
+    return !q || String(p.name || '').toLowerCase().indexOf(q) !== -1 || String(p.mobile || '').indexOf(q) !== -1;
+  });
+  if (!partners.length) { container.innerHTML = '<div class="empty">' + (showAllP || q ? 'No partners found.' : 'No partners with leads in process right now. Tick “Show all partners” to see everyone.') + '</div>'; return; }
   container.innerHTML = partners.map(function (p, i) {
     var count = p.last30Count || 0;
     var rankTag = (i === 0 && count > 0) ? ' 🏆' : '';
@@ -687,15 +725,16 @@ function renderPartners() {
   }).join('');
 }
 document.addEventListener('input', function (e) { if (e.target && e.target.id === 'partnerSearchBox') renderPartners(); });
+$('showAllPartners').addEventListener('change', renderPartners);
 
 /* ================= BIZ TOOL SUBSCRIPTIONS ================= */
-var ALL_SUBS = [];
 function loadSubscriptions() {
   $('subsContainer').innerHTML = '<div class="empty">Loading…</div>';
   apiPost({ action: "adminListSubscriptions", password: ADMIN_PASSWORD }).then(function (r) {
     if (!r.success) { $('subsContainer').innerHTML = '<div class="error-box">' + esc(r.error || 'Failed to load') + '</div>'; return; }
     ALL_SUBS = r.subscriptions || [];
     renderSubscriptions();
+    renderBankers(); renderPartners(); // subscribers count as "active" in those lists
   }).catch(function (err) { $('subsContainer').innerHTML = '<div class="error-box">' + esc(err.message) + '</div>'; });
 }
 function subStatusTag(s) {
@@ -712,13 +751,17 @@ function renderSubscriptions() {
     return '<div class="card"><div class="card-row" style="cursor:default;"><div>' +
       '<div class="name">' + esc(s.holderName || s.holderCode) + ' <span class="sub">(' + esc(s.holderType) + ')</span></div>' +
       '<div class="sub">' + esc(s.plan) + ' · ' + esc(s.states || '') + (s.city ? (' · ' + esc(s.city)) : '') + (s.bankName ? (' · ' + esc(s.bankName)) : '') + '</div>' +
-      '<div class="sub">₹' + esc(s.amountPaid) + ' · ' + esc(s.source) + (s.endDate ? (' · ends ' + fmtDate(s.endDate)) : '') + '</div></div>' +
+      '<div class="sub">₹' + esc(s.amountPaid) + ' · ' + esc(s.source) + (s.endDate ? (' · ends ' + fmtDate(s.endDate)) : '') + '</div>' +
+      (s.holderCode ? '<div class="linkbox mt8" style="max-width:340px;"><span>' + esc(refLinkFor(s.holderCode)) + '</span><button class="btn btn-gold btn-sm" data-copylink="' + esc(s.holderCode) + '">Copy</button></div>' : '') +
+      '</div>' +
       '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">' + subStatusTag(s.status) +
       (s.status === 'Active' || s.status === 'Pending' ? '<button class="btn btn-bad btn-sm" data-cancel="' + esc(s.subscriptionId) + '">Cancel</button>' : '') +
       '</div></div></div>';
   }).join('');
 }
 $('subsContainer').addEventListener('click', function (e) {
+  var copyBtn = e.target.closest('[data-copylink]');
+  if (copyBtn) { copyText(refLinkFor(copyBtn.getAttribute('data-copylink'))).then(function () { showToast('Link copied'); }).catch(function () { showToast('Could not copy', true); }); return; }
   var b = e.target.closest('[data-cancel]'); if (!b) return;
   if (!confirm('Cancel this subscription now?')) return;
   withBusy(b, 'Cancelling…', function () {
