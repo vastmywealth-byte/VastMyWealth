@@ -300,8 +300,8 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
 // ⚠️ SET THIS to the ONE Web App /exec every other page also uses
 // (the Bank Channel CRM was merged into this same project, so there is
 // no separate URL any more).
-var API_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
-  //var API_URL = "https://vmw-portal-api.vastmywealth.workers.dev";
+//var API_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
+  var API_URL = "https://vmw-portal-api.vastmywealth.workers.dev";
 // admin.html is deployed in the same folder as apply.html — build referral links relative to wherever THIS page is hosted.
 var SITE_BASE = String(location.href).split('#')[0].split('?')[0].replace(/[^\/]*$/, '');
 function refLinkFor(code) { return SITE_BASE + "apply.html?ref=" + encodeURIComponent(code); }
