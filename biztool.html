@@ -21,6 +21,31 @@
   .bc-share-row { display:flex; gap:8px; }
   .bc-share-btn { flex:1; display:flex; align-items:center; justify-content:center; height:38px; border-radius:9px; border:none; cursor:pointer; text-decoration:none; }
   .bc-share-btn svg { width:18px; height:18px; }
+      #planToggle { display:flex; gap:12px; }
+  #planToggle .toggle-btn {
+    flex:1; min-width:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    padding:16px 8px;
+    border-radius:12px;
+    border:1.5px solid var(--line);
+    background:#101b36;
+    color:#fff;
+    cursor:pointer;
+    text-align:center;
+    transition:all .15s ease;
+  }
+  #planToggle .plan-name { font-size:13px; font-weight:600; color:#aab4d4; text-transform:uppercase; letter-spacing:.03em; }
+  #planToggle .plan-price { font-size:19px; font-weight:800; margin:2px 0; }
+  #planToggle .small { font-size:11px; color:#8b96b8; }
+  #planToggle .toggle-btn:hover { border-color:#D9A94E; }
+  #planToggle .toggle-btn.active {
+    background:linear-gradient(135deg,#D9A94E,#B8860B);
+    border-color:#D9A94E;
+    box-shadow:0 4px 16px rgba(217,169,78,.35);
+  }
+  #planToggle .toggle-btn.active .plan-name { color:#3a2c0a; }
+  #planToggle .toggle-btn.active .plan-price,
+  #planToggle .toggle-btn.active .small { color:#1a1304; }
 </style>
 </head>
 <body>
@@ -67,13 +92,20 @@
     <p class="card-sub">Increase Biz leads by 4X.</p>
 
     <div class="field">
-      <label>Plan</label>
-      <div class="toggle-row" id="planToggle">
-        <button type="button" class="toggle-btn" data-plan="Monthly">Monthly — ₹7,000<br><span class="small">min. 6 leads expected</span></button>
-        <button type="button" class="toggle-btn" data-plan="Quarterly">Quarterly — ₹18,000<br><span class="small">min. 22 leads expected</span></button>
-      </div>
-    </div>
-
+  <label>Plan</label>
+  <div class="toggle-row" id="planToggle">
+    <button type="button" class="toggle-btn" data-plan="Monthly">
+      <span class="plan-name">Monthly</span>
+      <span class="plan-price">₹7,000</span>
+      <span class="small">min. 6 leads</span>
+    </button>
+    <button type="button" class="toggle-btn" data-plan="Quarterly">
+      <span class="plan-name">Quarterly</span>
+      <span class="plan-price">₹18,000</span>
+      <span class="small">min. 22 leads</span>
+    </button>
+  </div>
+</div>
     <div class="field">
       <label>State(s)</label>
       <div class="checkbox-grid" id="stateChecks" style="grid-template-columns:1fr 1fr;max-height:220px;overflow-y:auto;"></div>
