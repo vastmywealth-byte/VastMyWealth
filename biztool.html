@@ -11,6 +11,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+  <style>
+  .banner-grid { display:grid; grid-template-columns:1fr; gap:16px; margin-top:14px; }
+  @media (min-width:640px) { .banner-grid { grid-template-columns:1fr 1fr; } }
+  .banner-card { background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .banner-card img { width:100%; aspect-ratio:1.4/1; object-fit:cover; display:block; background:#1a2440; }
+  .banner-card .bc-body { padding:12px 14px; }
+  .banner-card .bc-caption { font-size:13px; color:var(--muted); margin-bottom:10px; line-height:1.4; }
+  .bc-share-row { display:flex; gap:8px; }
+  .bc-share-btn { flex:1; display:flex; align-items:center; justify-content:center; height:38px; border-radius:9px; border:none; cursor:pointer; text-decoration:none; }
+  .bc-share-btn svg { width:18px; height:18px; }
+</style>
 </head>
 <body>
 
@@ -38,7 +49,16 @@
     <p class="card-sub">Only visible to you. After 7 days — or if you release one early — it moves to the shared pool.</p>
     <div id="exclusiveLeadsList" class="mt12"><div class="skeleton"></div></div>
   </div>
-
+<div class="card">
+  <div class="card-title">Your Personal Sales Bot</div>
+  <p class="card-sub">Automate your sales follow-ups — every lead, every pool opportunity, and every pending document, pushed straight to you the instant it happens.</p>
+  <a class="btn btn-primary btn-block" id="connectBotBtn" target="_blank" rel="noopener">🚀 Create Your Sales Bot — free</a>
+</div>
+<div class="card">
+  <div class="card-title">Marketing creatives</div>
+  <p class="card-sub">Forward these to your customers — your personal link is already included in the message.</p>
+  <div class="banner-grid" id="bannerGrid"></div>
+</div>
   <div id="subscribeCard" class="card">
     <div class="card-title">Subscribe</div>
     <p class="card-sub">Choose a plan and the state(s) you want leads from.</p>
@@ -89,7 +109,57 @@
   } else {
     boot();
   }
+  // ---- Personal Marketing Bot ----
+  $('connectBotBtn').href = 'https://t.me/vastmywealthBot?start=' + HOLDER.type + '_' + encodeURIComponent(HOLDER.code);
 
+  // ---- Marketing creatives ----
+  // ⚠️ Fill in each filename once you've uploaded the images to GitHub.
+  // CREATIVES_BASE_URL should point at wherever you're hosting them.
+  var CREATIVES_BASE_URL = 'https://vastmywealth-byte.github.io/VastMyWealth/creatives/';
+  var BANNERS = [
+    { filename: '', caption: 'Personal Loan — quick approval, competitive rates.' },
+    { filename: '', caption: 'Business Loan — fuel your growth, minimal paperwork.' },
+    { filename: '', caption: 'Home Loan — your dream home, made affordable.' },
+    { filename: '', caption: 'Loan Against Property — unlock the value you already own.' },
+    { filename: '', caption: 'Vehicle Loan — drive home today, pay comfortably.' },
+    { filename: '', caption: 'Education Loan — invest in your future, stress-free.' },
+    { filename: '', caption: 'Apply with VastMyWealth — trusted by thousands.' },
+    { filename: '', caption: 'Festive offer — special rates, limited time.' }
+  ];
+
+  var ICONS = {
+    whatsapp: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#25D366"/><path d="M17 7a7 7 0 0 0-11.3 7.9L5 20l5.2-.7A7 7 0 0 0 17 7Z" fill="#fff" fill-opacity=".92"/><path d="M9.5 9c.2-.4.5-.4.8-.4h.6c.2 0 .4 0 .6.5l.7 1.7c.1.2 0 .4-.1.6l-.5.6c-.1.2-.1.3 0 .5.3.6 1.4 1.8 2.5 2.1.2.1.4 0 .5-.1l.6-.6c.2-.2.3-.2.5-.1l1.5.8c.2.1.3.3.2.6-.2.7-1.1 1.3-1.8 1.3-1.5.1-3.7-.7-5.1-2.1-1.2-1.2-2-2.9-2.1-4.4 0-.8.4-1.7 1.1-2z" fill="#25D366"/></svg>',
+    telegram: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#229ED9"/><path d="M17.6 7.2 6.4 11.5c-.6.2-.6.9 0 1.1l2.7.9 1 3.3c.1.4.6.5.9.2l1.5-1.4 2.6 1.9c.4.3 1 .1 1.1-.4l1.8-9c.1-.5-.4-.9-.9-.9Z" fill="#fff"/></svg>',
+    facebook: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#1877F2"/><path d="M13.5 20v-6.2h2.1l.3-2.4h-2.4v-1.5c0-.7.2-1.2 1.2-1.2h1.3V6.6c-.2 0-1-.1-1.9-.1-1.9 0-3.1 1.1-3.1 3.2v1.8H8.9v2.4h2.1V20h2.5Z" fill="#fff"/></svg>',
+    instagram: '<svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="url(#ig)"/><defs><linearGradient id="ig" x1="0" y1="24" x2="24" y2="0"><stop stop-color="#FEDA75"/><stop offset=".3" stop-color="#FA7E1E"/><stop offset=".6" stop-color="#D62976"/><stop offset=".8" stop-color="#962FBF"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><rect x="6" y="6" width="12" height="12" rx="3.5" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="12" r="3" stroke="#fff" stroke-width="1.5"/><circle cx="16.3" cy="7.7" r="1" fill="#fff"/></svg>'
+  };
+
+  function renderBanners() {
+    var referralLink = VMW.refLink(HOLDER.code);
+    $('bannerGrid').innerHTML = BANNERS.map(function (b, i) {
+      var imgSrc = b.filename ? (CREATIVES_BASE_URL + b.filename) : '';
+      var fullMessage = b.caption + '\n\n' + referralLink;
+      var creativeUrl = imgSrc || referralLink; // used for FB/Telegram link previews
+
+      var waHref = 'https://wa.me/?text=' + encodeURIComponent(fullMessage);
+      var tgHref = 'https://t.me/share/url?url=' + encodeURIComponent(creativeUrl) + '&text=' + encodeURIComponent(b.caption);
+      var fbHref = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(creativeUrl);
+
+      return '<div class="banner-card">' +
+        (imgSrc ? '<img src="' + esc(imgSrc) + '" alt="" loading="lazy">' : '<img alt="" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;">') +
+        '<div class="bc-body">' +
+        '<div class="bc-caption">' + esc(b.caption) + '</div>' +
+        '<div class="bc-share-row">' +
+        '<a class="bc-share-btn" style="background:#25D36622" href="' + esc(waHref) + '" target="_blank" rel="noopener" title="Share on WhatsApp">' + ICONS.whatsapp + '</a>' +
+        '<a class="bc-share-btn" style="background:#229ED922" href="' + esc(tgHref) + '" target="_blank" rel="noopener" title="Share on Telegram">' + ICONS.telegram + '</a>' +
+        '<a class="bc-share-btn" style="background:#1877F222" href="' + esc(fbHref) + '" target="_blank" rel="noopener" title="Share on Facebook">' + ICONS.facebook + '</a>' +
+        (imgSrc
+          ? '<a class="bc-share-btn" style="background:#96151522" href="' + esc(imgSrc) + '" download title="Download for Instagram">' + ICONS.instagram + '</a>'
+          : '<span class="bc-share-btn" style="background:#96151522;opacity:.4" title="Add an image first">' + ICONS.instagram + '</span>') +
+        '</div></div></div>';
+    }).join('');
+  }
+  renderBanners();
   var PLAN = '';
   document.querySelectorAll('#planToggle .toggle-btn').forEach(function (b) {
     b.addEventListener('click', function () {
