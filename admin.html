@@ -191,6 +191,10 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
       <div class="section-label">⚠ Blocked / near limit (8 rejections in 30 days)</div>
       <div id="blockedBankersContainer"><div class="empty">Loading…</div></div>
 
+      <div class="section-label" style="margin-top:20px;">Partner-referred bankers awaiting approval</div>
+      <p class="sub" style="margin:0 0 8px;">A DSA partner has vouched for these bankers. Approving unlocks their dashboard and lets that partner start sending them leads directly.</p>
+      <div id="pendingPartnerBankersContainer"><div class="empty">Loading…</div></div>
+
       <div class="section-label" style="margin-top:20px;">Pending DSA code verification</div>
       <div id="pendingCodesContainer"><div class="empty">Loading…</div></div>
 
@@ -300,8 +304,7 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
 // ⚠️ SET THIS to the ONE Web App /exec every other page also uses
 // (the Bank Channel CRM was merged into this same project, so there is
 // no separate URL any more).
-//var API_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
-  var API_URL = "https://vmw-portal-api.vastmywealth.workers.dev";
+var API_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
 // admin.html is deployed in the same folder as apply.html — build referral links relative to wherever THIS page is hosted.
 var SITE_BASE = String(location.href).split('#')[0].split('?')[0].replace(/[^\/]*$/, '');
 function refLinkFor(code) { return SITE_BASE + "apply.html?ref=" + encodeURIComponent(code); }
@@ -380,7 +383,31 @@ function applyDashboardData(result) {
   ALL_LEADS = result.leads || []; ACTIVE_LENDERS = result.lenders || []; ACTIVE_DSAS = result.dsas || []; ALL_PARTNERS = result.partners || [];
   renderLeads(); renderPartners();
 }
-function loadBankerTabData() { loadBankers(); loadPendingCodes(); loadBlockedBankers(); SUBS_LOADED = true; loadSubscriptions(); }
+function loadBankerTabData() { loadBankers(); loadPendingCodes(); loadBlockedBankers(); loadPendingPartnerBankers(); SUBS_LOADED = true; loadSubscriptions(); }
+
+function loadPendingPartnerBankers() {
+  $('pendingPartnerBankersContainer').innerHTML = '<div class="empty">Loading…</div>';
+  apiPost({ action: "adminListPendingPartnerBankers", password: ADMIN_PASSWORD }).then(function (r) {
+    var pending = (r.status === 'success' ? r.pending : []) || [];
+    var el = $('pendingPartnerBankersContainer');
+    if (!pending.length) { el.innerHTML = '<div class="empty">None waiting right now.</div>'; return; }
+    el.innerHTML = pending.map(function (p) {
+      return '<div class="card"><div class="card-row" style="cursor:default;"><div><div class="name">' + esc(p.name || p.bankerId) + '</div>' +
+        '<div class="sub">' + esc(p.bankName || '—') + ' · ' + esc(p.mobile || '') + ' · ' + esc(p.email || '') + '</div>' +
+        '<div class="sub">Referred by ' + esc(p.referredBy) + '</div></div>' +
+        '<button class="btn btn-ok btn-sm" data-approve-pb="' + esc(p.bankerId) + '">Approve</button></div></div>';
+    }).join('');
+  }).catch(function () { $('pendingPartnerBankersContainer').innerHTML = '<div class="error-box">Could not load.</div>'; });
+}
+$('pendingPartnerBankersContainer').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-approve-pb]'); if (!b) return;
+  withBusy(b, 'Approving…', function () {
+    return apiPost({ action: "adminApprovePartnerBanker", password: ADMIN_PASSWORD, bankerId: b.getAttribute('data-approve-pb') }).then(function (r) {
+      showToast(r.status === 'success' ? 'Approved' : (r.message || 'Failed'), r.status !== 'success');
+      if (r.status === 'success') { loadPendingPartnerBankers(); loadBankers(); }
+    });
+  }).catch(function (err) { showToast(err.message, true); });
+});
 
 function refreshAll() {
   $("leadsContainer").innerHTML = '<div class="empty">Loading leads…</div>';
