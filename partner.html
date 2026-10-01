@@ -110,6 +110,12 @@
     </div>
 
     <div class="card">
+      <div class="row-top"><div class="card-title">My bankers</div><button class="btn btn-gold btn-sm" id="addBankerBtn">+ Add a banker</button></div>
+      <p class="card-sub">Add a banker you know so you can send them your leads directly. New ones need a quick approval from our team before you can start sharing.</p>
+      <div id="myBankersArea" class="mt12"></div>
+    </div>
+
+    <div class="card">
       <div class="row-top"><div class="card-title">Your applications</div><button class="btn btn-ghost btn-sm" id="leadsRefresh">↻ Refresh</button></div>
       <div id="statsBar" class="stats hidden"></div>
       <div id="leadsArea" class="mt12"></div>
@@ -122,6 +128,24 @@
       <a class="btn btn-primary btn-block mt12" id="bizToolLink" href="#">Open Biz Tool</a>
     </div>
   </main>
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+<div class="sheet" id="addBankerSheet">
+  <div class="sheet-head"><h3>Add a banker</h3><button class="sheet-close" id="closeAddBankerSheet" aria-label="Close">✕</button></div>
+  <div class="field"><label for="abName">Banker's full name</label><input type="text" id="abName" autocomplete="off"></div>
+  <div class="field"><label for="abBank">Bank / NBFC name</label><input type="text" id="abBank" autocomplete="off" placeholder="Auto-fills if we recognise their email"></div>
+  <div class="field"><label for="abEmail">Banker's official email</label><input type="email" id="abEmail" autocomplete="off"></div>
+  <div class="field"><label for="abMobile">Banker's mobile number</label><input type="tel" id="abMobile" maxlength="10" inputmode="numeric"></div>
+  <button class="btn btn-primary btn-block" id="abSubmitBtn">Add banker</button>
+  <div id="abResult" class="alert hidden"></div>
+</div>
+
+<div class="sheet" id="sendToBankerSheet">
+  <div class="sheet-head"><h3>Send to a banker</h3><button class="sheet-close" id="closeSendToBankerSheet" aria-label="Close">✕</button></div>
+  <p class="small muted">Only your approved bankers are shown here.</p>
+  <div id="sendToBankerList" class="mt12"></div>
 </div>
 
 <script src="config.js"></script>
@@ -230,7 +254,7 @@
     var loginMobile = VMW.store.get(MOBILE_KEY);
     $('adminLink').classList.toggle('hidden', loginMobile !== VMW_CONFIG.ADMIN_ACCESS_MOBILE);
 
-    loadLeads();
+    loadMyBankers().then(loadLeads);
     setTimeout(function () { VMW.showAnnouncement('Partner'); }, 1500);
   }
   function loadBizToolSummary() {
@@ -268,10 +292,18 @@
     var notElig = String(l.status).toLowerCase() === 'not eligible';
     var name = (l.employmentType === 'Self-Employed' && l.companyName) ? l.companyName : (l.customerName || '—');
     var tags = '';
+    if (l.origin === 'subscribed') tags += '<span class="tag info">Biz Tool</span>';
     if (l.state) tags += '<span class="tag">📍 ' + esc(l.state) + '</span>';
     if (l.pincode) tags += '<span class="tag">Pincode ' + esc(l.pincode) + '</span>';
     if (l.processingBank) tags += '<span class="tag">🏦 ' + esc(l.processingBank) + '</span>';
+    if (l.routedToBanker) { var rb = MY_BANKERS_BY_ID[l.routedToBanker]; tags += '<span class="tag ok">Sent to ' + esc(rb ? rb.name : l.routedToBanker) + '</span>'; }
     var m = VMW.mobile10(l.mobile), main = '', contact = '';
+    var routing = '';
+    if (l.leadId && !notElig && String(l.status).toLowerCase() !== 'disbursed') {
+      routing = l.routedToBanker
+        ? '<button class="btn btn-ghost btn-sm" data-pool="' + esc(l.leadId) + '" data-product="' + esc(l.product) + '">Put back in pool</button>'
+        : '<button class="btn btn-outline btn-sm" data-send="' + esc(l.leadId) + '" data-product="' + esc(l.product) + '" data-name="' + esc(name) + '">Send to my banker</button>';
+    }
     if (l.leadId && !notElig) {
       var href = esc(VMW.leadLink({ leadId: l.leadId, product: l.product, ref: CODE }));
       main = pending ? '<a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="' + href + '">📤 Upload documents</a>'
@@ -282,8 +314,76 @@
     return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(name) + '</div>' +
       '<div class="row-meta">' + esc(VMW.productLabel(l.product)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + (m ? ' · 📱 ' + esc(m) : '') + '</div></div>' +
       '<div class="row-badges">' + VMW.badge(l.status) + (pending && !notElig ? VMW.docBadge('Pending') : '') + '</div></div>' +
-      (tags ? '<div class="row-tags">' + tags + '</div>' : '') + '<div class="row-actions">' + main + contact + '</div></div>';
+      (tags ? '<div class="row-tags">' + tags + '</div>' : '') + '<div class="row-actions">' + main + contact + routing + '</div></div>';
   }
+  var MY_BANKERS = [], MY_BANKERS_BY_ID = {};
+  function openSheet(id) { $('sheetBackdrop').style.display = 'block'; $(id).style.display = 'block'; }
+  function closeSheet(id) { $(id).style.display = 'none'; $('sheetBackdrop').style.display = 'none'; }
+  $('sheetBackdrop').addEventListener('click', function () { closeSheet('addBankerSheet'); closeSheet('sendToBankerSheet'); });
+  $('closeAddBankerSheet').addEventListener('click', function () { closeSheet('addBankerSheet'); });
+  $('closeSendToBankerSheet').addEventListener('click', function () { closeSheet('sendToBankerSheet'); });
+
+  function loadMyBankers() {
+    var el = $('myBankersArea'); el.innerHTML = '<div style="color:var(--muted);">Loading…</div>';
+    return VMW.post({ action: 'partnerListMyBankers', partnerCode: CODE }).then(function (r) {
+      MY_BANKERS = (r.status === 'success' ? r.bankers : []) || [];
+      MY_BANKERS_BY_ID = {}; MY_BANKERS.forEach(function (b) { MY_BANKERS_BY_ID[b.bankerId] = b; });
+      renderMyBankers();
+    }).catch(function () { el.innerHTML = '<div style="color:#FFC5C1;">Could not load your bankers.</div>'; });
+  }
+  function renderMyBankers() {
+    var el = $('myBankersArea');
+    if (!MY_BANKERS.length) { el.innerHTML = '<div style="color:var(--ink-400);">No bankers added yet.</div>'; return; }
+    el.innerHTML = MY_BANKERS.map(function (b) {
+      return '<div class="lead-card"><div class="lead-card-top"><b>' + esc(b.name) + '</b>' +
+        '<span class="status-pill">' + (b.approved ? 'Approved' : 'Awaiting approval') + '</span></div>' +
+        '<div class="lead-card-meta">' + esc(b.bankName || '—') + ' · ' + esc(b.mobile || '') + '</div></div>';
+    }).join('');
+  }
+  $('addBankerBtn').addEventListener('click', function () { $('abResult').classList.add('hidden'); openSheet('addBankerSheet'); });
+  $('abSubmitBtn').addEventListener('click', function () {
+    var name = $('abName').value.trim(), bank = $('abBank').value.trim(), email = $('abEmail').value.trim(), mobile = $('abMobile').value.replace(/\D/g, '');
+    var box = $('abResult'); box.className = 'alert hidden';
+    if (!name || !email || mobile.length !== 10) { box.className = 'alert error'; box.textContent = 'Please fill in the banker\'s name, email and a 10-digit mobile number.'; return; }
+    var btn = this, orig = btn.textContent; btn.disabled = true; btn.textContent = 'Adding…';
+    VMW.post({ action: 'partnerAddBanker', partnerCode: CODE, partnerName: localStorage.getItem('vmw_partner_name'), name: name, bankName: bank, officialEmail: email, mobileNumber: mobile }).then(function (d) {
+        btn.disabled = false; btn.textContent = orig;
+        if (d.status === 'success') { box.className = 'alert success'; box.textContent = d.message; $('abName').value = ''; $('abBank').value = ''; $('abEmail').value = ''; $('abMobile').value = ''; loadMyBankers(); setTimeout(function () { closeSheet('addBankerSheet'); }, 1400); }
+        else { box.className = 'alert error'; box.textContent = d.message || 'Could not add this banker.'; }
+      }).catch(function () { btn.disabled = false; btn.textContent = orig; box.className = 'alert error'; box.textContent = 'Connection error.'; });
+  });
+
+  var SEND_LEAD = null;
+  function openSendToBanker(leadId, product, name) {
+    SEND_LEAD = { leadId: leadId, product: product, name: name };
+    var approved = MY_BANKERS.filter(function (b) { return b.approved; });
+    var el = $('sendToBankerList');
+    el.innerHTML = approved.length ? approved.map(function (b) {
+      return '<div class="lead-card"><div class="lead-card-top"><b>' + esc(b.name) + '</b></div><div class="lead-card-meta">' + esc(b.bankName || '') + '</div>' +
+        '<div class="lead-card-action"><button class="pill-btn" data-pick-banker="' + esc(b.bankerId) + '" style="border:none;">Send ' + esc(name) + ' to them</button></div></div>';
+    }).join('') : '<div style="color:var(--ink-400);">You have no approved bankers yet — add one and wait for approval first.</div>';
+    openSheet('sendToBankerSheet');
+  }
+  $('sendToBankerList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-pick-banker]'); if (!b || !SEND_LEAD) return;
+    b.disabled = true; b.textContent = 'Sending…';
+    VMW.post({ action: 'partnerRouteLeadToBanker', partnerCode: CODE, partnerName: localStorage.getItem('vmw_partner_name'), partnerEmail: '', bankerId: b.getAttribute('data-pick-banker'), leadId: SEND_LEAD.leadId, product: SEND_LEAD.product }).then(function (d) {
+        pToast(d.status === 'success' ? d.message : (d.message || 'Could not send'), d.status !== 'success');
+        if (d.status === 'success') { closeSheet('sendToBankerSheet'); loadLeads(); }
+        else { b.disabled = false; b.textContent = 'Send ' + esc(SEND_LEAD.name) + ' to them'; }
+      }).catch(function () { pToast('Connection error', true); b.disabled = false; });
+  });
+  $('leadsArea').addEventListener('click', function (e) {
+    var sendBtn = e.target.closest('[data-send]');
+    if (sendBtn) { openSendToBanker(sendBtn.getAttribute('data-send'), sendBtn.getAttribute('data-product'), sendBtn.getAttribute('data-name')); return; }
+    var poolBtn = e.target.closest('[data-pool]');
+    if (poolBtn) {
+      poolBtn.disabled = true; poolBtn.textContent = 'Moving…';
+      VMW.post({ action: 'partnerPushLeadToPool', partnerCode: CODE, leadId: poolBtn.getAttribute('data-pool'), product: poolBtn.getAttribute('data-product') }).then(function (d) { pToast(d.status === 'success' ? 'Back in the pool' : (d.message || 'Failed'), d.status !== 'success'); loadLeads(); })
+        .catch(function () { pToast('Connection error', true); poolBtn.disabled = false; });
+    }
+  });
+
   function loadLeads() {
     var area = $('leadsArea'); area.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
     $('statsBar').classList.add('hidden');
