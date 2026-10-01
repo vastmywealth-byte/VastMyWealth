@@ -40,9 +40,12 @@
   </div>
 
   <div id="statusCard" class="card">
-    <div class="card-title">Your subscription</div>
-    <div id="statusBody" class="mt8">Loading…</div>
+  <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+    <span>Your subscription</span>
+    <button type="button" class="btn btn-primary btn-sm" id="increaseLeadsBtn">📈 Increase Biz Leads by 4X</button>
   </div>
+  <div id="statusBody" class="mt8">Loading…</div>
+</div>
 
   <div class="card">
     <div class="card-title">Your exclusive leads</div>
@@ -102,7 +105,9 @@
     bankName: params.get('bankName') || ''
   };
   $('backLink').href = HOLDER.type === 'Partner' ? 'partner.html' : 'banker.html';
-
+  $('increaseLeadsBtn').addEventListener('click', function () {
+    $('subscribeCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   if (!HOLDER.code) {
     $('statusBody').innerHTML = '<div class="alert error">This page needs to be opened from your dashboard\'s Biz Tool card.</div>';
     $('subscribeCard').classList.add('hidden');
