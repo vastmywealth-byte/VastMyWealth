@@ -250,7 +250,7 @@
 
     $('refLink').textContent = link;
     $('waShareBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + link);
-    $('bizToolLink').href = 'biztool.html?holderType=Partner&holderCode=' + encodeURIComponent(CODE) + '&holderName=' + encodeURIComponent(pname || '');
+    $('bizToolLink').href = 'biztool.html?holderType=Partner&holderCode=' + encodeURIComponent(CODE) + '&holderName=' + encodeURIComponent(pname || '') + '&holderMobile=' + encodeURIComponent(pmob || '');
     loadBizToolSummary();
     // Shown ONLY when logging in with this exact mobile number — a convenience shortcut for
     // whoever owns that number, not a security boundary. admin.html's own password is the
