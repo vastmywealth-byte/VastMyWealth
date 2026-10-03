@@ -13,8 +13,33 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<body>
+
+<!-- ===================== CO-BRANDED PARTNER BANNER ===================== -->
+<div id="vmwPartnerHeader" style="display:none;background:#0d1e38;color:#f8fafc;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.12);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:relative;z-index:99;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="width:36px;height:36px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;">
+      👤
+    </div>
+    <div>
+      <div style="font-size:11px;color:#94a3b8;letter-spacing:0.5px;text-transform:uppercase;">Your Loan Partner</div>
+      <strong id="vmwPartnerName" style="font-size:14px;color:#ffffff;display:block;"></strong>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <a id="vmwPartnerCall" href="#" class="btn btn-sm" style="background:#22c55e;color:#ffffff;text-decoration:none;padding:6px 12px;border-radius:6px;font-weight:600;display:inline-flex;align-items:center;gap:4px;font-size:12px;">
+      📞 Call
+    </a>
+    <a id="vmwPartnerWa" href="#" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#ffffff;text-decoration:none;padding:6px 12px;border-radius:6px;font-weight:600;display:inline-flex;align-items:center;gap:4px;font-size:12px;">
+      💬 WhatsApp
+    </a>
+  </div>
+</div>
+<!-- ====================================================================== -->
 
 <header class="app-header">
+<header class="app-header">
+  
   <div class="in">
     <a class="brand" href="index.html">
       <img src="1000550390.png" alt="" onerror="this.style.display='none'">
@@ -229,7 +254,36 @@
   'use strict';
   var $ = VMW.$, esc = VMW.esc, C = VMW_CONFIG;
   var params = new URLSearchParams(location.search);
-  var REF = params.get('ref') || '';
+
+  // Read from URL, fallback to localStorage (for PWA installs or re-visits)
+  var REF = (params.get('ref') || localStorage.getItem('vmw_partner_ref') || '').trim();
+  var PNAME = (params.get('pname') || localStorage.getItem('vmw_partner_pname') || '').trim();
+  var PMOB = (params.get('pmob') || localStorage.getItem('vmw_partner_pmob') || '').trim();
+
+  // Persist into localStorage whenever provided in URL
+  if (params.get('ref')) localStorage.setItem('vmw_partner_ref', params.get('ref').trim());
+  if (params.get('pname')) localStorage.setItem('vmw_partner_pname', params.get('pname').trim());
+  if (params.get('pmob')) localStorage.setItem('vmw_partner_pmob', params.get('pmob').trim());
+
+  // Render Partner Banner if details exist
+  if (PNAME || PMOB) {
+    var pHeader = $('vmwPartnerHeader');
+    var pNameEl = $('vmwPartnerName');
+    var pCall = $('vmwPartnerCall');
+    var pWa = $('vmwPartnerWa');
+
+    if (pHeader && pNameEl) {
+      pNameEl.textContent = PNAME + (REF ? ' (' + REF + ')' : '');
+      if (PMOB) {
+        if (pCall) pCall.href = 'tel:' + PMOB;
+        if (pWa) pWa.href = VMW.waLink(PMOB, 'Hi ' + PNAME + ', I am on your VastMyWealth application page and need some help.');
+      } else {
+        if (pCall) pCall.style.display = 'none';
+        if (pWa) pWa.style.display = 'none';
+      }
+      pHeader.style.display = 'flex';
+    }
+  }
   var VIEWS = ['checkingState', 'trackCard', 'formWrap', 'loadingState', 'resultsWrap', 'docWrap', 'doneWrap', 'blockedWrap'];
   var S = { loanType: 'PL', employmentType: null, companyType: null, personCount: 2, residenceType: null,
             leadId: null, profile: {}, forceNew: false, docStore: {}, warnedMissing: false, trackedMobile: '', lastDup: null };
