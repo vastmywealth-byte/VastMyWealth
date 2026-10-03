@@ -9,10 +9,10 @@
 const CACHE_NAME = 'vmw-cache-v12';
 
 const CORE = [
-  './', './index.html', './apply.html', './banker.html', './partner.html',
+  './', './index.html', './apply.html', './banker.html', './partner.html', './business-loan.jpg'
   './vl-el-application.html', './portal-unified-application.html',
-  './privacy-policy.html', './refund-policy.html',
-  './style.css', './config.js', './common.js', './manifest.json', './1000550390.png'
+  './privacy-policy.html', './refund-policy.html', './vl.jpg', './lap.jpg', './home-loan.jpg', './personal-loan.jpg'
+  './style.css', './config.js', './common.js', './manifest.json', './1000550390.png', './festival-offer.jpg', './partner.jpg', './el.jpg'
 ];
 
 self.addEventListener('install', (event) => {
