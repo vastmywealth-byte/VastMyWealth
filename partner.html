@@ -239,15 +239,19 @@
   var CODE = '';
   function initDashboard() {
     CODE = VMW.store.get(CODE_KEY) || '';
-    var pname = VMW.store.get(NAME_KEY);
+    var pname = VMW.store.get(NAME_KEY) || '';
+    var pmob = VMW.store.get(MOBILE_KEY) || '';
     $('welcomeMsg').textContent = 'Welcome, ' + (pname || 'Partner');
     $('codeMsg').textContent = 'Partner code: ' + CODE;
-    var link = VMW.refLink(CODE);
+
+    // Build co-branded personalized link
+    var baseLink = VMW.refLink(CODE);
+    var link = baseLink + (baseLink.indexOf('?') > -1 ? '&' : '?') + 'pname=' + encodeURIComponent(pname) + '&pmob=' + encodeURIComponent(pmob);
+
     $('refLink').textContent = link;
     $('waShareBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + link);
     $('bizToolLink').href = 'biztool.html?holderType=Partner&holderCode=' + encodeURIComponent(CODE) + '&holderName=' + encodeURIComponent(pname || '');
     loadBizToolSummary();
-
     // Shown ONLY when logging in with this exact mobile number — a convenience shortcut for
     // whoever owns that number, not a security boundary. admin.html's own password is the
     // real gate; the underlying admin URL is never listed anywhere public.
@@ -271,7 +275,8 @@
     }).catch(function () { el.className = 'alert info'; el.style.marginBottom = '0'; el.textContent = 'Open Biz Tool to subscribe or check your status.'; });
   }
   $('copyBtn').onclick = function () {
-    VMW.copy(VMW.refLink(CODE)).then(function () { VMW.toast('Link copied — share it with your customer', 'success'); })
+    var fullLink = $('refLink').textContent;
+    VMW.copy(fullLink).then(function () { VMW.toast('Link copied — share it with your customer', 'success'); })
       .catch(function () { VMW.toast('Could not copy. Long-press the link to copy it.', 'error'); });
   };
   $('logoutBtn').onclick = function () { VMW.store.del(CODE_KEY); VMW.store.del(NAME_KEY); VMW.store.del(MOBILE_KEY); CODE = ''; showAuth('loginView'); VMW.toast('Logged out'); };
