@@ -138,10 +138,10 @@
   var HOLDER = {
     type: params.get('holderType') === 'Partner' ? 'Partner' : 'Banker',
     code: params.get('holderCode') || '',
-    name: params.get('holderName') || '',
+    name: params.get('holderName') || (VMW.store ? VMW.store.get('vmw_partner_name') : '') || localStorage.getItem('vmw_partner_name') || '',
+    mobile: params.get('holderMobile') || (VMW.store ? VMW.store.get('vmw_partner_mobile') : '') || localStorage.getItem('vmw_partner_mobile') || '',
     bankName: params.get('bankName') || ''
   };
-
   $('backLink').href = HOLDER.type === 'Partner' ? 'partner.html' : 'banker.html';
   $('increaseLeadsBtn').addEventListener('click', function () {
     $('subscribeCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -178,12 +178,13 @@
   };
 
   // Pre-cached or instant share handler
+  // Pre-cached or instant share handler
   async function triggerShare(index, platform) {
     var b = BANNERS[index];
-    var referralLink = VMW.refLink(HOLDER.code);
+    var baseLink = VMW.refLink(HOLDER.code);
+    var referralLink = baseLink + (baseLink.indexOf('?') > -1 ? '&' : '?') + 'pname=' + encodeURIComponent(HOLDER.name) + '&pmob=' + encodeURIComponent(HOLDER.mobile);
     var imgSrc = b.filename ? (CREATIVES_BASE_URL + b.filename) : '';
     var fullMessage = b.caption + '\n\nApply here: ' + referralLink;
-
     // Helper: direct file download & copy
     function downloadAndCopy(customMsg) {
       if (!imgSrc) return;
