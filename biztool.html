@@ -12,10 +12,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
   <style>
-  .banner-grid { display:grid; grid-template-columns:1fr; gap:16px; margin-top:14px; }
-  @media (min-width:640px) { .banner-grid { grid-template-columns:1fr 1fr; } }
+    .banner-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
   .banner-card { background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
-  .banner-card img { width:100%; aspect-ratio:1.4/1; object-fit:cover; display:block; background:#1a2440; }
+  .banner-card img { width:100%; aspect-ratio:4/5; object-fit:cover; display:block; background:#1a2440; }
   .banner-card .bc-body { padding:12px 14px; }
   .banner-card .bc-caption { font-size:13px; color:var(--muted); margin-bottom:10px; line-height:1.4; }
   .bc-share-row { display:flex; gap:8px; }
@@ -107,15 +106,16 @@
   </div>
 </div>
     <div class="field">
-      <label>State(s)</label>
-      <div class="checkbox-grid" id="stateChecks" style="grid-template-columns:1fr 1fr;max-height:220px;overflow-y:auto;"></div>
-    </div>
+  <label>State(s)</label>
+  <div class="chip-row" id="stateChips"></div>
+  <input type="text" id="stateInput" placeholder="Start typing a state and select it" autocomplete="off">
+</div>
 
-    <div class="field">
-      <label for="cityInput">City (optional — leave blank for the whole state)</label>
-      <input type="text" id="cityInput" placeholder="e.g. Pune">
-    </div>
-
+<div class="field">
+  <label for="cityInput">City / Cities <span class="small muted">(optional — leave blank for the whole state)</span></label>
+  <input type="text" id="cityInput" placeholder="Start typing a city — add more separated by commas" autocomplete="off">
+  <div class="hint">Can't find a city? Just type it — it'll be saved as entered.</div>
+</div>
     <div id="subMsg" class="alert hidden"></div>
     <button class="btn btn-primary btn-block" id="payBtn">Pay &amp; subscribe</button>
     <p class="small muted center mt12">🔒 Payment is handled securely by Razorpay. It usually activates within moments — in rare cases (a dropped connection, for example) it can take up to 4 hours to reflect here.</p>
@@ -205,17 +205,72 @@
     });
   });
 
-  function renderStateChecks() {
-    var el = $('stateChecks');
-    el.innerHTML = VMW.lists.states.map(function (s) {
-      return '<label><input type="checkbox" name="stState" value="' + esc(s) + '"> ' + esc(s) + '</label>';
+    // ---- State / City (from the "State/City" sheet tab) ----
+  var STATE_CITY = { states: [], citiesByState: {} };
+  var selectedStates = [];
+
+  function loadStateCityList() {
+    return VMW.get('getStateCityList', null, { tries: 2 }).then(function (r) {
+      if (r && r.success) { STATE_CITY.states = r.states || []; STATE_CITY.citiesByState = r.citiesByState || {}; }
+    }).catch(function () { /* no suggestions, free typing still works */ });
+  }
+  loadStateCityList();
+
+  function renderStateChips() {
+    $('stateChips').innerHTML = selectedStates.map(function (s) {
+      return '<span class="chip static">' + esc(s) + ' <b data-remove="' + esc(s) + '" style="cursor:pointer;">✕</b></span>';
     }).join('');
   }
-  VMW.loadLists('states').then(renderStateChecks);
-  renderStateChecks();
+  $('stateChips').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-remove]'); if (!b) return;
+    selectedStates = selectedStates.filter(function (s) { return s !== b.getAttribute('data-remove'); });
+    renderStateChips();
+  });
 
-  function chosenStates() { return Array.prototype.map.call(document.querySelectorAll('input[name="stState"]:checked'), function (c) { return c.value; }); }
+  function wireSimpleAutosuggest(input, getItems, onPick) {
+    var box = document.createElement('div'); box.className = 'suggest'; input.parentNode.appendChild(box);
+    function hide() { box.style.display = 'none'; }
+    function render() {
+      var q = input.value.trim().toLowerCase();
+      var lastPart = q.indexOf(',') !== -1 ? q.split(',').pop().trim() : q;
+      if (!lastPart) { hide(); return; }
+      var items = getItems().filter(function (it) { return it.toLowerCase().indexOf(lastPart) === 0; }).slice(0, 8);
+      if (!items.length) { hide(); return; }
+      box.innerHTML = items.map(function (it, i) { return '<div data-i="' + i + '">' + esc(it) + '</div>'; }).join('');
+      box.style.display = 'block';
+      box._items = items;
+    }
+    input.addEventListener('input', render);
+    input.addEventListener('focus', render);
+    box.addEventListener('mousedown', function (e) {
+      var el = e.target.closest('[data-i]'); if (!el) return;
+      e.preventDefault();
+      onPick(box._items[parseInt(el.getAttribute('data-i'), 10)]);
+      hide();
+    });
+    document.addEventListener('click', function (e) { if (e.target !== input && !box.contains(e.target)) hide(); });
+  }
 
+  wireSimpleAutosuggest($('stateInput'), function () {
+    return STATE_CITY.states.filter(function (s) { return selectedStates.indexOf(s) === -1; });
+  }, function (picked) {
+    selectedStates.push(picked);
+    renderStateChips();
+    $('stateInput').value = '';
+  });
+
+  wireSimpleAutosuggest($('cityInput'), function () {
+    var pool = {};
+    selectedStates.forEach(function (s) { (STATE_CITY.citiesByState[s] || []).forEach(function (c) { pool[c] = true; }); });
+    return Object.keys(pool);
+  }, function (picked) {
+    var parts = $('cityInput').value.split(',');
+    parts[parts.length - 1] = ' ' + picked;
+    $('cityInput').value = parts.join(',').replace(/^ /, '') + ', ';
+  });
+
+  function chosenStates() { return selectedStates; }
+  function chosenCity() { return $('cityInput').value.replace(/,\s*$/, '').trim(); }
   function renderStatus(sub) {
     var box = $('statusBody');
     if (sub) {
@@ -261,7 +316,7 @@
 
   $('payBtn').addEventListener('click', function () {
     var box = $('subMsg'); VMW.hideMsg(box);
-    var states = chosenStates(), city = $('cityInput').value.trim();
+    var states = chosenStates(), city = chosenCity();
     if (!PLAN) { VMW.showMsg(box, 'Please choose a plan.', 'error'); return; }
     if (!states.length) { VMW.showMsg(box, 'Please select at least one state.', 'error'); return; }
 
