@@ -177,21 +177,51 @@
     instagram: '<svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="url(#ig)"/><defs><linearGradient id="ig" x1="0" y1="24" x2="24" y2="0"><stop stop-color="#FEDA75"/><stop offset=".3" stop-color="#FA7E1E"/><stop offset=".6" stop-color="#D62976"/><stop offset=".8" stop-color="#962FBF"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><rect x="6" y="6" width="12" height="12" rx="3.5" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="12" r="3" stroke="#fff" stroke-width="1.5"/><circle cx="16.3" cy="7.7" r="1" fill="#fff"/></svg>'
   };
 
-  // Direct native sharing for banner files with web fallbacks
+  // Pre-cached or instant share handler
   async function triggerShare(index, platform) {
     var b = BANNERS[index];
     var referralLink = VMW.refLink(HOLDER.code);
     var imgSrc = b.filename ? (CREATIVES_BASE_URL + b.filename) : '';
     var fullMessage = b.caption + '\n\nApply here: ' + referralLink;
 
-    // Mobile / Modern Browser: Attempt sharing the actual image file
-    if (navigator.share && navigator.canShare && imgSrc) {
-      try {
-        var response = await fetch(imgSrc);
-        var blob = await response.blob();
-        var file = new File([blob], b.filename || 'banner.png', { type: blob.type || 'image/png' });
+    // Helper: direct file download & copy
+    function downloadAndCopy(customMsg) {
+      if (!imgSrc) return;
+      var a = document.createElement('a');
+      a.href = imgSrc;
+      a.download = b.filename || 'banner.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
 
-        if (navigator.canShare({ files: [file] })) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(fullMessage).then(function () {
+          VMW.toast(customMsg || 'Image saved to gallery! Caption copied.');
+        }).catch(function() {
+          VMW.toast('Image downloaded!');
+        });
+      } else {
+        VMW.toast('Image downloaded!');
+      }
+    }
+
+    // Instagram: Cannot receive attachments via web links -> Auto download & copy
+    if (platform === 'instagram') {
+      downloadAndCopy('Banner saved! Paste copied caption on Instagram.');
+      setTimeout(function() {
+        window.location.href = 'instagram://app';
+      }, 700);
+      return;
+    }
+
+    // For WhatsApp & System Share: Try direct file share
+    if (navigator.share) {
+      try {
+        var resp = await fetch(imgSrc);
+        var blob = await resp.blob();
+        var file = new File([blob], b.filename || 'creative.png', { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({
             files: [file],
             title: 'VastMyWealth',
@@ -200,32 +230,26 @@
           return;
         }
       } catch (err) {
-        if (err.name === 'AbortError') return; // User closed sheet
-        console.warn('Native share bypass:', err);
+        // If aborted by user, do nothing
+        if (err.name === 'AbortError') return;
+        console.warn('Native share error, using fallback:', err);
       }
     }
 
-    // Fallbacks for Desktop or when file sharing is unavailable
+    // Fallbacks if native file share is unsupported on device
     if (platform === 'whatsapp') {
-      window.open('https://wa.me/?text=' + encodeURIComponent(fullMessage), '_blank');
+      // WhatsApp fallback: copies text, downloads photo, then opens WhatsApp
+      downloadAndCopy('Banner saved! Forwarding to WhatsApp…');
+      setTimeout(function () {
+        window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(fullMessage), '_blank');
+      }, 600);
     } else if (platform === 'telegram') {
-      window.open('https://t.me/share/url?url=' + encodeURIComponent(imgSrc || referralLink) + '&text=' + encodeURIComponent(b.caption + '\n\n' + referralLink), '_blank');
+      window.open('https://t.me/share/url?url=' + encodeURIComponent(referralLink) + '&text=' + encodeURIComponent(b.caption), '_blank');
     } else if (platform === 'facebook') {
-      window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(imgSrc || referralLink), '_blank');
-    } else if (platform === 'instagram') {
-      if (imgSrc) {
-        var a = document.createElement('a');
-        a.href = imgSrc;
-        a.download = b.filename;
-        a.click();
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(fullMessage);
-          VMW.toast('Banner downloaded & caption copied!');
-        }
-      }
+      // Facebook app will create a post with your referral link
+      window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(referralLink) + '&quote=' + encodeURIComponent(b.caption), '_blank');
     }
   }
-
   function renderBanners() {
     $('bannerGrid').innerHTML = BANNERS.map(function (b, i) {
       var imgSrc = b.filename ? (CREATIVES_BASE_URL + b.filename) : '';
