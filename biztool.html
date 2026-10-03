@@ -149,16 +149,14 @@
   // ---- Personal Marketing Bot ----
   $('connectBotBtn').href = 'https://t.me/vastmywealthBot?start=' + HOLDER.type + '_' + encodeURIComponent(HOLDER.code);
 
-  // ---- Marketing creatives ----
-  // ⚠️ Fill in each filename once you've uploaded the images to GitHub.
-  // CREATIVES_BASE_URL should point at wherever you're hosting them.
- var CREATIVES_BASE_URL = 'https://raw.githubusercontent.com/vastmywealth-byte/VastMyWealth/main/';
+ // ---- Marketing creatives ----
+  var CREATIVES_BASE_URL = 'https://raw.githubusercontent.com/vastmywealth-byte/VastMyWealth/main/';
   var BANNERS = [
     { filename: 'pl.png', caption: 'Personal Loan — quick approval, competitive rates.' },
     { filename: 'bl.png', caption: 'Business Loan — fuel your growth, minimal paperwork.' },
     { filename: 'hl.png', caption: 'Home Loan — your dream home, made affordable.' },
     { filename: 'lap.png', caption: 'Loan Against Property — unlock the value you already own.' },
-    { filename: vl.png caption: 'Vehicle Loan — drive home today, pay comfortably.' },
+    { filename: 'vl.png', caption: 'Vehicle Loan — drive home today, pay comfortably.' },
     { filename: 'el.png', caption: 'Education Loan — invest in your future, stress-free.' },
     { filename: 'partner.png', caption: 'Apply with VastMyWealth — trusted by thousands.' },
     { filename: 'festival-offer.png', caption: 'Festive offer — special rates, limited time.' }
@@ -173,10 +171,10 @@
 
   function renderBanners() {
     var referralLink = VMW.refLink(HOLDER.code);
-    $('bannerGrid').innerHTML = BANNERS.map(function (b, i) {
+    $('bannerGrid').innerHTML = BANNERS.map(function (b) {
       var imgSrc = b.filename ? (CREATIVES_BASE_URL + b.filename) : '';
+      var creativeUrl = imgSrc || referralLink;
       var fullMessage = b.caption + '\n\n' + creativeUrl + '\n\n' + referralLink;
-      var creativeUrl = imgSrc || referralLink; // used for FB/Telegram link previews
 
       var waHref = 'https://wa.me/?text=' + encodeURIComponent(fullMessage);
       var tgHref = 'https://t.me/share/url?url=' + encodeURIComponent(creativeUrl) + '&text=' + encodeURIComponent(b.caption);
