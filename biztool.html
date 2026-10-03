@@ -175,7 +175,7 @@
     var referralLink = VMW.refLink(HOLDER.code);
     $('bannerGrid').innerHTML = BANNERS.map(function (b, i) {
       var imgSrc = b.filename ? (CREATIVES_BASE_URL + b.filename) : '';
-      var fullMessage = b.caption + '\n\n' + referralLink;
+      var fullMessage = b.caption + '\n\n' + creativeUrl + '\n\n' + referralLink;
       var creativeUrl = imgSrc || referralLink; // used for FB/Telegram link previews
 
       var waHref = 'https://wa.me/?text=' + encodeURIComponent(fullMessage);
