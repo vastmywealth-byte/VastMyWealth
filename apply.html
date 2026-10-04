@@ -68,7 +68,38 @@
     <button class="btn btn-outline btn-block" id="trackBtn">Track my application</button>
     <div id="trackMsg" class="alert hidden"></div>
   </section>
+<!-- QUICK START (ad landing) -->
+<section id="adWrap" class="hidden">
+  <div class="hero">
+    <h1>Check your loan options</h1>
+    <p>Tell us what you need and see top lenders in seconds.</p>
+  </div>
+  <div class="card">
+    <div class="field"><label for="a_pan">PAN number<span class="req">*</span></label>
+      <input type="text" id="a_pan" maxlength="10" autocapitalize="characters" autocomplete="off" placeholder="ABCDE1234F"></div>
+    <div class="field"><label for="a_loanType">Loan type<span class="req">*</span></label>
+      <select id="a_loanType"><option value="">Select</option>
+        <option value="PL">Personal Loan</option><option value="BL">Business Loan</option>
+        <option value="HL">Home Loan</option><option value="LAP">Loan Against Property</option></select></div>
+    <div class="field"><label for="a_amount">Loan amount required (₹)<span class="req">*</span></label>
+      <input type="text" id="a_amount" inputmode="numeric"></div>
+    <div id="adError" class="alert hidden"></div>
+    <button class="btn btn-primary btn-block" id="adGoBtn">See top lenders</button>
+    <p class="small muted center mt12">🔒 Your details are kept confidential.</p>
+  </div>
+</section>
 
+<section id="adResultsWrap" class="hidden">
+  <div class="hero" style="padding-bottom:12px;">
+    <h1 id="adResHeading">Top lenders for you</h1>
+    <p>Final offers depend on your profile. Complete a quick form to proceed.</p>
+  </div>
+  <div id="adLenderCards"></div>
+  <div class="btn-stack">
+    <button class="btn btn-primary btn-block" id="adProceed">Proceed</button>
+    <button class="btn btn-ghost btn-block" id="adBack">← Change details</button>
+  </div>
+</section>
   <!-- NEW APPLICATION -->
   <div id="formWrap" class="hidden">
     <div class="hero">
@@ -284,7 +315,7 @@
       pHeader.style.display = 'flex';
     }
   }
-  var VIEWS = ['checkingState', 'trackCard', 'formWrap', 'loadingState', 'resultsWrap', 'docWrap', 'doneWrap', 'blockedWrap'];
+  var VIEWS = ['checkingState', 'trackCard', 'formWrap', 'loadingState', 'resultsWrap', 'docWrap', 'doneWrap', 'blockedWrap', 'adWrap', 'adResultsWrap'];
   var S = { loanType: 'PL', employmentType: null, companyType: null, personCount: 2, residenceType: null,
             leadId: null, profile: {}, forceNew: false, docStore: {}, warnedMissing: false, trackedMobile: '', lastDup: null };
 
@@ -398,7 +429,7 @@
       udyam: SE ? val('f_udyam') : '', bankAccountType: SE ? val('f_bankAccountType') : '',
       propertyAddress: secured ? val('f_propertyAddress') : '', propertyPincode: secured ? VMW.digits(val('f_propertyPincode')) : '',
       marketValue: secured ? num('f_marketValue') : '',
-      consentGiven: true, partnerCode: REF
+      consentGiven: true, partnerCode: REF, pan: S.pan || ''
     };
   }
 
@@ -425,7 +456,7 @@
         S.leadId = data.leadId; S.profile = profile; S.trackedMobile = profile.mobile;
         S.employmentType = profile.employmentType; S.companyType = profile.companyType || null;
         S.personCount = parseInt(profile.personCount, 10) || 2;
-        renderFresh(data, profile);
+        if (S.quick) { goToDocuments(); } else { renderFresh(data, profile); }
       })
       .catch(function (err) { backToForm(VMW.errMsg(err) + ' Your details are still filled in — just tap the button again.'); });
   });
@@ -677,13 +708,51 @@
       });
     }).catch(function (err) { VMW.showMsg(msg, VMW.errMsg(err), 'error'); });
   });
+/* ---------- quick start (ad landing) ---------- */
+S.quick = false; S.pan = ''; S.quickLoan = ''; S.quickAmount = '';
+VMW.wireAmount($('a_amount'));
+$('a_pan').addEventListener('input', function () { this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
 
+function showQuick() { S.quick = true; show(['adWrap']); }
+
+function renderQuickLenders(list, lt) {
+  $('adResHeading').textContent = 'Top lenders for ' + VMW.productLabel(lt);
+  $('adLenderCards').innerHTML = (list && list.length) ? list.map(function (l) {
+    return '<div class="lender-card"><div class="lender-rank">🏦</div><div class="lender-info"><div class="lender-name">' + esc(l.name) + '</div>' +
+      (l.rateBand ? '<div class="lender-rate">' + esc(l.rateBand) + '</div>' : '') + '</div></div>';
+  }).join('') : '<div class="alert info">Our team will find the best lender for your profile.</div>';
+  show(['adResultsWrap']);
+}
+
+$('adGoBtn').addEventListener('click', function () {
+  var err = $('adError'); VMW.hideMsg(err);
+  var pan = val('a_pan').toUpperCase(), lt = val('a_loanType'), amt = num('a_amount');
+  if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) { VMW.showMsg(err, 'Please enter a valid PAN, like ABCDE1234F.', 'error'); return; }
+  if (!lt) { VMW.showMsg(err, 'Please choose a loan type.', 'error'); return; }
+  if (!(parseFloat(amt) > 0)) { VMW.showMsg(err, 'Please enter the loan amount.', 'error'); return; }
+  S.pan = pan; S.quickLoan = lt; S.quickAmount = amt;
+  $('loadingText').textContent = 'Finding lenders…';
+  show(['loadingState']);
+  VMW.get('getSampleLenders', { product: lt }, { tries: 2 })
+    .then(function (d) { renderQuickLenders(d && d.success ? d.lenders : [], lt); })
+    .catch(function () { renderQuickLenders([], lt); });
+});
+
+$('adBack').addEventListener('click', function () { show(['adWrap']); });
+
+$('adProceed').addEventListener('click', function () {
+  show(['formWrap']);
+  setLoanType(S.quickLoan);
+  var amt = $('f_loanAmount'); amt.value = S.quickAmount;
+  amt.dispatchEvent(new Event('input'));   // applies the same ₹ formatting as typing
+});
   /* ---------- start ---------- */
   (function boot() {
     var leadId = params.get('leadId'), product = params.get('product'), mobile = VMW.mobile10(params.get('mobile'));
     if (leadId) { resume(leadId, product); }
     else if (mobile.length === 10) { $('trackMobile').value = mobile; $('f_mobile').value = mobile; runTrack(mobile, true); }
-    else { showForm(); }
+    else if (params.get('flow') === 'quick') { showQuick(); }
+else { showForm(); }
     setLoanType('PL');
     setTimeout(function () { VMW.showAnnouncement('Customer'); }, 1500);
   })();
