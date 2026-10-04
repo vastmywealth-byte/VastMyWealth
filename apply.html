@@ -80,9 +80,9 @@
       <input type="text" id="a_pan" maxlength="10" autocapitalize="characters" autocomplete="off" placeholder="ABCDE1234F"></div>
     <div class="field"><label for="a_loanType">Loan type<span class="req">*</span></label>
       <select id="a_loanType"><option value="">Select</option>
-        <option value="PL">Personal Loan</option><option value="BL">Business Loan</option>
-        <option value="HL">Home Loan</option><option value="LAP">Loan Against Property</option></select>
-      <option value="VL">Vehicle Loan</option><option value="EL">Education Loan</option>
+  <option value="PL">Personal Loan</option><option value="BL">Business Loan</option>
+  <option value="HL">Home Loan</option><option value="LAP">Loan Against Property</option>
+  <option value="VL">Vehicle Loan</option><option value="EL">Education Loan</option></select>
     </div>
     <div class="field"><label for="a_amount">Loan amount required (₹)<span class="req">*</span></label>
       <input type="text" id="a_amount" inputmode="numeric"></div>
@@ -743,6 +743,8 @@ $('adGoBtn').addEventListener('click', function () {
   return;
 }
   S.pan = pan; S.quickLoan = lt; S.quickAmount = amt;
+  S.pan = pan; S.quickLoan = lt; S.quickAmount = amt;
+if (lt === 'EL') { renderQuickLenders([], lt); return; }   // no lender suggestions for education loans
   $('loadingText').textContent = 'Finding lenders…';
   show(['loadingState']);
   VMW.get('getSampleLenders', { product: lt }, { tries: 2 })
@@ -753,10 +755,14 @@ $('adGoBtn').addEventListener('click', function () {
 $('adBack').addEventListener('click', function () { show(['adWrap']); });
 
 $('adProceed').addEventListener('click', function () {
+  if (S.quickLoan === 'VL' || S.quickLoan === 'EL') {
+    location.href = 'vl-el-application.html?product=' + S.quickLoan + (REF ? '&ref=' + encodeURIComponent(REF) : '');
+    return;
+  }
   show(['formWrap']);
   setLoanType(S.quickLoan);
   var amt = $('f_loanAmount'); amt.value = S.quickAmount;
-  amt.dispatchEvent(new Event('input'));   // applies the same ₹ formatting as typing
+  amt.dispatchEvent(new Event('input'));
 });
   /* ---------- start ---------- */
   (function boot() {
