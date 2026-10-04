@@ -459,7 +459,7 @@
         S.leadId = data.leadId; S.profile = profile; S.trackedMobile = profile.mobile;
         S.employmentType = profile.employmentType; S.companyType = profile.companyType || null;
         S.personCount = parseInt(profile.personCount, 10) || 2;
-        if (S.quick) { goToDocuments(); } else { renderFresh(data, profile); }
+        if (S.quick) { try { sessionStorage.removeItem('vmw_quick'); } catch (e) {} goToDocuments(); } else { renderFresh(data, profile); }
       })
       .catch(function (err) { backToForm(VMW.errMsg(err) + ' Your details are still filled in — just tap the button again.'); });
   });
@@ -714,14 +714,33 @@
 /* ---------- quick start (ad landing) ---------- */
 S.quick = false; S.pan = ''; S.quickLoan = ''; S.quickAmount = '';
 VMW.wireAmount($('a_amount'));
-  if (REF) {
+$('a_pan').addEventListener('input', function () { this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+if (REF) {
   ['HL', 'LAP'].forEach(function (v) {
     var o = $('a_loanType').querySelector('option[value="' + v + '"]'); if (o) o.remove();
   });
 }
-$('a_pan').addEventListener('input', function () { this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
 
-function showQuick() { S.quick = true; show(['adWrap']); }
+// Each step gets its own history entry, so the phone's back button moves between steps.
+var QUICK_STEPS = { ad: ['adWrap'], adres: ['adResultsWrap'], form: ['formWrap'] };
+function goStep(step, push) {
+  show(QUICK_STEPS[step]);
+  try { history[push ? 'pushState' : 'replaceState']({ vmwStep: step }, ''); } catch (e) {}
+}
+window.addEventListener('popstate', function (e) {
+  if (S.quick && S.leadId) { location.href = 'index.html'; return; }   // already submitted: back goes home
+  var st = e.state && e.state.vmwStep;
+  if (S.quick && st && QUICK_STEPS[st]) show(QUICK_STEPS[st]);
+});
+
+function showQuick() {
+  S.quick = true;
+  try {   // after a refresh, keep loan type and amount (PAN is deliberately not stored)
+    var q = JSON.parse(sessionStorage.getItem('vmw_quick') || 'null');
+    if (q) { $('a_loanType').value = q.lt || ''; $('a_amount').value = q.amt || ''; $('a_amount').dispatchEvent(new Event('input')); }
+  } catch (e) {}
+  goStep('ad', false);
+}
 
 function renderQuickLenders(list, lt) {
   $('adResHeading').textContent = 'Top lenders for ' + VMW.productLabel(lt);
@@ -729,7 +748,7 @@ function renderQuickLenders(list, lt) {
     return '<div class="lender-card"><div class="lender-rank">🏦</div><div class="lender-info"><div class="lender-name">' + esc(l.name) + '</div>' +
       (l.rateBand ? '<div class="lender-rate">' + esc(l.rateBand) + '</div>' : '') + '</div></div>';
   }).join('') : '<div class="alert info">Our team will find the best lender for your profile.</div>';
-  show(['adResultsWrap']);
+  goStep('adres', true);
 }
 
 $('adGoBtn').addEventListener('click', function () {
@@ -738,13 +757,8 @@ $('adGoBtn').addEventListener('click', function () {
   if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) { VMW.showMsg(err, 'Please enter a valid PAN, like ABCDE1234F.', 'error'); return; }
   if (!lt) { VMW.showMsg(err, 'Please choose a loan type.', 'error'); return; }
   if (!(parseFloat(amt) > 0)) { VMW.showMsg(err, 'Please enter the loan amount.', 'error'); return; }
-  if (lt === 'VL' || lt === 'EL') {
-  location.href = 'vl-el-application.html?product=' + lt + (REF ? '&ref=' + encodeURIComponent(REF) : '');
-  return;
-}
   S.pan = pan; S.quickLoan = lt; S.quickAmount = amt;
-  S.pan = pan; S.quickLoan = lt; S.quickAmount = amt;
-if (lt === 'EL') { renderQuickLenders([], lt); return; }   // no lender suggestions for education loans
+  try { sessionStorage.setItem('vmw_quick', JSON.stringify({ lt: lt, amt: amt })); } catch (e) {}
   $('loadingText').textContent = 'Finding lenders…';
   show(['loadingState']);
   VMW.get('getSampleLenders', { product: lt }, { tries: 2 })
@@ -752,14 +766,14 @@ if (lt === 'EL') { renderQuickLenders([], lt); return; }   // no lender suggesti
     .catch(function () { renderQuickLenders([], lt); });
 });
 
-$('adBack').addEventListener('click', function () { show(['adWrap']); });
+$('adBack').addEventListener('click', function () { history.back(); });
 
 $('adProceed').addEventListener('click', function () {
   if (S.quickLoan === 'VL' || S.quickLoan === 'EL') {
     location.href = 'vl-el-application.html?product=' + S.quickLoan + (REF ? '&ref=' + encodeURIComponent(REF) : '');
     return;
   }
-  show(['formWrap']);
+  goStep('form', true);
   setLoanType(S.quickLoan);
   var amt = $('f_loanAmount'); amt.value = S.quickAmount;
   amt.dispatchEvent(new Event('input'));
