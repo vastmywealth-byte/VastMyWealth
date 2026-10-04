@@ -16,26 +16,45 @@
 <body>
 
 <!-- ===================== CO-BRANDED PARTNER BANNER ===================== -->
-<div id="vmwPartnerHeader" style="display:none;background:#0d1e38;color:#f8fafc;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.12);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:relative;z-index:99;">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div style="width:36px;height:36px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;">
-      👤
+<style>
+  :root { --pc-navy:#0B1A38; --pc-accent:#2563eb; --pc-text:#0f1b33; --pc-muted:#64748b; }
+  .vmw-pc-wrap { background:var(--pc-navy); padding:10px 14px; position:relative; z-index:99; }
+  .vmw-pc { max-width:560px; margin:0 auto; background:#fff; border-radius:14px; display:flex; align-items:center; gap:12px;
+            padding:11px 14px; border-left:5px solid var(--pc-accent); box-shadow:0 4px 14px rgba(0,0,0,.28); }
+  .vmw-pc-avatar { flex:none; width:46px; height:46px; border-radius:50%; background:var(--pc-navy); color:#fff;
+                   display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; letter-spacing:.5px; }
+  .vmw-pc-body { flex:1; min-width:0; }
+  .vmw-pc-label { font-size:10px; letter-spacing:.8px; text-transform:uppercase; color:var(--pc-muted); font-weight:600; }
+  .vmw-pc-name { font-size:15px; font-weight:700; color:var(--pc-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .vmw-pc-mob { display:inline-block; font-size:13px; color:var(--pc-accent); text-decoration:none; font-weight:600; }
+  .vmw-pc-code { display:inline-block; margin-left:6px; font-size:10px; color:var(--pc-muted); background:#eef2f7; border-radius:20px; padding:1px 8px; }
+  .vmw-pc-actions { flex:none; display:flex; gap:8px; }
+  .vmw-pc-btn { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none; transition:transform .15s; }
+  .vmw-pc-btn:hover { transform:scale(1.07); }
+  .vmw-pc-btn svg { width:20px; height:20px; fill:#fff; }
+  .vmw-pc-call { background:var(--pc-navy); }
+  .vmw-pc-wa { background:#25D366; }
+</style>
+
+<div id="vmwPartnerHeader" class="vmw-pc-wrap" style="display:none;">
+  <div class="vmw-pc">
+    <div class="vmw-pc-avatar" id="vmwPartnerInitials">VM</div>
+    <div class="vmw-pc-body">
+      <div class="vmw-pc-label">Your Relationship Manager</div>
+      <div class="vmw-pc-name" id="vmwPartnerName"></div>
+      <div><a class="vmw-pc-mob" id="vmwPartnerMobile" href="#"></a><span class="vmw-pc-code" id="vmwPartnerCode"></span></div>
     </div>
-    <div>
-      <div style="font-size:11px;color:#94a3b8;letter-spacing:0.5px;text-transform:uppercase;">Relationship Manager</div>
-      <strong id="vmwPartnerName" style="font-size:14px;color:#ffffff;display:block;"></strong>
+    <div class="vmw-pc-actions">
+      <a id="vmwPartnerCall" class="vmw-pc-btn vmw-pc-call" href="#" aria-label="Call">
+        <svg viewBox="0 0 24 24"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
+      </a>
+      <a id="vmwPartnerWa" class="vmw-pc-btn vmw-pc-wa" href="#" target="_blank" rel="noopener" aria-label="WhatsApp">
+        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      </a>
     </div>
-  </div>
-  <div style="display:flex;align-items:center;gap:8px;">
-    <a id="vmwPartnerCall" href="#" class="btn btn-sm" style="background:#22c55e;color:#ffffff;text-decoration:none;padding:6px 12px;border-radius:6px;font-weight:600;display:inline-flex;align-items:center;gap:4px;font-size:12px;">
-      📞 Call
-    </a>
-    <a id="vmwPartnerWa" href="#" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#ffffff;text-decoration:none;padding:6px 12px;border-radius:6px;font-weight:600;display:inline-flex;align-items:center;gap:4px;font-size:12px;">
-      💬 WhatsApp
-    </a>
   </div>
 </div>
-<!-- ====================================================================== -->
+  <!-- ====================================================================== -->
 
 <header class="app-header">
 <header class="app-header">
@@ -302,23 +321,29 @@
 
   // Render Partner Banner if details exist
   if (PNAME || PMOB) {
-    var pHeader = $('vmwPartnerHeader');
-    var pNameEl = $('vmwPartnerName');
-    var pCall = $('vmwPartnerCall');
-    var pWa = $('vmwPartnerWa');
+  var pHeader = $('vmwPartnerHeader');
+  if (pHeader) {
+    var nm = PNAME || 'Your advisor';
+    $('vmwPartnerName').textContent = nm;
+    $('vmwPartnerInitials').textContent = nm.split(/\s+/).filter(Boolean).slice(0, 2)
+      .map(function (w) { return w.charAt(0).toUpperCase(); }).join('') || '👤';
+    if (REF) $('vmwPartnerCode').textContent = 'ID ' + REF; else $('vmwPartnerCode').style.display = 'none';
 
-    if (pHeader && pNameEl) {
-      pNameEl.textContent = PNAME + (REF ? ' (' + REF + ')' : '');
-      if (PMOB) {
-        if (pCall) pCall.href = 'tel:' + PMOB;
-        if (pWa) pWa.href = VMW.waLink(PMOB, 'Hi ' + PNAME + ', I am on your VastMyWealth application page and need some help.');
-      } else {
-        if (pCall) pCall.style.display = 'none';
-        if (pWa) pWa.style.display = 'none';
-      }
-      pHeader.style.display = 'flex';
+    var mob = String(PMOB || '').replace(/\D/g, '').slice(-10);
+    if (mob.length === 10) {
+      var shown = '+91 ' + mob.slice(0, 5) + ' ' + mob.slice(5);
+      $('vmwPartnerMobile').textContent = shown;
+      $('vmwPartnerMobile').href = 'tel:+91' + mob;
+      $('vmwPartnerCall').href = 'tel:+91' + mob;
+      $('vmwPartnerWa').href = VMW.waLink(PMOB, 'Hi ' + PNAME + ', I am on your VastMyWealth application page and need some help.');
+    } else {
+      $('vmwPartnerMobile').style.display = 'none';
+      $('vmwPartnerCall').style.display = 'none';
+      $('vmwPartnerWa').style.display = 'none';
     }
+    pHeader.style.display = 'block';
   }
+}
   var VIEWS = ['checkingState', 'trackCard', 'formWrap', 'loadingState', 'resultsWrap', 'docWrap', 'doneWrap', 'blockedWrap', 'adWrap', 'adResultsWrap'];
   var S = { loanType: 'PL', employmentType: null, companyType: null, personCount: 2, residenceType: null,
             leadId: null, profile: {}, forceNew: false, docStore: {}, warnedMissing: false, trackedMobile: '', lastDup: null };
