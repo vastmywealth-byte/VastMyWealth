@@ -293,6 +293,7 @@
   var REF = (params.get('ref') || localStorage.getItem('vmw_partner_ref') || '').trim();
   var PNAME = (params.get('pname') || localStorage.getItem('vmw_partner_pname') || '').trim();
   var PMOB = (params.get('pmob') || localStorage.getItem('vmw_partner_pmob') || '').trim();
+  var REF_LINK = (params.get('ref') || '').trim();   // partner code in THIS link only (not the saved one)
 
   // Persist into localStorage whenever provided in URL
   if (params.get('ref')) localStorage.setItem('vmw_partner_ref', params.get('ref').trim());
@@ -337,7 +338,7 @@
   VMW.autosuggest($('f_state'), function () { return VMW.lists.states; });
   VMW.loadLists('states');
 
-  if (REF) {
+  if (REF_LINK) {
     // partner / banker links only offer the loan types they handle
     document.querySelectorAll('#loanToggle button[data-val="HL"], #loanToggle button[data-val="LAP"]').forEach(function (b) { b.style.display = 'none'; });
   }
@@ -432,7 +433,7 @@
       udyam: SE ? val('f_udyam') : '', bankAccountType: SE ? val('f_bankAccountType') : '',
       propertyAddress: secured ? val('f_propertyAddress') : '', propertyPincode: secured ? VMW.digits(val('f_propertyPincode')) : '',
       marketValue: secured ? num('f_marketValue') : '',
-      consentGiven: true, partnerCode: REF, pan: S.pan || ''
+      consentGiven: true, partnerCode: (S.loanType === 'HL' || S.loanType === 'LAP') ? '' : REF, pan: S.pan || ''
     };
   }
 
@@ -715,7 +716,7 @@
 S.quick = false; S.pan = ''; S.quickLoan = ''; S.quickAmount = '';
 VMW.wireAmount($('a_amount'));
 $('a_pan').addEventListener('input', function () { this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
-if (REF) {
+if (REF_LINK) {
   ['HL', 'LAP'].forEach(function (v) {
     var o = $('a_loanType').querySelector('option[value="' + v + '"]'); if (o) o.remove();
   });
