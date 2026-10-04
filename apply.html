@@ -73,6 +73,7 @@
   <div class="hero">
     <h1>Check your loan options</h1>
     <p>Tell us what you need and see top lenders in seconds.</p>
+    <p class="small center mt12"><a href="apply.html">Already applied? Track your application</a></p>
   </div>
   <div class="card">
     <div class="field"><label for="a_pan">PAN number<span class="req">*</span></label>
@@ -80,7 +81,9 @@
     <div class="field"><label for="a_loanType">Loan type<span class="req">*</span></label>
       <select id="a_loanType"><option value="">Select</option>
         <option value="PL">Personal Loan</option><option value="BL">Business Loan</option>
-        <option value="HL">Home Loan</option><option value="LAP">Loan Against Property</option></select></div>
+        <option value="HL">Home Loan</option><option value="LAP">Loan Against Property</option></select>
+      <option value="VL">Vehicle Loan</option><option value="EL">Education Loan</option>
+    </div>
     <div class="field"><label for="a_amount">Loan amount required (₹)<span class="req">*</span></label>
       <input type="text" id="a_amount" inputmode="numeric"></div>
     <div id="adError" class="alert hidden"></div>
@@ -711,6 +714,11 @@
 /* ---------- quick start (ad landing) ---------- */
 S.quick = false; S.pan = ''; S.quickLoan = ''; S.quickAmount = '';
 VMW.wireAmount($('a_amount'));
+  if (REF) {
+  ['HL', 'LAP'].forEach(function (v) {
+    var o = $('a_loanType').querySelector('option[value="' + v + '"]'); if (o) o.remove();
+  });
+}
 $('a_pan').addEventListener('input', function () { this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
 
 function showQuick() { S.quick = true; show(['adWrap']); }
@@ -730,6 +738,10 @@ $('adGoBtn').addEventListener('click', function () {
   if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) { VMW.showMsg(err, 'Please enter a valid PAN, like ABCDE1234F.', 'error'); return; }
   if (!lt) { VMW.showMsg(err, 'Please choose a loan type.', 'error'); return; }
   if (!(parseFloat(amt) > 0)) { VMW.showMsg(err, 'Please enter the loan amount.', 'error'); return; }
+  if (lt === 'VL' || lt === 'EL') {
+  location.href = 'vl-el-application.html?product=' + lt + (REF ? '&ref=' + encodeURIComponent(REF) : '');
+  return;
+}
   S.pan = pan; S.quickLoan = lt; S.quickAmount = amt;
   $('loadingText').textContent = 'Finding lenders…';
   show(['loadingState']);
@@ -751,7 +763,7 @@ $('adProceed').addEventListener('click', function () {
     var leadId = params.get('leadId'), product = params.get('product'), mobile = VMW.mobile10(params.get('mobile'));
     if (leadId) { resume(leadId, product); }
     else if (mobile.length === 10) { $('trackMobile').value = mobile; $('f_mobile').value = mobile; runTrack(mobile, true); }
-    else if (params.get('flow') === 'quick') { showQuick(); }
+    else if (params.get('flow') === 'quick' || params.get('ref')) { showQuick(); }
 else { showForm(); }
     setLoanType('PL');
     setTimeout(function () { VMW.showAnnouncement('Customer'); }, 1500);
