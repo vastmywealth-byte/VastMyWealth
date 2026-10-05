@@ -192,7 +192,7 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
       <div id="blockedBankersContainer"><div class="empty">Loading…</div></div>
 
       <div class="section-label" style="margin-top:20px;">Partner-referred bankers awaiting approval</div>
-      <p class="sub" style="margin:0 0 8px;">Check and Approve.</p>
+      <p class="sub" style="margin:0 0 8px;">A DSA partner has vouched for these bankers. Approving unlocks their dashboard and lets that partner start sending them leads directly.</p>
       <div id="pendingPartnerBankersContainer"><div class="empty">Loading…</div></div>
 
       <div class="section-label" style="margin-top:20px;">Pending DSA code verification</div>
@@ -394,7 +394,8 @@ function loadPendingPartnerBankers() {
     el.innerHTML = pending.map(function (p) {
       return '<div class="card"><div class="card-row" style="cursor:default;"><div><div class="name">' + esc(p.name || p.bankerId) + '</div>' +
         '<div class="sub">' + esc(p.bankName || '—') + ' · ' + esc(p.mobile || '') + ' · ' + esc(p.email || '') + '</div>' +
-        '<div class="sub">Referred by ' + esc(p.referredBy) + '</div></div>' +
+        '<div class="sub">Referred by ' + esc(p.referredBy) + '</div>' +
+        (p.domainFlag ? '<div class="sub" style="color:var(--warn);">⚠ ' + esc(p.domainFlag) + ' — double-check before approving</div>' : '') + '</div>' +
         '<button class="btn btn-ok btn-sm" data-approve-pb="' + esc(p.bankerId) + '">Approve</button></div></div>';
     }).join('');
   }).catch(function () { $('pendingPartnerBankersContainer').innerHTML = '<div class="error-box">Could not load.</div>'; });
