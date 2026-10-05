@@ -45,24 +45,39 @@
   #planToggle .toggle-btn.active .plan-name { color:#3a2c0a; }
   #planToggle .toggle-btn.active .plan-price,
   #planToggle .toggle-btn.active .small { color:#1a1304; }
+  
+  select.field-select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border, #2a3b61);
+    background-color: var(--input-bg, #0d1e3d);
+    color: var(--text, #fff);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+  }
+  select.field-select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 </style>
 </head>
 <body>
-
 <header class="app-header"><div class="in">
   <a class="brand" href="index.html">
     <img src="1000550390.png" alt="" onerror="this.style.display='none'">
     <div><b>VastMyWealth</b><small>Biz Tool</small></div>
   </a>
-  <div class="hdr-right"><a class="hdr-link" id="backLink" href="banker.html">← Back</a></div>
+  <div class="hdr-right"><a class="hdr-link" id="backLink" href="#">← Back</a></div>
 </div></header>
-
 <main class="wrap">
   <div class="hero">
     <h1>Biz Tool — exclusive leads</h1>
     <p>Get first access to matching customer leads in your chosen state, exclusively yours for 7 days before they go to the shared pool.</p>
   </div>
-
   <div id="statusCard" class="card">
     <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
       <span>Premium subscription</span>
@@ -70,29 +85,24 @@
     </div>
     <div id="statusBody" class="mt8">Loading…</div>
   </div>
-
   <div class="card">
     <div class="card-title">Your exclusive leads</div>
     <p class="card-sub">Only visible to you. After 7 days — or if you release one early — it moves to the shared pool.</p>
     <div id="exclusiveLeadsList" class="mt12"><div class="skeleton"></div></div>
   </div>
-
   <div class="card">
     <div class="card-title">Your Personal Sales Bot</div>
     <p class="card-sub">Automate your sales follow-ups — every lead, every pool opportunity, and every pending document, pushed straight to you the instant it happens.</p>
     <a class="btn btn-primary btn-block" id="connectBotBtn" target="_blank" rel="noopener">🚀 Create Your Sales Bot — free</a>
   </div>
-
   <div class="card">
     <div class="card-title">Marketing creatives</div>
     <p class="card-sub">Forward these to your customers — your personal link is already included in the message.</p>
     <div class="banner-grid" id="bannerGrid"></div>
   </div>
-
   <div id="subscribeCard" class="card">
     <div class="card-title">Subscribe</div>
     <p class="card-sub">Increase Biz leads by 4X.</p>
-
     <div class="field">
       <label>Plan</label>
       <div class="toggle-row" id="planToggle">
@@ -108,25 +118,26 @@
         </button>
       </div>
     </div>
-
     <div class="field">
-      <label>State(s)</label>
-      <div class="chip-row" id="stateChips"></div>
-      <input type="text" id="stateInput" placeholder="Start typing a state and select it" autocomplete="off">
+      <label>State(s) <span class="small muted">(Select from dropdown)</span></label>
+      <div class="chip-row" id="stateChips" style="margin-bottom:8px;"></div>
+      <select id="stateSelect" class="field-select">
+        <option value="">Loading states…</option>
+      </select>
     </div>
-
     <div class="field">
-      <label for="cityInput">City / Cities <span class="small muted">(optional — leave blank for the whole state)</span></label>
-      <input type="text" id="cityInput" placeholder="Start typing a city — add more separated by commas" autocomplete="off">
-      <div class="hint">Can't find a city? Just type it — it'll be saved as entered.</div>
+      <label for="cityInput">City / Cities <span class="small muted">(pick from list or type extra cities separated by commas)</span></label>
+      <select id="citySelect" class="field-select" disabled>
+        <option value="">Select state first</option>
+      </select>
+      <input type="text" id="cityInput" placeholder="e.g. Visakhapatnam, Kakinada, Vijayawada" autocomplete="off" style="margin-top:6px;">
+      <div class="hint">Select from the dropdown above to add cities, or type additional cities directly separated by commas.</div>
     </div>
-
     <div id="subMsg" class="alert hidden"></div>
     <button class="btn btn-primary btn-block" id="payBtn">Pay &amp; subscribe</button>
     <p class="small muted center mt12">🔒 Payment is handled securely by Razorpay. It usually activates within moments — in rare cases (a dropped connection, for example) it can take up to 4 hours to reflect here.</p>
   </div>
 </main>
-
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="config.js"></script>
 <script src="common.js"></script>
@@ -142,7 +153,21 @@
     mobile: params.get('holderMobile') || (VMW.store ? VMW.store.get('vmw_partner_mobile') : '') || localStorage.getItem('vmw_partner_mobile') || '',
     bankName: params.get('bankName') || ''
   };
-  $('backLink').href = HOLDER.type === 'Partner' ? 'partner.html' : 'banker.html';
+
+  /* ---------- Mobile Back Button & Navigation Handling ---------- */
+  var targetBackUrl = HOLDER.type === 'Partner' ? 'partner.html' : 'banker.html';
+  $('backLink').href = targetBackUrl;
+  $('backLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    window.location.replace(targetBackUrl);
+  });
+
+  // Intercept hardware / gesture back button on mobile phones
+  history.pushState({ page: 'biztool' }, '', location.href);
+  window.addEventListener('popstate', function () {
+    window.location.replace(targetBackUrl);
+  });
+
   $('increaseLeadsBtn').addEventListener('click', function () {
     $('subscribeCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
@@ -154,10 +179,10 @@
     boot();
   }
 
-  // ---- Personal Marketing Bot ----
+  // Personal Marketing Bot
   $('connectBotBtn').href = 'https://t.me/vastmywealthBot?start=' + HOLDER.type + '_' + encodeURIComponent(HOLDER.code);
 
-  // ---- Marketing creatives ----
+  // Marketing Creatives
   var CREATIVES_BASE_URL = 'https://raw.githubusercontent.com/vastmywealth-byte/VastMyWealth/main/';
   var BANNERS = [
     { filename: 'pl.png', caption: 'Personal Loan — quick approval, competitive rates.' },
@@ -169,7 +194,6 @@
     { filename: 'partner.png', caption: 'Apply with VastMyWealth — trusted by thousands.' },
     { filename: 'festival-offer.png', caption: 'Festive offer — special rates, limited time.' }
   ];
-
   var ICONS = {
     whatsapp: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#25D366"/><path d="M17 7a7 7 0 0 0-11.3 7.9L5 20l5.2-.7A7 7 0 0 0 17 7Z" fill="#fff" fill-opacity=".92"/><path d="M9.5 9c.2-.4.5-.4.8-.4h.6c.2 0 .4 0 .6.5l.7 1.7c.1.2 0 .4-.1.6l-.5.6c-.1.2-.1.3 0 .5.3.6 1.4 1.8 2.5 2.1.2.1.4 0 .5-.1l.6-.6c.2-.2.3-.2.5-.1l1.5.8c.2.1.3.3.2.6-.2.7-1.1 1.3-1.8 1.3-1.5.1-3.7-.7-5.1-2.1-1.2-1.2-2-2.9-2.1-4.4 0-.8.4-1.7 1.1-2z" fill="#25D366"/></svg>',
     telegram: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#229ED9"/><path d="M17.6 7.2 6.4 11.5c-.6.2-.6.9 0 1.1l2.7.9 1 3.3c.1.4.6.5.9.2l1.5-1.4 2.6 1.9c.4.3 1 .1 1.1-.4l1.8-9c.1-.5-.4-.9-.9-.9Z" fill="#fff"/></svg>',
@@ -177,15 +201,13 @@
     instagram: '<svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="url(#ig)"/><defs><linearGradient id="ig" x1="0" y1="24" x2="24" y2="0"><stop stop-color="#FEDA75"/><stop offset=".3" stop-color="#FA7E1E"/><stop offset=".6" stop-color="#D62976"/><stop offset=".8" stop-color="#962FBF"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><rect x="6" y="6" width="12" height="12" rx="3.5" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="12" r="3" stroke="#fff" stroke-width="1.5"/><circle cx="16.3" cy="7.7" r="1" fill="#fff"/></svg>'
   };
 
-  // Pre-cached or instant share handler
-  // Pre-cached or instant share handler
   async function triggerShare(index, platform) {
     var b = BANNERS[index];
     var baseLink = VMW.refLink(HOLDER.code);
     var referralLink = baseLink + (baseLink.indexOf('?') > -1 ? '&' : '?') + 'pname=' + encodeURIComponent(HOLDER.name) + '&pmob=' + encodeURIComponent(HOLDER.mobile);
     var imgSrc = b.filename ? (CREATIVES_BASE_URL + b.filename) : '';
     var fullMessage = b.caption + '\n\nApply here: ' + referralLink;
-    // Helper: direct file download & copy
+
     function downloadAndCopy(customMsg) {
       if (!imgSrc) return;
       var a = document.createElement('a');
@@ -194,52 +216,36 @@
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(fullMessage).then(function () {
-          VMW.toast(customMsg || 'Image saved to gallery! Caption copied.');
-        }).catch(function() {
-          VMW.toast('Image downloaded!');
-        });
+          VMW.toast(customMsg || 'Image saved! Caption copied.');
+        }).catch(function() { VMW.toast('Image downloaded!'); });
       } else {
         VMW.toast('Image downloaded!');
       }
     }
 
-    // Instagram: Cannot receive attachments via web links -> Auto download & copy
     if (platform === 'instagram') {
       downloadAndCopy('Banner saved! Paste copied caption on Instagram.');
-      setTimeout(function() {
-        window.location.href = 'instagram://app';
-      }, 700);
+      setTimeout(function() { window.location.href = 'instagram://app'; }, 700);
       return;
     }
 
-    // For WhatsApp & System Share: Try direct file share
     if (navigator.share) {
       try {
         var resp = await fetch(imgSrc);
         var blob = await resp.blob();
         var file = new File([blob], b.filename || 'creative.png', { type: 'image/png' });
-
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: 'VastMyWealth',
-            text: fullMessage
-          });
+          await navigator.share({ files: [file], title: 'VastMyWealth', text: fullMessage });
           return;
         }
       } catch (err) {
-        // If aborted by user, do nothing
         if (err.name === 'AbortError') return;
-        console.warn('Native share error, using fallback:', err);
       }
     }
 
-    // Fallbacks if native file share is unsupported on device
     if (platform === 'whatsapp') {
-      // WhatsApp fallback: copies text, downloads photo, then opens WhatsApp
       downloadAndCopy('Banner saved! Forwarding to WhatsApp…');
       setTimeout(function () {
         window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(fullMessage), '_blank');
@@ -247,10 +253,10 @@
     } else if (platform === 'telegram') {
       window.open('https://t.me/share/url?url=' + encodeURIComponent(referralLink) + '&text=' + encodeURIComponent(b.caption), '_blank');
     } else if (platform === 'facebook') {
-      // Facebook app will create a post with your referral link
       window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(referralLink) + '&quote=' + encodeURIComponent(b.caption), '_blank');
     }
   }
+
   function renderBanners() {
     $('bannerGrid').innerHTML = BANNERS.map(function (b, i) {
       var imgSrc = b.filename ? (CREATIVES_BASE_URL + b.filename) : '';
@@ -276,7 +282,7 @@
     triggerShare(idx, platform);
   });
 
-  // ---- Plan selection ----
+  // Plan Selection
   var PLAN = '';
   document.querySelectorAll('#planToggle .toggle-btn').forEach(function (b) {
     b.addEventListener('click', function () {
@@ -286,7 +292,7 @@
     });
   });
 
-  // ---- State / City autosuggest ----
+  /* ---------- Dynamic State & City Dropdowns from Sheet ---------- */
   var STATE_CITY = { states: [], citiesByState: {} };
   var selectedStates = [];
 
@@ -295,73 +301,83 @@
       if (r && r.success) {
         STATE_CITY.states = r.states || [];
         STATE_CITY.citiesByState = r.citiesByState || {};
+        populateStateDropdown();
+      } else {
+        $('stateSelect').innerHTML = '<option value="">Could not load states</option>';
       }
-    }).catch(function () {});
+    }).catch(function (err) {
+      console.warn('Error fetching state city list:', err);
+      $('stateSelect').innerHTML = '<option value="">Could not load states</option>';
+    });
   }
   loadStateCityList();
 
+  function populateStateDropdown() {
+    var sSel = $('stateSelect');
+    var available = STATE_CITY.states.filter(function (s) { return selectedStates.indexOf(s) === -1; });
+    sSel.innerHTML = '<option value="">+ Add a State</option>' +
+      available.map(function (s) { return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('');
+    updateCityDropdown();
+  }
+
   function renderStateChips() {
     $('stateChips').innerHTML = selectedStates.map(function (s) {
-      return '<span class="chip static">' + esc(s) + ' <b data-remove="' + esc(s) + '" style="cursor:pointer;">✕</b></span>';
+      return '<span class="chip static">' + esc(s) + ' <b data-remove="' + esc(s) + '" style="cursor:pointer;margin-left:4px;">✕</b></span>';
     }).join('');
+    populateStateDropdown();
   }
+
+  $('stateSelect').addEventListener('change', function () {
+    var st = this.value;
+    if (!st) return;
+    if (selectedStates.indexOf(st) === -1) {
+      selectedStates.push(st);
+      renderStateChips();
+    }
+    this.value = '';
+  });
 
   $('stateChips').addEventListener('click', function (e) {
     var b = e.target.closest('[data-remove]');
     if (!b) return;
-    selectedStates = selectedStates.filter(function (s) { return s !== b.getAttribute('data-remove'); });
+    var toRemove = b.getAttribute('data-remove');
+    selectedStates = selectedStates.filter(function (s) { return s !== toRemove; });
     renderStateChips();
   });
 
-  function wireSimpleAutosuggest(input, getItems, onPick) {
-    var box = document.createElement('div');
-    box.className = 'suggest';
-    input.parentNode.appendChild(box);
-
-    function hide() { box.style.display = 'none'; }
-    function render() {
-      var q = input.value.trim().toLowerCase();
-      var lastPart = q.indexOf(',') !== -1 ? q.split(',').pop().trim() : q;
-      if (!lastPart) { hide(); return; }
-      var items = getItems().filter(function (it) { return it.toLowerCase().indexOf(lastPart) === 0; }).slice(0, 8);
-      if (!items.length) { hide(); return; }
-      box.innerHTML = items.map(function (it, i) { return '<div data-i="' + i + '">' + esc(it) + '</div>'; }).join('');
-      box.style.display = 'block';
-      box._items = items;
+  function updateCityDropdown() {
+    var cSel = $('citySelect');
+    if (!selectedStates.length) {
+      cSel.innerHTML = '<option value="">Select state first</option>';
+      cSel.disabled = true;
+      return;
     }
-
-    input.addEventListener('input', render);
-    input.addEventListener('focus', render);
-    box.addEventListener('mousedown', function (e) {
-      var el = e.target.closest('[data-i]');
-      if (!el) return;
-      e.preventDefault();
-      onPick(box._items[parseInt(el.getAttribute('data-i'), 10)]);
-      hide();
-    });
-    document.addEventListener('click', function (e) {
-      if (e.target !== input && !box.contains(e.target)) hide();
-    });
-  }
-
-  wireSimpleAutosuggest($('stateInput'), function () {
-    return STATE_CITY.states.filter(function (s) { return selectedStates.indexOf(s) === -1; });
-  }, function (picked) {
-    selectedStates.push(picked);
-    renderStateChips();
-    $('stateInput').value = '';
-  });
-
-  wireSimpleAutosuggest($('cityInput'), function () {
     var pool = {};
     selectedStates.forEach(function (s) {
       (STATE_CITY.citiesByState[s] || []).forEach(function (c) { pool[c] = true; });
     });
-    return Object.keys(pool);
-  }, function (picked) {
-    var parts = $('cityInput').value.split(',');
-    parts[parts.length - 1] = ' ' + picked;
-    $('cityInput').value = parts.join(',').replace(/^ /, '') + ', ';
+    var cities = Object.keys(pool).sort();
+    if (!cities.length) {
+      cSel.innerHTML = '<option value="">No predefined cities for selected states (type below)</option>';
+      cSel.disabled = true;
+      return;
+    }
+    cSel.innerHTML = '<option value="">Select city to add</option>' +
+      cities.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
+    cSel.disabled = false;
+  }
+
+  // When a city is picked from dropdown, append to input field with comma
+  $('citySelect').addEventListener('change', function () {
+    var pickedCity = this.value;
+    if (!pickedCity) return;
+    var inp = $('cityInput');
+    var existing = inp.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    if (existing.indexOf(pickedCity) === -1) {
+      existing.push(pickedCity);
+      inp.value = existing.join(', ') + ', ';
+    }
+    this.value = '';
   });
 
   function chosenStates() { return selectedStates; }
@@ -417,8 +433,7 @@
     VMW.hideMsg(box);
     var states = chosenStates(), city = chosenCity();
     if (!PLAN) { VMW.showMsg(box, 'Please choose a plan.', 'error'); return; }
-    if (!states.length) { VMW.showMsg(box, 'Please select at least one state.', 'error'); return; }
-
+    if (!states.length) { VMW.showMsg(box, 'Please select at least one state from the dropdown.', 'error'); return; }
     var btn = this;
     VMW.busy(btn, 'Starting payment…', function () {
       return VMW.post({ action: 'createRazorpayOrder', holderType: HOLDER.type, holderCode: HOLDER.code, holderName: HOLDER.name, bankName: HOLDER.bankName, plan: PLAN, states: states, city: city })
