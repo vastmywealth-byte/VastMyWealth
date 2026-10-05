@@ -290,11 +290,35 @@
   VMW.wireDigits($('loginPin'), 4);
   VMW.wireAmount($('disburseAmount'));
 
-  // Bank + State suggestions: instant (filtered from the device), refreshed quietly from the sheet
-  VMW.autosuggest($('reqBank'), function () { return VMW.lists.banks; });
-  VMW.autosuggest($('reqState'), function () { return VMW.lists.states; });
-  VMW.loadLists('both');
+  // Local storage cache for registration dropdowns
+  var REG_DATA = { lenders: [], states: [] };
 
+  // Wire autosuggest to live sheet-backed arrays with fallback to VMW.lists
+  VMW.autosuggest($('reqBank'), function () {
+    return (REG_DATA.lenders && REG_DATA.lenders.length) ? REG_DATA.lenders : VMW.lists.banks;
+  });
+
+  VMW.autosuggest($('reqState'), function () {
+    return (REG_DATA.states && REG_DATA.states.length) ? REG_DATA.states : VMW.lists.states;
+  });
+
+  // Fetch Lender Names from 'Bank Codes' tab
+  VMW.post({ action: 'getBankCodesLenders' }).then(function (r) {
+    if (r && r.status === 'success' && r.lenders && r.lenders.length) {
+      REG_DATA.lenders = r.lenders;
+    }
+  }).catch(function () {});
+
+  // Fetch States from 'State/City' tab
+  VMW.post({ action: 'getStatesFromSheet' }).then(function (r) {
+    if (r && r.status === 'success' && r.states && r.states.length) {
+      REG_DATA.states = r.states;
+      // Also sync canonical state validator so form validation accepts sheet spellings
+      if (VMW.lists) VMW.lists.states = r.states;
+    }
+  }).catch(function () {});
+
+  VMW.loadLists('both');
   $('requestCodeForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var box = $('reqResult'); VMW.hideMsg(box); VMW.clearErrors($('requestCodeForm'));
