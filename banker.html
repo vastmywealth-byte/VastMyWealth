@@ -303,18 +303,32 @@
     for (var i = 0; i < REG_DATA.lenders.length; i++) if (REG_DATA.lenders[i].toLowerCase() === t) return REG_DATA.lenders[i];
     return '';
   }
+  function setLenders(list) { REG_DATA.lenders = list; fillDatalist('reqBankList', list); fillDatalist('scBankList', list); }
+  function setStates(list) {
+    REG_DATA.states = list;
+    $('reqState').innerHTML = '<option value="">Select your state</option>' + list.map(function (s) { return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('');
+  }
   function loadRegLists() {
-    VMW.post({ action: 'getBankCodesLenders' }).then(function (r) {
-      if (r && r.status === 'success' && r.lenders && r.lenders.length) {
-        REG_DATA.lenders = r.lenders; fillDatalist('reqBankList', r.lenders); fillDatalist('scBankList', r.lenders);
-      }
-    }).catch(function () {});
-    VMW.post({ action: 'getStatesFromSheet' }).then(function (r) {
-      if (r && r.status === 'success' && r.states && r.states.length) {
-        REG_DATA.states = r.states;
-        $('reqState').innerHTML = '<option value="">Select your state</option>' + r.states.map(function (s) { return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('');
-      } else { $('reqState').innerHTML = '<option value="">Could not load states - refresh the page</option>'; }
-    }).catch(function () { $('reqState').innerHTML = '<option value="">Could not load states - refresh the page</option>'; });
+    // 1) getBankList (GET) carries lenders + sheetStates from the sheet tabs
+    VMW.get('getBankList', {}).then(function (r) {
+      if (r && r.lenders && r.lenders.length) setLenders(r.lenders);
+      if (r && r.sheetStates && r.sheetStates.length) setStates(r.sheetStates);
+      if (!(r && r.lenders)) console.warn('getBankList did not include sheet lists (old/cached server copy?):', r);
+    }).catch(function (e) { console.warn('getBankList failed', e); })
+    // 2) fall back to the dedicated actions for whatever is still missing
+    .then(function () {
+      var jobs = [];
+      if (!REG_DATA.lenders.length) jobs.push(VMW.post({ action: 'getBankCodesLenders' }).then(function (r) {
+        if (r && r.lenders && r.lenders.length) setLenders(r.lenders); else console.warn('getBankCodesLenders:', r);
+      }).catch(function (e) { console.warn('getBankCodesLenders failed', e); }));
+      if (!REG_DATA.states.length) jobs.push(VMW.post({ action: 'getStatesFromSheet' }).then(function (r) {
+        if (r && r.states && r.states.length) setStates(r.states); else console.warn('getStatesFromSheet:', r);
+      }).catch(function (e) { console.warn('getStatesFromSheet failed', e); }));
+      return Promise.all(jobs);
+    }).then(function () {
+      if (!REG_DATA.states.length) $('reqState').innerHTML = '<option value="">Could not load states - refresh the page</option>';
+      if (!REG_DATA.lenders.length) { $('reqBank').placeholder = 'Could not load bank list - refresh the page'; }
+    });
   }
   loadRegLists();
   $('requestCodeForm').addEventListener('submit', function (e) {
