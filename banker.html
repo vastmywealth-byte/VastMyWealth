@@ -458,11 +458,15 @@
     }).catch(function (err) { el.innerHTML = '<div class="alert error">' + esc(VMW.errMsg(err)) + '</div>'; });
   }
 
-  var SC = { bank: '', newMode: false, banks: [], token: 0, loanType: '' };
+  var SC = { bank: '', newMode: false, banks: [], token: 0, loanType: '', autoCode: '' };
+  var hintTimer = null;
+  function refreshCodeHintSoon() { clearTimeout(hintTimer); hintTimer = setTimeout(refreshCodeHint, 400); }
   $('addCodeBtn').addEventListener('click', openSubmitCodeSheet);
   function openSubmitCodeSheet() {
     SC.bank = SESSION.currentBankName || ''; SC.newMode = false; SC.banks = SC.bank ? [SC.bank] : []; SC.loanType = '';
-    $('submitCodeForm').reset(); VMW.hideMsg($('scResult')); VMW.hideMsg($('scCodeHint'));
+    $('submitCodeForm').reset(); 
+    SC.autoCode = '';
+    VMW.hideMsg($('scResult')); VMW.hideMsg($('scCodeHint'));
     $('scNewBankFields').classList.add('hidden'); $('scCodeGroup').classList.remove('hidden');
     renderBankChips(); renderLoanTypeChips();
     openSheet('submitCodeSheet');
@@ -500,47 +504,8 @@
   }, function () { 
     refreshCodeHint(); 
   });
-  $('scNewBankName').addEventListener('input', refreshCodeHint);
+  $('scNewBankName').addEventListener('input', refreshCodeHintSoon);
 
-  function refreshCodeHint() {
-    var bank = currentBank(), lts = loanTypesChosen(), hint = $('scCodeHint');
-    if (!bank || !lts.length) { 
-      VMW.hideMsg(hint); 
-      $('scCodeGroup').classList.remove('hidden'); 
-      return; 
-    }
-    var mine = ++SC.token;
-    VMW.showMsg(hint, 'Checking for DSA code…', 'info');
-    VMW.post({ action: 'checkBankCode', bankerId: SESSION.bankerId, bankName: bank, loanTypes: lts }).then(function (r) {
-      if (mine !== SC.token) return;
-      if (r.status !== 'success') { VMW.hideMsg(hint); return; }
-      
-      var suggestedCode = '';
-      var lines = lts.map(function (lt) {
-        if (r.existing && r.existing[lt]) {
-          return VMW.productLabel(lt) + ': Active code (' + r.existing[lt] + ') already on file — reused automatically';
-        }
-        if (r.suggested && r.suggested[lt]) { 
-          suggestedCode = r.suggested[lt]; 
-          return VMW.productLabel(lt) + ': Urban Money Code (' + suggestedCode + ') found and pre-filled below'; 
-        }
-        return VMW.productLabel(lt) + ': No code found in Bank Codes — enter yours manually below';
-      });
-
-      hint.className = 'alert info'; 
-      hint.innerHTML = lines.map(esc).join('<br>');
-
-      var allExisting = lts.every(function (lt) { return r.existing && !!r.existing[lt]; });
-      $('scCodeGroup').classList.toggle('hidden', allExisting);
-
-      // Pre-fill the input with the Urban Money Code if found
-      if (!allExisting && suggestedCode) {
-        $('scCode').value = suggestedCode;
-      }
-    }).catch(function () { 
-      if (mine === SC.token) VMW.hideMsg(hint); 
-    });
-  }
   $('scLoanTypeChips').addEventListener('click', function (e) {
     var b = e.target.closest('.chip'); if (!b) return;
     SC.loanType = (SC.loanType === b.getAttribute('data-lt')) ? '' : b.getAttribute('data-lt');
@@ -558,22 +523,34 @@
   function loanTypesChosen() { return SC.loanType ? [SC.loanType] : []; }
   function refreshCodeHint() {
     var bank = currentBank(), lts = loanTypesChosen(), hint = $('scCodeHint');
-    if (!bank || !lts.length) { VMW.hideMsg(hint); $('scCodeGroup').classList.remove('hidden'); return; }
+    if (!bank || !lts.length) {
+      VMW.hideMsg(hint); $('scCodeGroup').classList.remove('hidden');
+      if ($('scCode').value.trim() === SC.autoCode) { $('scCode').value = ''; SC.autoCode = ''; }
+      return;
+    }
     var mine = ++SC.token;
-    VMW.showMsg(hint, 'Checking whether a code already exists…', 'info');
+    VMW.showMsg(hint, 'Checking for DSA code…', 'info');
     VMW.post({ action: 'checkBankCode', bankerId: SESSION.bankerId, bankName: bank, loanTypes: lts }).then(function (r) {
       if (mine !== SC.token) return;
       if (r.status !== 'success') { VMW.hideMsg(hint); return; }
       var suggestedCode = '';
       var lines = lts.map(function (lt) {
-        if (r.existing[lt]) return VMW.productLabel(lt) + ': an existing code will be reused automatically';
-        if (r.suggested && r.suggested[lt]) { suggestedCode = r.suggested[lt]; return VMW.productLabel(lt) + ': suggested code pre-filled below — check it\'s right, then submit'; }
-        return VMW.productLabel(lt) + ': no code on file — enter yours below';
+        if (r.existing && r.existing[lt]) return VMW.productLabel(lt) + ': an active code (' + r.existing[lt] + ') is already on file — reused automatically';
+        if (r.suggested && r.suggested[lt]) { suggestedCode = r.suggested[lt]; return VMW.productLabel(lt) + ': code ' + suggestedCode + ' found in Bank Codes and pre-filled below — check it, then submit'; }
+        return VMW.productLabel(lt) + ': no code found in Bank Codes — enter yours below';
       });
       hint.className = 'alert info'; hint.innerHTML = lines.map(esc).join('<br>');
-      var allExisting = lts.every(function (lt) { return !!r.existing[lt]; });
+      var allExisting = lts.every(function (lt) { return r.existing && !!r.existing[lt]; });
       $('scCodeGroup').classList.toggle('hidden', allExisting);
-      if (!allExisting && suggestedCode && !$('scCode').value) $('scCode').value = suggestedCode;
+      if (!allExisting) {
+        var cur = $('scCode').value.trim();
+        if (suggestedCode) {
+          // overwrite only if empty or it was our own earlier suggestion (never a code the banker typed)
+          if (!cur || cur === SC.autoCode) { $('scCode').value = suggestedCode; SC.autoCode = suggestedCode; }
+        } else if (cur && cur === SC.autoCode) {
+          $('scCode').value = ''; SC.autoCode = '';
+        }
+      }
     }).catch(function () { if (mine === SC.token) VMW.hideMsg(hint); });
   }
   $('submitCodeForm').addEventListener('submit', function (e) {
