@@ -24,6 +24,11 @@
   .biztool-hero-sub { font-size:14px; color:#c7cfe6; line-height:1.5; margin-bottom:14px; }
   .biztool-feature-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
   .biztool-feature-list li { font-size:13.5px; color:#e4e8f5; line-height:1.4; }
+  .picker-input{padding-right:34px !important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%239aa6c8' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+  .pick-list{position:absolute;left:0;right:0;top:100%;margin-top:4px;max-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--panel,#101d3f);border:1px solid rgba(255,255,255,.18);border-radius:12px;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  .pick-item{padding:12px 14px;font-size:14.5px;color:#fff;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer}
+  .pick-item:hover,.pick-item:active{background:rgba(217,169,78,.18)}
+  .pick-empty{padding:12px 14px;font-size:13.5px;color:#9aa6c8}
 </style>
 </head>
 <body>
@@ -47,7 +52,7 @@
       <div class="card">
         <form id="requestCodeForm" novalidate>
           <div class="field"><label for="reqName">Full name<span class="req">*</span></label><input type="text" id="reqName" autocomplete="name" placeholder="Your name"></div>
-          <div class="field"><label for="reqBank">Bank or NBFC name<span class="req">*</span></label><input type="text" id="reqBank" list="reqBankList" autocomplete="off" placeholder="Type to search, then pick from the list"><datalist id="reqBankList"></datalist></div>
+          <div class="field"><label for="reqBank">Bank or NBFC name<span class="req">*</span></label><input type="text" id="reqBank" autocomplete="off" placeholder="Tap to choose your bank / NBFC"></div>
           <div class="field"><label for="reqState">State<span class="req">*</span></label><select id="reqState"><option value="">Loading states…</option></select></div>
           <div class="field"><label for="reqEmail">Official bank email ID<span class="req">*</span></label><input type="email" id="reqEmail" autocomplete="email" placeholder="name@yourbank.com">
             <div class="hint">Personal emails (Gmail, Yahoo, etc.) are not accepted.</div></div>
@@ -212,7 +217,7 @@
       <div class="chip-row" id="scBankChips"><span class="muted small">Loading your banks…</span></div>
     </div>
     <div id="scNewBankFields" class="hidden">
-      <div class="field"><label for="scNewBankName">New bank / NBFC name</label><input type="text" id="scNewBankName" list="scBankList" autocomplete="off" placeholder="Type to search, then pick from the list"><datalist id="scBankList"></datalist></div>
+      <div class="field"><label for="scNewBankName">New bank / NBFC name</label><input type="text" id="scNewBankName" autocomplete="off" placeholder="Tap to choose the bank / NBFC"></div>
       <div class="field"><label for="scNewBankEmail">Official email for this bank</label><input type="email" id="scNewBankEmail" placeholder="name@newbank.com"></div>
     </div>
     <div class="field"><label>Loan type</label>
@@ -293,17 +298,46 @@
   // Banks and states come ONLY from the sheet tabs: "Bank codes" (Lender Name) and "State/City".
   // There is no fallback to the old external bank list, so a bank picked here always matches the DSA code list.
   var REG_DATA = { lenders: [], states: [] };
-  function fillDatalist(id, items) {
-    var el = $(id); if (!el) return;
-    el.innerHTML = items.map(function (v) { return '<option value="' + esc(v) + '"></option>'; }).join('');
-  }
   // Returns the exact Lender Name for what was typed/picked, or '' if it is not on the list.
   function matchLender(typed) {
     var t = String(typed || '').trim().toLowerCase();
     for (var i = 0; i < REG_DATA.lenders.length; i++) if (REG_DATA.lenders[i].toLowerCase() === t) return REG_DATA.lenders[i];
     return '';
   }
-  function setLenders(list) { REG_DATA.lenders = list; fillDatalist('reqBankList', list); fillDatalist('scBankList', list); }
+  // Searchable dropdown: tap the field to see the whole Bank codes list, type to narrow it, tap a bank to select.
+  var PICKERS = [];
+  function lenderPicker(input) {
+    var wrap = input.parentNode, selecting = false, shown = [];
+    wrap.style.position = 'relative';
+    input.classList.add('picker-input');
+    var box = document.createElement('div'); box.className = 'pick-list'; box.style.display = 'none'; wrap.appendChild(box);
+    function isOpen() { return box.style.display !== 'none'; }
+    function render() {
+      var q = input.value.trim().toLowerCase();
+      if (!REG_DATA.lenders.length) { shown = []; box.innerHTML = '<div class="pick-empty">Loading banks…</div>'; return; }
+      shown = REG_DATA.lenders.filter(function (n) { return !q || n.toLowerCase().indexOf(q) !== -1; });
+      box.innerHTML = shown.length
+        ? shown.map(function (n, i) { return '<div class="pick-item" data-i="' + i + '">' + esc(n) + '</div>'; }).join('')
+        : '<div class="pick-empty">No match - choose a bank from the list</div>';
+    }
+    function open() { if (selecting) return; render(); box.style.display = 'block'; }
+    function close() { box.style.display = 'none'; var m = matchLender(input.value); if (m) input.value = m; }
+    input.addEventListener('focus', open);
+    input.addEventListener('click', open);
+    input.addEventListener('input', open);
+    input.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    box.addEventListener('click', function (e) {
+      var it = e.target.closest('.pick-item'); if (!it) return;
+      var name = shown[parseInt(it.getAttribute('data-i'), 10)]; if (!name) return;
+      input.value = name; box.style.display = 'none';
+      selecting = true; input.dispatchEvent(new Event('input', { bubbles: true })); selecting = false;
+    });
+    function outside(e) { if (isOpen() && !wrap.contains(e.target)) close(); }
+    document.addEventListener('mousedown', outside);
+    document.addEventListener('touchstart', outside, { passive: true });
+    return function refresh() { if (isOpen()) render(); };
+  }
+  function setLenders(list) { REG_DATA.lenders = list; PICKERS.forEach(function (f) { f(); }); }
   function setStates(list) {
     REG_DATA.states = list;
     $('reqState').innerHTML = '<option value="">Select your state</option>' + list.map(function (s) { return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('');
@@ -330,6 +364,8 @@
       if (!REG_DATA.lenders.length) { $('reqBank').placeholder = 'Could not load bank list - refresh the page'; }
     });
   }
+  PICKERS.push(lenderPicker($('reqBank')));
+  PICKERS.push(lenderPicker($('scNewBankName')));
   loadRegLists();
   $('requestCodeForm').addEventListener('submit', function (e) {
     e.preventDefault();
