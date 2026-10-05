@@ -197,93 +197,42 @@
   VMW.wireDigits($('pin'), 4);
   VMW.loadLists('both');
 
-  /* ---------- Dynamic Bank Codes Engine (All Loan Types) ---------- */
-  var DEFAULT_FALLBACK_PRODUCTS = [
-    { code: "PL", label: "Personal Loan" },
-    { code: "BL", label: "Business Loan" },
-    { code: "HL", label: "Home Loan" },
-    { code: "LAP", label: "Loan Against Property" },
-    { code: "VL", label: "Vehicle Loan" },
-    { code: "EL", label: "Education Loan" }
-  ];
-
+    /* ---------- Bank codes (same "Bank codes" tab as banker registration) ---------- */
   var BANK_CODES_DATA = { products: [], byProduct: {} };
 
-  function loadBankCodes() {
-    var pCode = VMW.store.get(CODE_KEY) || CODE || '';
-    return VMW.post({ action: 'partnerGetBankCodes', partnerCode: pCode }).then(function (r) {
-      if (r && (r.success || r.status === 'success') && r.products && r.products.length) {
-        BANK_CODES_DATA = r;
-      } else {
-        ensureFallbackBankCodes();
-      }
-      populateLoanTypes();
-    }).catch(function (err) {
-      console.warn('Network issue fetching bank codes, using fallbacks:', err);
-      ensureFallbackBankCodes();
-      populateLoanTypes();
-    });
+  function showBankCodesError() {
+    var sel = $('abLoanType');
+    if (sel) sel.innerHTML = '<option value="">Could not load — close and reopen</option>';
   }
 
-  function ensureFallbackBankCodes() {
-    if (!BANK_CODES_DATA.products || !BANK_CODES_DATA.products.length) {
-      BANK_CODES_DATA.products = DEFAULT_FALLBACK_PRODUCTS;
-      var defaultBanks = [
-        { name: "HDFC Bank" },
-        { name: "ICICI Bank" },
-        { name: "Axis Bank" },
-        { name: "State Bank of India" },
-        { name: "Kotak Mahindra Bank" },
-        { name: "Bajaj Finserv" },
-        { name: "Tata Capital" },
-        { name: "Piramal Capital" }
-      ];
-      BANK_CODES_DATA.byProduct = {};
-      DEFAULT_FALLBACK_PRODUCTS.forEach(function(p) {
-        BANK_CODES_DATA.byProduct[p.code] = defaultBanks;
-      });
-    }
+  function loadBankCodes() {
+    var sel = $('abLoanType');
+    if (sel && !BANK_CODES_DATA.products.length) sel.innerHTML = '<option value="">Loading loan types…</option>';
+    return VMW.post({ action: 'partnerGetBankCodes', partnerCode: CODE }).then(function (r) {
+      if (r && r.success && r.products && r.products.length) { BANK_CODES_DATA = r; populateLoanTypes(); }
+      else showBankCodesError();
+    }).catch(showBankCodesError);
   }
 
   function populateLoanTypes() {
     var sel = $('abLoanType');
     if (!sel) return;
-    if (!BANK_CODES_DATA.products || !BANK_CODES_DATA.products.length) {
-      ensureFallbackBankCodes();
-    }
     var currentVal = sel.value;
     sel.innerHTML = '<option value="">Select Loan Type</option>' +
       BANK_CODES_DATA.products.map(function (p) {
-        return '<option value="' + esc(p.code) + '" ' + (p.code === currentVal ? 'selected' : '') + '>' + esc(p.label || p.code) + '</option>';
+        return '<option value="' + esc(p.code) + '"' + (p.code === currentVal ? ' selected' : '') + '>' + esc(p.label || p.code) + '</option>';
       }).join('');
   }
 
   $('abLoanType').addEventListener('change', function () {
-    var pCode = this.value;
-    var bSel = $('abBank');
-    if (!pCode) {
-      bSel.innerHTML = '<option value="">Choose loan type first</option>';
-      bSel.disabled = true;
-      return;
-    }
+    var pCode = this.value, bSel = $('abBank');
+    if (!pCode) { bSel.innerHTML = '<option value="">Choose loan type first</option>'; bSel.disabled = true; return; }
     var list = (BANK_CODES_DATA.byProduct && BANK_CODES_DATA.byProduct[pCode]) || [];
-    if (!list.length) {
-      ensureFallbackBankCodes();
-      list = (BANK_CODES_DATA.byProduct && BANK_CODES_DATA.byProduct[pCode]) || [];
-    }
-
-    if (!list.length) {
-      bSel.innerHTML = '<option value="">No mapped banks for this loan</option>';
-      bSel.disabled = true;
-      return;
-    }
+    if (!list.length) { bSel.innerHTML = '<option value="">No mapped banks for this loan</option>'; bSel.disabled = true; return; }
     bSel.innerHTML = '<option value="">Select Bank / NBFC</option>' +
-      list.map(function (b) {
-        return '<option value="' + esc(b.name) + '">' + esc(b.name) + '</option>';
-      }).join('');
+      list.map(function (b) { return '<option value="' + esc(b.name) + '">' + esc(b.name) + '</option>'; }).join('');
     bSel.disabled = false;
   });
-
   /* ---------- Views Navigation ---------- */
   function showAuth(view) {
     $('bootScreen').classList.add('hidden'); 
@@ -464,7 +413,7 @@
   function closeSheet(id) { $(id).style.display = 'none'; $('sheetBackdrop').style.display = 'none'; }
   $('sheetBackdrop').addEventListener('click', function () { closeSheet('addBankerSheet'); closeSheet('sendToBankerSheet'); });
   $('closeAddBankerSheet').addEventListener('click', function () { closeSheet('addBankerSheet'); });
-  $('closeSendToBankerSheet').addEventListener('click', function () { closeSendToBankerSheet(); });
+  $('closeSendToBankerSheet').addEventListener('click', function () { closeSheet('sendToBankerSheet'); });
 
   function loadMyBankers() {
     var el = $('myBankersArea'); el.innerHTML = '<div style="color:var(--muted);">Loading…</div>';
