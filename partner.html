@@ -33,7 +33,7 @@
     box-sizing: border-box;
   }
   select.field-select:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
   }
 </style>
@@ -168,7 +168,7 @@
   <div class="field">
     <label for="abLoanType">Loan Type / Product<span class="req">*</span></label>
     <select id="abLoanType" class="field-select">
-      <option value="">Select Loan Type</option>
+      <option value="">Loading loan types…</option>
     </select>
   </div>
   <div class="field">
@@ -204,24 +204,49 @@
   VMW.wireDigits($('pin'), 4);
   VMW.loadLists('both');
 
-  /* ---------- Dynamic Bank Codes ---------- */
+  /* ---------- Dynamic Bank Codes Engine ---------- */
   var BANK_CODES_DATA = { products: [], byProduct: {} };
 
   function loadBankCodes() {
-    if (!CODE) return;
-    VMW.post({ action: 'partnerGetBankCodes', partnerCode: CODE }).then(function (r) {
-      if (r && r.products) {
+    if (!CODE) return Promise.resolve();
+    return VMW.post({ action: 'partnerGetBankCodes', partnerCode: CODE }).then(function (r) {
+      if (r && (r.success || r.status === 'success') && r.products && r.products.length) {
         BANK_CODES_DATA = r;
         populateLoanTypes();
+      } else {
+        console.warn('Bank list load notice:', r ? (r.message || r.error) : 'Empty');
+        // Graceful fallback defaults if sheet tab connection has delay
+        if (!BANK_CODES_DATA.products.length) {
+          BANK_CODES_DATA.products = [
+            { code: "HL", label: "Home Loan" },
+            { code: "LAP", label: "Loan Against Property" },
+            { code: "PL", label: "Personal Loan" },
+            { code: "BL", label: "Business Loan" }
+          ];
+          populateLoanTypes();
+        }
       }
     }).catch(function (err) {
-      console.warn('Could not load bank codes:', err);
+      console.warn('Network issue fetching bank codes:', err);
+      if (!BANK_CODES_DATA.products.length) {
+        BANK_CODES_DATA.products = [
+          { code: "HL", label: "Home Loan" },
+          { code: "LAP", label: "Loan Against Property" },
+          { code: "PL", label: "Personal Loan" },
+          { code: "BL", label: "Business Loan" }
+        ];
+        populateLoanTypes();
+      }
     });
   }
 
   function populateLoanTypes() {
     var sel = $('abLoanType');
     if (!sel) return;
+    if (!BANK_CODES_DATA.products || !BANK_CODES_DATA.products.length) {
+      sel.innerHTML = '<option value="">No loan types found</option>';
+      return;
+    }
     sel.innerHTML = '<option value="">Select Loan Type</option>' +
       BANK_CODES_DATA.products.map(function (p) {
         return '<option value="' + esc(p.code) + '">' + esc(p.label || p.code) + '</option>';
@@ -231,12 +256,17 @@
   $('abLoanType').addEventListener('change', function () {
     var pCode = this.value;
     var bSel = $('abBank');
-    if (!pCode || !BANK_CODES_DATA.byProduct[pCode]) {
+    if (!pCode) {
       bSel.innerHTML = '<option value="">Choose loan type first</option>';
       bSel.disabled = true;
       return;
     }
-    var list = BANK_CODES_DATA.byProduct[pCode] || [];
+    var list = (BANK_CODES_DATA.byProduct && BANK_CODES_DATA.byProduct[pCode]) || [];
+    if (!list.length) {
+      bSel.innerHTML = '<option value="">No mapped banks for this loan</option>';
+      bSel.disabled = true;
+      return;
+    }
     bSel.innerHTML = '<option value="">Select Bank / NBFC</option>' +
       list.map(function (b) {
         return '<option value="' + esc(b.name) + '">' + esc(b.name) + '</option>';
@@ -377,7 +407,7 @@
     $('openBizToolBtn').href = 'biztool.html?holderType=Partner&holderCode=' + encodeURIComponent(CODE) + '&holderName=' + encodeURIComponent(pname || '');
     
     loadBizToolSummary();
-    loadBankCodes(); // Fetch live sheet-driven bank/NBFC codes
+    loadBankCodes(); // Load bank codes on startup
 
     var loginMobile = VMW.store.get(MOBILE_KEY);
     $('adminLink').classList.toggle('hidden', loginMobile !== VMW_CONFIG.ADMIN_ACCESS_MOBILE);
@@ -450,6 +480,12 @@
   $('addBankerBtn').addEventListener('click', function () { 
     $('abResult').classList.add('hidden'); 
     openSheet('addBankerSheet'); 
+    // Always refresh and populate on open
+    if (!BANK_CODES_DATA.products || !BANK_CODES_DATA.products.length) {
+      loadBankCodes();
+    } else {
+      populateLoanTypes();
+    }
   });
 
   $('abSubmitBtn').addEventListener('click', function () {
@@ -463,12 +499,12 @@
 
     if (!loanType || !bank) {
       box.className = 'alert error';
-      box.textContent = 'Please choose the loan type and the bank / NBFC.';
+      box.textContent = 'Please choose both the loan type and the bank / NBFC.';
       return;
     }
     if (!name || !email || mobile.length !== 10) {
       box.className = 'alert error';
-      box.textContent = 'Please fill in the banker\'s name, email, and a valid 10-digit mobile number.';
+      box.textContent = 'Please fill in the banker\'s full name, email, and 10-digit mobile number.';
       return;
     }
 
