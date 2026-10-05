@@ -47,8 +47,8 @@
       <div class="card">
         <form id="requestCodeForm" novalidate>
           <div class="field"><label for="reqName">Full name<span class="req">*</span></label><input type="text" id="reqName" autocomplete="name" placeholder="Your name"></div>
-          <div class="field"><label for="reqBank">Bank or NBFC name<span class="req">*</span></label><input type="text" id="reqBank" autocomplete="off" placeholder="Start typing your bank / NBFC"></div>
-          <div class="field"><label for="reqState">State<span class="req">*</span></label><input type="text" id="reqState" autocomplete="off" placeholder="Start typing your state"></div>
+          <div class="field"><label for="reqBank">Bank or NBFC name<span class="req">*</span></label><input type="text" id="reqBank" list="reqBankList" autocomplete="off" placeholder="Type to search, then pick from the list"><datalist id="reqBankList"></datalist></div>
+          <div class="field"><label for="reqState">State<span class="req">*</span></label><select id="reqState"><option value="">Loading states…</option></select></div>
           <div class="field"><label for="reqEmail">Official bank email ID<span class="req">*</span></label><input type="email" id="reqEmail" autocomplete="email" placeholder="name@yourbank.com">
             <div class="hint">Personal emails (Gmail, Yahoo, etc.) are not accepted.</div></div>
           <div class="field"><label for="reqMobile">Mobile number<span class="req">*</span></label><input type="tel" id="reqMobile" maxlength="10" inputmode="numeric" autocomplete="tel" placeholder="10-digit mobile"></div>
@@ -212,7 +212,7 @@
       <div class="chip-row" id="scBankChips"><span class="muted small">Loading your banks…</span></div>
     </div>
     <div id="scNewBankFields" class="hidden">
-      <div class="field"><label for="scNewBankName">New bank / NBFC name</label><input type="text" id="scNewBankName" autocomplete="off" placeholder="Start typing…"></div>
+      <div class="field"><label for="scNewBankName">New bank / NBFC name</label><input type="text" id="scNewBankName" list="scBankList" autocomplete="off" placeholder="Type to search, then pick from the list"><datalist id="scBankList"></datalist></div>
       <div class="field"><label for="scNewBankEmail">Official email for this bank</label><input type="email" id="scNewBankEmail" placeholder="name@newbank.com"></div>
     </div>
     <div class="field"><label>Loan type</label>
@@ -290,44 +290,42 @@
   VMW.wireDigits($('loginPin'), 4);
   VMW.wireAmount($('disburseAmount'));
 
-  // Local storage cache for registration dropdowns
+  // Banks and states come ONLY from the sheet tabs: "Bank codes" (Lender Name) and "State/City".
+  // There is no fallback to the old external bank list, so a bank picked here always matches the DSA code list.
   var REG_DATA = { lenders: [], states: [] };
-
-  // Wire autosuggest to live sheet-backed arrays with fallback to VMW.lists
-  VMW.autosuggest($('reqBank'), function () {
-    return (REG_DATA.lenders && REG_DATA.lenders.length) ? REG_DATA.lenders : VMW.lists.banks;
-  });
-
-  VMW.autosuggest($('reqState'), function () {
-    return (REG_DATA.states && REG_DATA.states.length) ? REG_DATA.states : VMW.lists.states;
-  });
-
-  // Fetch Lender Names from 'Bank Codes' tab
-  VMW.post({ action: 'getBankCodesLenders' }).then(function (r) {
-    if (r && r.status === 'success' && r.lenders && r.lenders.length) {
-      REG_DATA.lenders = r.lenders;
-    }
-  }).catch(function () {});
-
-  // Fetch States from 'State/City' tab
-  VMW.post({ action: 'getStatesFromSheet' }).then(function (r) {
-    if (r && r.status === 'success' && r.states && r.states.length) {
-      REG_DATA.states = r.states;
-      // Also sync canonical state validator so form validation accepts sheet spellings
-      if (VMW.lists) VMW.lists.states = r.states;
-    }
-  }).catch(function () {});
-
-  VMW.loadLists('both');
+  function fillDatalist(id, items) {
+    var el = $(id); if (!el) return;
+    el.innerHTML = items.map(function (v) { return '<option value="' + esc(v) + '"></option>'; }).join('');
+  }
+  // Returns the exact Lender Name for what was typed/picked, or '' if it is not on the list.
+  function matchLender(typed) {
+    var t = String(typed || '').trim().toLowerCase();
+    for (var i = 0; i < REG_DATA.lenders.length; i++) if (REG_DATA.lenders[i].toLowerCase() === t) return REG_DATA.lenders[i];
+    return '';
+  }
+  function loadRegLists() {
+    VMW.post({ action: 'getBankCodesLenders' }).then(function (r) {
+      if (r && r.status === 'success' && r.lenders && r.lenders.length) {
+        REG_DATA.lenders = r.lenders; fillDatalist('reqBankList', r.lenders); fillDatalist('scBankList', r.lenders);
+      }
+    }).catch(function () {});
+    VMW.post({ action: 'getStatesFromSheet' }).then(function (r) {
+      if (r && r.status === 'success' && r.states && r.states.length) {
+        REG_DATA.states = r.states;
+        $('reqState').innerHTML = '<option value="">Select your state</option>' + r.states.map(function (s) { return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('');
+      } else { $('reqState').innerHTML = '<option value="">Could not load states - refresh the page</option>'; }
+    }).catch(function () { $('reqState').innerHTML = '<option value="">Could not load states - refresh the page</option>'; });
+  }
+  loadRegLists();
   $('requestCodeForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var box = $('reqResult'); VMW.hideMsg(box); VMW.clearErrors($('requestCodeForm'));
     var ok = true; function bad(id, m) { VMW.setErr(id, m); ok = false; }
-    var name = $('reqName').value.trim(), bank = $('reqBank').value.trim(), email = $('reqEmail').value.trim(), mobile = VMW.mobile10($('reqMobile').value);
-    var state = VMW.canonicalState($('reqState').value);
+    var name = $('reqName').value.trim(), bank = matchLender($('reqBank').value), email = $('reqEmail').value.trim(), mobile = VMW.mobile10($('reqMobile').value);
+    var state = $('reqState').value;
     if (name.length < 2) bad('reqName', 'Please enter your full name.');
-    if (bank.length < 2) bad('reqBank', 'Please enter your bank or NBFC name.');
-    if (!state) bad('reqState', 'Please pick your state from the list.');
+    if (!bank) bad('reqBank', 'Please pick your bank / NBFC from the list.');
+    if (!state) bad('reqState', 'Please select your state.');
     if (!validEmail(email)) bad('reqEmail', 'Enter a valid email address.');
     else if (isPersonal(email)) bad('reqEmail', 'Personal emails are not allowed. Please use your official bank email.');
     if (!/^[6-9]\d{9}$/.test(mobile)) bad('reqMobile', 'Enter a valid 10-digit mobile number.');
@@ -480,12 +478,8 @@
       }
     }).catch(function () {});
 
-    // 2. Fetch master Lender Name list from "Bank Codes" tab for autosuggest
-    VMW.post({ action: 'getBankCodesLenders' }).then(function (r) {
-      if (r.status === 'success' && r.lenders && r.lenders.length) {
-        SC.masterLenders = r.lenders;
-      }
-    }).catch(function () {});
+    // 2. Bank list (Bank codes tab) for the "Add new bank" picker
+    if (!REG_DATA.lenders.length) loadRegLists();
   }  
   function renderBankChips() {
     var el = $('scBankChips');
@@ -498,12 +492,7 @@
     else { SC.newMode = false; SC.bank = b.getAttribute('data-bank'); $('scNewBankFields').classList.add('hidden'); }
     renderBankChips(); refreshCodeHint();
   });
-  // Autosuggest from Bank Codes master lenders list
-  VMW.autosuggest($('scNewBankName'), function () { 
-    return (SC.masterLenders && SC.masterLenders.length) ? SC.masterLenders : VMW.lists.banks; 
-  }, function () { 
-    refreshCodeHint(); 
-  });
+  // New-bank picker uses the <datalist> filled from the Bank codes tab (see loadRegLists)
   $('scNewBankName').addEventListener('input', refreshCodeHintSoon);
 
   $('scLoanTypeChips').addEventListener('click', function (e) {
@@ -519,7 +508,7 @@
     });
   }
 
-  function currentBank() { return SC.newMode ? $('scNewBankName').value.trim() : SC.bank; }
+  function currentBank() { return SC.newMode ? matchLender($('scNewBankName').value) : SC.bank; }
   function loanTypesChosen() { return SC.loanType ? [SC.loanType] : []; }
   function refreshCodeHint() {
     var bank = currentBank(), lts = loanTypesChosen(), hint = $('scCodeHint');
@@ -557,6 +546,7 @@
     e.preventDefault();
     var box = $('scResult'); VMW.hideMsg(box);
     var lts = loanTypesChosen(), bank = currentBank();
+    if (SC.newMode && !bank) { VMW.showMsg(box, 'Please pick the bank from the list that appears as you type.', 'error'); return; }
     if (!bank) { VMW.showMsg(box, 'Please select a bank, or add a new one.', 'error'); return; }
     if (!lts.length) { VMW.showMsg(box, 'Please choose a loan type for this code.', 'error'); return; }
     var newEmail = $('scNewBankEmail').value.trim();
