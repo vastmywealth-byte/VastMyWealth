@@ -31,7 +31,6 @@
     if (!el) return;
     el.addEventListener('input', function () { el.value = el.value.replace(/\D/g, '').slice(0, max || 10); });
   };
-
   VMW.PRODUCTS = { PL: 'Personal Loan', BL: 'Business Loan', HL: 'Home Loan', LAP: 'Loan Against Property', VL: 'Vehicle Loan', EL: 'Education Loan' };
   VMW.productLabel = function (p) { return VMW.PRODUCTS[p] || p || ''; };
 
@@ -58,16 +57,19 @@
       })();
     });
   }
+
   VMW.get = function (action, params, o) {
     o = o || {};
     var q = 'action=' + encodeURIComponent(action);
     for (var k in (params || {})) if (params[k] !== undefined && params[k] !== null) q += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
-    return fetchJson(C.BACKEND_URL + '?' + q, {}, o.tries || 2, o.timeout || 40000);
+    return fetchJson(C.BACKEND_URL + '?' + q, {}, o.tries || 2, o.timeout || 30000);
   };
+
   VMW.post = function (payload, o) {
     o = o || {};
-    return fetchJson(C.BACKEND_URL, { method: 'POST', body: JSON.stringify(payload) }, o.tries || 1, o.timeout || 60000);
+    return fetchJson(C.BACKEND_URL, { method: 'POST', body: JSON.stringify(payload) }, o.tries || 1, o.timeout || 45000);
   };
+
   VMW.errMsg = function (e) {
     var m = e && e.message ? e.message : String(e || '');
     if (/failed to fetch|networkerror|load failed|network request/i.test(m)) return 'Could not reach the server. Please check your internet connection and try again.';
@@ -83,12 +85,14 @@
     clearTimeout(t._t);
     t._t = setTimeout(function () { t.className = 'toast'; }, 3400);
   };
+
   VMW.showMsg = function (el, text, type) {
     if (!el) return;
     el.className = 'alert ' + (type || 'info');
     el.textContent = text;
   };
   VMW.hideMsg = function (el) { if (el) { el.className = 'alert hidden'; el.textContent = ''; } };
+
   VMW.busy = function (btn, label, fn) {
     var orig = btn.innerHTML;
     btn.disabled = true;
@@ -98,7 +102,7 @@
     return p.then(function (v) { btn.disabled = false; btn.innerHTML = orig; return v; },
                   function (e) { btn.disabled = false; btn.innerHTML = orig; throw e; });
   };
-  // Field-level errors: setErr('f_name', 'Enter your name'); clearErrors(container)
+
   VMW.setErr = function (id, msg) {
     var el = VMW.$(id); if (!el) return;
     var f = el.closest('.field'); if (!f) return;
@@ -117,7 +121,7 @@
     var i = f.querySelector('input,select,textarea'); if (i) { try { i.focus({ preventScroll: true }); } catch (e) { i.focus(); } }
   };
 
-  /* ---------- instant autosuggest (filters a local list, no network, no delay) ---------- */
+  /* ---------- autosuggest ---------- */
   VMW.autosuggest = function (input, getItems, onPick) {
     if (!input) return;
     var box = document.createElement('div');
@@ -163,7 +167,6 @@
       else if (e.key === 'Enter' && active >= 0) { pick(active); e.preventDefault(); }
       else if (e.key === 'Escape') hide();
     });
-    // mousedown fires before the input loses focus, so the tap always registers
     box.addEventListener('mousedown', function (e) {
       var el = e.target.closest('[data-i]'); if (!el) return;
       e.preventDefault(); pick(parseInt(el.getAttribute('data-i'), 10));
@@ -175,11 +178,15 @@
     document.addEventListener('click', function (e) { if (e.target !== input && !box.contains(e.target)) hide(); });
   };
 
-  /* ---------- State / bank lists: show instantly from the device, refresh quietly ---------- */
-  VMW.STATES_FALLBACK = ['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh',
-    'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand',
-    'Karnataka', 'Kerala', 'Ladakh', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha',
-    'Puducherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'];
+  /* ---------- State / bank lists ---------- */
+  VMW.STATES_FALLBACK = [
+    'Andaman & Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar',
+    'Chandigarh', 'Chhattisgarh', 'Dadra & Nagar Haveli and Daman & Diu', 'Delhi', 'Goa',
+    'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu & Kashmir', 'Jharkhand', 'Karnataka',
+    'Kerala', 'Ladakh', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+    'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Puducherry', 'Punjab', 'Rajasthan',
+    'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+  ];
   VMW.lists = { banks: [], states: VMW.STATES_FALLBACK.slice() };
   var LISTS_KEY = 'vmw_lists_v2';
   function readCache() { try { return JSON.parse(localStorage.getItem(LISTS_KEY) || '{}'); } catch (e) { return {}; } }
@@ -188,16 +195,16 @@
     if (c.states && c.states.length) VMW.lists.states = c.states;
     if (c.banks && c.banks.length) VMW.lists.banks = c.banks;
   }
-  // need = 'states' (customers) | 'both' (bankers)
+
   VMW.loadLists = function (need) {
     applyCache();
     return VMW.get(need === 'both' ? 'getBankList' : 'getStates', null, { tries: 2 }).then(function (r) {
       if (r && r.states && r.states.length) VMW.lists.states = r.states;
       if (r && r.banks && r.banks.length) VMW.lists.banks = r.banks;
-      try { localStorage.setItem(LISTS_KEY, JSON.stringify({ banks: VMW.lists.banks, states: VMW.lists.states })); } catch (e) { /* storage full — fine */ }
-    }).catch(function () { /* keep whatever we already have */ });
+      try { localStorage.setItem(LISTS_KEY, JSON.stringify({ banks: VMW.lists.banks, states: VMW.lists.states })); } catch (e) {}
+    }).catch(function () {});
   };
-  // Returns the official spelling of a state, or '' if it is not in the list
+
   VMW.canonicalState = function (v) {
     var t = String(v || '').trim().toLowerCase();
     if (!t) return '';
@@ -223,9 +230,6 @@
   };
 
   /* ---------- links ---------- */
-  // Document checklist per loan / employment / company type — the same lists the
-  // customer sees on the upload screens, so a banker or partner can ask for exactly
-  // the right documents over WhatsApp.
   VMW.docChecklist = function (product, employmentType, companyType) {
     if (product === 'VL') return ['PAN card', 'Aadhaar card', 'Selfie / photo', 'Bank statement — last 6 months (PDF, with password if any)', 'Vehicle quotation / proforma invoice (new vehicle) or RC (used vehicle)'];
     if (product === 'EL') return ['Student PAN / ID proof', 'Student Aadhaar card', 'Admission letter', 'Fee structure', 'Co-applicant PAN card', 'Co-applicant Aadhaar card', 'Co-applicant bank statement — last 6 months'];
@@ -238,7 +242,7 @@
     }
     return ['Applicant PAN card, Aadhaar card and selfie', 'Co-applicant PAN card, Aadhaar card and selfie', 'GST certificate', 'Current account statement — last 6 months (PDF, with password if any)'];
   };
-  // opts: { name, companyName, product, employmentType, companyType, loanAmount }
+
   VMW.docChecklistWaLink = function (mobile10, opts) {
     var isSE = opts.employmentType === 'Self-Employed';
     var who = (isSE && opts.companyName) ? opts.companyName : (opts.name || '');
@@ -248,8 +252,6 @@
     return VMW.waLink('91' + mobile10, text);
   };
 
-  /* ---------- links (continued) ---------- */
-  // Link that opens a lead in the RIGHT live page (never an old/trial page)
   VMW.leadLink = function (o) {
     var base = (o.product === 'VL' || o.product === 'EL') ? C.VL_EL_URL : C.APPLY_URL;
     var q = [];
@@ -273,11 +275,11 @@
   };
   VMW.store = {
     get: function (k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
-    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } },
-    del: function (k) { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } }
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+    del: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
   };
 
-  /* ---------- document uploads (used by apply.html and vl-el-application.html) ---------- */
+  /* ---------- document uploads ---------- */
   var MAX_FILE = 10 * 1024 * 1024;
   VMW.docBox = function (key, label, sub, accept, multiple) {
     return '<div class="upload-box" id="box_' + VMW.esc(key) + '"><div class="upload-icon">📄</div>' +
@@ -333,8 +335,6 @@
       r.readAsDataURL(file);
     });
   }
-  // Uploads one file per request (a weak connection only retries a small upload).
-  // Returns the list of files that FAILED — empty list means everything is safely uploaded.
   VMW.uploadAll = async function (jobs, base, action, onProgress) {
     var failed = [];
     for (var i = 0; i < jobs.length; i++) {
@@ -357,13 +357,25 @@
     return failed;
   };
 
-  /* ---------- announcement popup (shown once per session) ---------- */
+  /* ---------- sheets / modal fix ---------- */
+  VMW.openSheet = function (sheetId, backdropId) {
+    var b = VMW.$(backdropId), s = VMW.$(sheetId);
+    if (b) b.style.display = 'block';
+    if (s) s.style.display = 'block';
+  };
+  VMW.closeSheet = function (sheetId, backdropId) {
+    var s = VMW.$(sheetId), b = VMW.$(backdropId);
+    if (s) s.style.display = 'none';
+    if (b) b.style.display = 'none';
+  };
+
+  /* ---------- announcements ---------- */
   function safeUrl(u) { return /^https?:\/\//i.test(String(u || '')) ? u : ''; }
   VMW.showAnnouncement = function (audience) {
     VMW.get('getAnnouncement', { audience: audience }, { tries: 1 }).then(function (r) {
       if (!r || !r.success || !r.announcement) return;
       var a = r.announcement, key = 'vmw_ann_' + (a.id || a.title);
-      try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch (e) { /* ignore */ }
+      try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch (e) {}
       var overlay = document.createElement('div'); overlay.className = 'modal';
       var box = document.createElement('div'); box.className = 'modal-box'; overlay.appendChild(box);
       if (safeUrl(a.imageUrl)) { var im = document.createElement('img'); im.src = a.imageUrl; im.alt = ''; box.appendChild(im); }
@@ -376,28 +388,20 @@
       d.onclick = function () { overlay.remove(); }; box.appendChild(d);
       overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
       document.body.appendChild(overlay);
-    }).catch(function () { /* announcements are optional */ });
+    }).catch(function () {});
   };
 
-  /* ---------- sheets ---------- */
-  VMW.openSheet = function (sheetId, backdropId) { VMW.$(backdropId).style.display = 'block'; VMW.$(sheetId).style.display = 'block'; };
-  VMW.closeSheet = function (sheetId, backdropId) { VMW.$(sheetId).style.display = 'none'; VMW.$(backdropId).style.display = 'none'; };
-
-  /* ---------- offline / installable app ---------- */
+  /* ---------- service worker & install ---------- */
   if ('serviceWorker' in navigator) {
-    w.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () { /* optional */ }); });
+    w.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); });
   }
 
-  /* ---------- "Install the app" bar (every page) ----------
-     Browsers only show their own install prompt on some pages/visits, so the app
-     shows its own bar at the top of every module. It stays hidden once the app is
-     installed, and after "✕" it stays away for 7 days. */
   var DISMISS_KEY = 'vmw_install_dismissed', deferred = null, bar = null;
   function isStandalone() {
     return (w.matchMedia && w.matchMedia('(display-mode: standalone)').matches) || w.navigator.standalone === true;
   }
   function dismissedRecently() {
-    var t = 0; try { t = parseInt(localStorage.getItem(DISMISS_KEY), 10) || 0; } catch (e) { /* ignore */ }
+    var t = 0; try { t = parseInt(localStorage.getItem(DISMISS_KEY), 10) || 0; } catch (e) {}
     return Date.now() - t < 7 * 24 * 3600 * 1000;
   }
   function hideBar() { if (bar && bar.parentNode) bar.parentNode.removeChild(bar); bar = null; }
@@ -409,20 +413,20 @@
     bar.setAttribute('aria-label', 'Install the app');
     bar.innerHTML = '<img src="1000550390.png" alt="" onerror="this.style.display=\'none\'">' +
       '<div class="ib-text"><b>Install the VastMyWealth app</b><span>' + (iosHelp
-        ? 'Tap <b>Share</b> (the square with an arrow), then <b>Add to Home Screen</b>.'
-        : 'Faster access — it works just like an app on your phone.') + '</span></div>' +
+        ? 'Tap <b>Share</b>, then <b>Add to Home Screen</b>.'
+        : 'Faster access — works just like an app on your phone.') + '</span></div>' +
       (iosHelp ? '' : '<button type="button" class="btn btn-primary btn-sm" id="vmwInstallBtn">Install</button>') +
       '<button type="button" class="ib-x" aria-label="Not now">✕</button>';
     document.body.insertBefore(bar, document.body.firstChild);
     bar.querySelector('.ib-x').addEventListener('click', function () {
-      try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) { /* ignore */ }
+      try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) {}
       hideBar();
     });
     var b = bar.querySelector('#vmwInstallBtn');
     if (b) b.addEventListener('click', function () { VMW.install.prompt(); });
   }
   VMW.install = {
-    ready: function () { return !!deferred; },
+    ready: function () { return !deferred; },
     prompt: function () {
       if (!deferred) return Promise.resolve(false);
       var d = deferred; deferred = null;
@@ -437,7 +441,6 @@
     document.dispatchEvent(new Event('vmw-install-ready'));
   });
   w.addEventListener('appinstalled', function () { deferred = null; hideBar(); });
-  // iPhone / iPad Safari has no install event — show the how-to instead
   (function () {
     var ua = w.navigator.userAgent || '';
     var ios = /iphone|ipad|ipod/i.test(ua) && /safari/i.test(ua) && !/crios|fxios|edgios/i.test(ua);
