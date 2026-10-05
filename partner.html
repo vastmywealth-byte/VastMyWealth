@@ -135,7 +135,7 @@
 <div class="sheet" id="addBankerSheet">
   <div class="sheet-head"><h3>Add a banker</h3><button class="sheet-close" id="closeAddBankerSheet" aria-label="Close">✕</button></div>
   <div class="field"><label for="abName">Banker's full name</label><input type="text" id="abName" autocomplete="off"></div>
-  <div class="field"><label for="abBank">Bank / NBFC name</label><input type="text" id="abBank" autocomplete="off" placeholder="Auto-fills if we recognise their email"></div>
+  <div class="field"><label for="abBank">Bank / NBFC name</label><input type="text" id="abBank" autocomplete="off" placeholder="Start typing their bank or NBFC"></div>
   <div class="field"><label for="abEmail">Banker's official email</label><input type="email" id="abEmail" autocomplete="off"></div>
   <div class="field"><label for="abMobile">Banker's mobile number</label><input type="tel" id="abMobile" maxlength="10" inputmode="numeric"></div>
   <button class="btn btn-primary btn-block" id="abSubmitBtn">Add banker</button>
@@ -156,8 +156,10 @@
   var $ = VMW.$, esc = VMW.esc, C = VMW_CONFIG;
   var CODE_KEY = 'vmw_partner_code', NAME_KEY = 'vmw_partner_name', MOBILE_KEY = 'vmw_partner_mobile';
   $('termsLink').href = C.PARTNER_TERMS_URL;
-  ['loginMobile', 'fpMobile', 'mobile', 'newAppMobile'].forEach(function (id) { VMW.wireDigits($(id), 10); });
+  ['loginMobile', 'fpMobile', 'mobile', 'newAppMobile', 'abMobile'].forEach(function (id) { VMW.wireDigits($(id), 10); });
   VMW.wireDigits($('loginPin'), 4); VMW.wireDigits($('pin'), 4);
+  VMW.autosuggest($('abBank'), function () { return VMW.lists.banks; });
+  VMW.loadLists('both');
 
   /* ---------- views ---------- */
   function showAuth(view) {
@@ -239,19 +241,15 @@
   var CODE = '';
   function initDashboard() {
     CODE = VMW.store.get(CODE_KEY) || '';
-    var pname = VMW.store.get(NAME_KEY) || '';
-    var pmob = VMW.store.get(MOBILE_KEY) || '';
+    var pname = VMW.store.get(NAME_KEY);
     $('welcomeMsg').textContent = 'Welcome, ' + (pname || 'Partner');
     $('codeMsg').textContent = 'Partner code: ' + CODE;
-
-    // Build co-branded personalized link
-    var baseLink = VMW.refLink(CODE);
-    var link = baseLink + (baseLink.indexOf('?') > -1 ? '&' : '?') + 'pname=' + encodeURIComponent(pname) + '&pmob=' + encodeURIComponent(pmob);
-
+    var link = VMW.refLink(CODE);
     $('refLink').textContent = link;
     $('waShareBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + link);
-    $('bizToolLink').href = 'biztool.html?holderType=Partner&holderCode=' + encodeURIComponent(CODE) + '&holderName=' + encodeURIComponent(pname || '') + '&holderMobile=' + encodeURIComponent(pmob || '');
+    $('bizToolLink').href = 'biztool.html?holderType=Partner&holderCode=' + encodeURIComponent(CODE) + '&holderName=' + encodeURIComponent(pname || '');
     loadBizToolSummary();
+
     // Shown ONLY when logging in with this exact mobile number — a convenience shortcut for
     // whoever owns that number, not a security boundary. admin.html's own password is the
     // real gate; the underlying admin URL is never listed anywhere public.
@@ -275,8 +273,7 @@
     }).catch(function () { el.className = 'alert info'; el.style.marginBottom = '0'; el.textContent = 'Open Biz Tool to subscribe or check your status.'; });
   }
   $('copyBtn').onclick = function () {
-    var fullLink = $('refLink').textContent;
-    VMW.copy(fullLink).then(function () { VMW.toast('Link copied — share it with your customer', 'success'); })
+    VMW.copy(VMW.refLink(CODE)).then(function () { VMW.toast('Link copied — share it with your customer', 'success'); })
       .catch(function () { VMW.toast('Could not copy. Long-press the link to copy it.', 'error'); });
   };
   $('logoutBtn').onclick = function () { VMW.store.del(CODE_KEY); VMW.store.del(NAME_KEY); VMW.store.del(MOBILE_KEY); CODE = ''; showAuth('loginView'); VMW.toast('Logged out'); };
@@ -408,18 +405,5 @@
   if (VMW.store.get(CODE_KEY)) showDashboard(); else showAuth('loginView');
 })();
 </script>
-  <!--Start of Tawk.to Script-->
-<script type="text/javascript">
-var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-(function(){
-var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-s1.async=true;
-s1.src='https://embed.tawk.to/6abe26e4d6b87e34414e927e/1k3rcfrt8';
-s1.charset='UTF-8';
-s1.setAttribute('crossorigin','*');
-s0.parentNode.insertBefore(s1,s0);
-})();
-</script>
-<!--End of Tawk.to Script-->
 </body>
 </html>
