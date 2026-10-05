@@ -13,6 +13,13 @@
 <link rel="stylesheet" href="style.css">
 <style>
   .view{display:none}.view.active{display:block}
+  .biztool-hero { padding:0; overflow:hidden; }
+  .biztool-hero-img { width:100%; aspect-ratio:3/1; object-fit:cover; display:block; background:linear-gradient(135deg,#1a2440,#0B1A38); }
+  .biztool-hero-body { padding:18px 20px; }
+  .biztool-hero-title { font-family:'Poppins',sans-serif; font-size:20px; font-weight:800; color:#D9A94E; margin-bottom:8px; }
+  .biztool-hero-sub { font-size:14px; color:#c7cfe6; line-height:1.5; margin-bottom:14px; }
+  .biztool-feature-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+  .biztool-feature-list li { font-size:13.5px; color:#e4e8f5; line-height:1.4; }
 </style>
 </head>
 <body>
@@ -121,11 +128,27 @@
       <div id="leadsArea" class="mt12"></div>
     </div>
 
-    <div class="card">
-      <div class="card-title">Biz Tool — exclusive leads</div>
-      <p class="card-sub">Subscribe for 7-day exclusive access to matching leads in your chosen state, before they reach the shared pool.</p>
-      <div id="bizToolSummary" class="alert info" style="margin-bottom:0;">Loading…</div>
-      <a class="btn btn-primary btn-block mt12" id="bizToolLink" href="#">Open Biz Tool</a>
+        <!-- BUSINESS TOOL -->
+    <div id="tabBizTool" class="tab-pane">
+      <div class="card biztool-hero">
+        <img src="biz-tool-banner.jpg" alt="" class="biztool-hero-img" onerror="this.style.display='none'">
+        <div class="biztool-hero-body">
+          <div class="biztool-hero-title">Unlock Exclusive Leads with Biz Tool</div>
+          <p class="biztool-hero-sub">Subscribe and get leads exclusively yours for 7 days, earn up to <b>85% commission</b>, and get your own <b>free personal Sales Bot</b>.</p>
+          <ul class="biztool-feature-list">
+            <li>🎯 <b>Exclusive leads</b> — matched to your chosen states &amp; cities, yours alone for 7 days</li>
+            <li>💰 <b>Earn up to 85%</b> commission on every lead you source</li>
+            <li>🤖 <b>Free Sales Bot</b> — instant Telegram alerts for leads, pool leads &amp; pending documents</li>
+            <li>📈 <b>Guaranteed leads</b> — minimum 6/month or 22/quarter, delivered straight to you</li>
+            <li>🎨 <b>Ready-made creatives</b> — share on WhatsApp, Telegram, Facebook &amp; Instagram in one tap</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Your subscription</div>
+        <div id="bizSubStatus" class="mt8">Loading…</div>
+        <a class="btn btn-primary btn-block mt16" id="openBizToolBtn" target="_blank" rel="noopener">🚀 Open Biz Tool</a>
+      </div>
     </div>
   </main>
 </div>
@@ -238,6 +261,20 @@
   });
 
   /* ---------- dashboard ---------- */
+  function loadBizToolSummary() {
+    var box = $('bizSubStatus'); // ⚠️ change this to match your actual status element's id
+    if (!box) return;
+    VMW.post({ action: 'getMySubscription', holderCode: CODE }).then(function (r) {
+      var sub = r.subscription;
+      if (sub) {
+        var daysLeft = Math.max(0, Math.ceil((sub.endDate - Date.now()) / 86400000));
+        box.innerHTML = '<span class="badge ok">Active</span> ' + esc(sub.plan) + ' plan · ' + esc((sub.states || []).join(', ')) +
+          '<div class="small muted mt8">Renews or expires in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + '.</div>';
+      } else {
+        box.innerHTML = '<span class="badge warn">No active subscription</span><div class="small muted mt8">Subscribe to start getting exclusive leads.</div>';
+      }
+    }).catch(function () { box.textContent = 'Could not load your subscription.'; });
+  }
   var CODE = '';
   function initDashboard() {
     CODE = VMW.store.get(CODE_KEY) || '';
