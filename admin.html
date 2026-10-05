@@ -305,7 +305,7 @@ function withBusy(btn, label, fn) {
 }
 
 /* ================= 3. BACK BUTTON NAVIGATION HANDLER ================= */
-// Prevents accidentally closing or exiting the app on Android / mobile browsers
+// Prevents accidentally exiting or reloading the app when tapping back on phone
 function openSheet(s, b) {
   $(b).style.display = 'block';
   $(s).style.display = 'block';
@@ -334,7 +334,7 @@ window.addEventListener('popstate', function (event) {
     }
   });
   if (anyOpen) {
-    return; // Consumed back press to close the open sheet
+    return; // Closed the sheet on back press
   }
   var activeTab = document.querySelector('.tab-pane:not(.hidden)');
   if (activeTab && activeTab.id !== 'tabLeads') {
@@ -765,7 +765,7 @@ function renderBankers() {
   $('bankersStats').innerHTML = ['<div class="stat-box"><b>' + ALL_BANKERS.length + '</b><span>Registered bankers</span></div>',
     '<div class="stat-box"><b>' + ALL_BANKERS.filter(function (b) { return b.accountVerified; }).length + '</b><span>Verified</span></div>'].join('');
   var el = $('bankersContainer');
-  if (!list.length) { el.innerHTML = '<div class="empty">' + (showAll || q ? 'No bankers found.' : 'No active bankers.') + '</div>'; return; }
+  if (!list.length) { el.innerHTML = '<div class="empty">' + (showAll || q ? 'No bankers found.' : 'No bankers with leads in process right now. Tick “Show all bankers” to see everyone.') + '</div>'; return; }
   el.innerHTML = list.map(function (b) {
     var codes = (b.codes || []).map(function (c) { return '<span class="tag ' + (c.status === 'Active' ? 'ok' : 'warn') + '">' + esc(c.bankName) + ' · ' + esc(c.loanType) + (c.status !== 'Active' ? ' (pending)' : '') + '</span>'; }).join(' ');
     return '<div class="card"><div class="card-row" onclick="toggleDetail(this)"><div><div class="name">' + esc(b.name || '—') + (b.accountVerified ? '' : ' <span class="tag warn">unverified</span>') + '</div><div class="sub">' + esc(b.bankName || '—') + ' · ' + esc(b.mobile || '') + '</div></div><span class="caret">▼</span></div>' +
@@ -854,7 +854,7 @@ function renderPartners() {
     if (!showAllP && !q && !activeSetP[p.partnerCode]) return false;
     return !q || String(p.name || '').toLowerCase().indexOf(q) !== -1 || String(p.mobile || '').indexOf(q) !== -1;
   });
-  if (!partners.length) { container.innerHTML = '<div class="empty">' + (showAllP || q ? 'No partners found.' : 'No partners with leads in process.') + '</div>'; return; }
+  if (!partners.length) { container.innerHTML = '<div class="empty">' + (showAllP || q ? 'No partners found.' : 'No partners with leads in process right now. Tick “Show all partners” to see everyone.') + '</div>'; return; }
   container.innerHTML = partners.map(function (p, i) {
     var count = p.last30Count || 0;
     var rankTag = (i === 0 && count > 0) ? ' 🏆' : '';
@@ -937,7 +937,7 @@ $('subSubmitBtn').addEventListener('click', function () {
         showToast('Subscription created and active'); closeSheet('addSubSheet', 'addSubBackdrop');
         ['subHolderCode', 'subHolderName', 'subBankName', 'subStates', 'subCity', 'subAmount', 'subProof'].forEach(function (id) { $(id).value = ''; });
         loadSubscriptions();
-      } else { box.textContent = r.error || 'Could not create subscription.'; box.classList.remove('hidden'); }
+      } else { box.textContent = r.error || 'Could not create the subscription.'; box.classList.remove('hidden'); }
     });
   }).catch(function (err) { box.textContent = err.message; box.classList.remove('hidden'); });
 });
