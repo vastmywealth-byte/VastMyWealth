@@ -42,7 +42,6 @@
 <div id="bootScreen" class="wrap narrow">
   <div class="card state-box" style="margin-top:80px;"><div class="spinner"></div><p>Loading…</p></div>
 </div>
-
 <!-- ===================== LOGIN / REGISTER ===================== -->
 <div id="authScreen" class="hidden">
   <header class="app-header"><div class="in">
@@ -102,7 +101,6 @@
     </div>
   </main>
 </div>
-
 <!-- ===================== DASHBOARD ===================== -->
 <div id="dashboardView" class="hidden">
   <header class="app-header"><div class="in">
@@ -159,10 +157,8 @@
     </div>
   </main>
 </div>
-
 <!-- ===================== BOTTOM SHEETS / MODALS ===================== -->
 <div class="sheet-backdrop" id="sheetBackdrop"></div>
-
 <div class="sheet" id="addBankerSheet">
   <div class="sheet-head"><h3>Add a banker</h3><button class="sheet-close" id="closeAddBankerSheet" aria-label="Close">✕</button></div>
   <div class="field">
@@ -183,13 +179,11 @@
   <button class="btn btn-primary btn-block" id="abSubmitBtn">Add banker</button>
   <div id="abResult" class="alert hidden"></div>
 </div>
-
 <div class="sheet" id="sendToBankerSheet">
   <div class="sheet-head"><h3>Send to a banker</h3><button class="sheet-close" id="closeSendToBankerSheet" aria-label="Close">✕</button></div>
   <p class="small muted">Only your approved bankers are shown here.</p>
   <div id="sendToBankerList" class="mt12"></div>
 </div>
-
 <script src="config.js"></script>
 <script src="common.js"></script>
 <script>
@@ -197,59 +191,70 @@
   'use strict';
   var $ = VMW.$, esc = VMW.esc, C = VMW_CONFIG;
   var CODE_KEY = 'vmw_partner_code', NAME_KEY = 'vmw_partner_name', MOBILE_KEY = 'vmw_partner_mobile';
-
   $('termsLink').href = C.PARTNER_TERMS_URL;
   ['loginMobile', 'fpMobile', 'mobile', 'newAppMobile', 'abMobile'].forEach(function (id) { VMW.wireDigits($(id), 10); });
   VMW.wireDigits($('loginPin'), 4);
   VMW.wireDigits($('pin'), 4);
   VMW.loadLists('both');
 
-  /* ---------- Dynamic Bank Codes Engine ---------- */
+  /* ---------- Dynamic Bank Codes Engine (All Loan Types) ---------- */
+  var DEFAULT_FALLBACK_PRODUCTS = [
+    { code: "PL", label: "Personal Loan" },
+    { code: "BL", label: "Business Loan" },
+    { code: "HL", label: "Home Loan" },
+    { code: "LAP", label: "Loan Against Property" },
+    { code: "VL", label: "Vehicle Loan" },
+    { code: "EL", label: "Education Loan" }
+  ];
+
   var BANK_CODES_DATA = { products: [], byProduct: {} };
 
   function loadBankCodes() {
-    if (!CODE) return Promise.resolve();
-    return VMW.post({ action: 'partnerGetBankCodes', partnerCode: CODE }).then(function (r) {
+    var pCode = VMW.store.get(CODE_KEY) || CODE || '';
+    return VMW.post({ action: 'partnerGetBankCodes', partnerCode: pCode }).then(function (r) {
       if (r && (r.success || r.status === 'success') && r.products && r.products.length) {
         BANK_CODES_DATA = r;
-        populateLoanTypes();
       } else {
-        console.warn('Bank list load notice:', r ? (r.message || r.error) : 'Empty');
-        // Graceful fallback defaults if sheet tab connection has delay
-        if (!BANK_CODES_DATA.products.length) {
-          BANK_CODES_DATA.products = [
-            { code: "HL", label: "Home Loan" },
-            { code: "LAP", label: "Loan Against Property" },
-            { code: "PL", label: "Personal Loan" },
-            { code: "BL", label: "Business Loan" }
-          ];
-          populateLoanTypes();
-        }
+        ensureFallbackBankCodes();
       }
+      populateLoanTypes();
     }).catch(function (err) {
-      console.warn('Network issue fetching bank codes:', err);
-      if (!BANK_CODES_DATA.products.length) {
-        BANK_CODES_DATA.products = [
-          { code: "HL", label: "Home Loan" },
-          { code: "LAP", label: "Loan Against Property" },
-          { code: "PL", label: "Personal Loan" },
-          { code: "BL", label: "Business Loan" }
-        ];
-        populateLoanTypes();
-      }
+      console.warn('Network issue fetching bank codes, using fallbacks:', err);
+      ensureFallbackBankCodes();
+      populateLoanTypes();
     });
+  }
+
+  function ensureFallbackBankCodes() {
+    if (!BANK_CODES_DATA.products || !BANK_CODES_DATA.products.length) {
+      BANK_CODES_DATA.products = DEFAULT_FALLBACK_PRODUCTS;
+      var defaultBanks = [
+        { name: "HDFC Bank" },
+        { name: "ICICI Bank" },
+        { name: "Axis Bank" },
+        { name: "State Bank of India" },
+        { name: "Kotak Mahindra Bank" },
+        { name: "Bajaj Finserv" },
+        { name: "Tata Capital" },
+        { name: "Piramal Capital" }
+      ];
+      BANK_CODES_DATA.byProduct = {};
+      DEFAULT_FALLBACK_PRODUCTS.forEach(function(p) {
+        BANK_CODES_DATA.byProduct[p.code] = defaultBanks;
+      });
+    }
   }
 
   function populateLoanTypes() {
     var sel = $('abLoanType');
     if (!sel) return;
     if (!BANK_CODES_DATA.products || !BANK_CODES_DATA.products.length) {
-      sel.innerHTML = '<option value="">No loan types found</option>';
-      return;
+      ensureFallbackBankCodes();
     }
+    var currentVal = sel.value;
     sel.innerHTML = '<option value="">Select Loan Type</option>' +
       BANK_CODES_DATA.products.map(function (p) {
-        return '<option value="' + esc(p.code) + '">' + esc(p.label || p.code) + '</option>';
+        return '<option value="' + esc(p.code) + '" ' + (p.code === currentVal ? 'selected' : '') + '>' + esc(p.label || p.code) + '</option>';
       }).join('');
   }
 
@@ -262,6 +267,11 @@
       return;
     }
     var list = (BANK_CODES_DATA.byProduct && BANK_CODES_DATA.byProduct[pCode]) || [];
+    if (!list.length) {
+      ensureFallbackBankCodes();
+      list = (BANK_CODES_DATA.byProduct && BANK_CODES_DATA.byProduct[pCode]) || [];
+    }
+
     if (!list.length) {
       bSel.innerHTML = '<option value="">No mapped banks for this loan</option>';
       bSel.disabled = true;
@@ -349,7 +359,6 @@
     if (!/^\d{4}$/.test(pin)) bad('pin', 'Your PIN must be exactly 4 digits.');
     if (!$('terms').checked) bad('terms', 'Please accept the Terms & Conditions to continue.');
     if (!ok) { VMW.focusFirstError($('regForm')); return; }
-
     var reader = new FileReader();
     reader.onerror = function () { VMW.showMsg(box, 'Could not read the cheque file. Please choose it again.', 'error'); };
     reader.onload = function () {
@@ -406,9 +415,8 @@
     $('waShareBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + link);
     $('openBizToolBtn').href = 'biztool.html?holderType=Partner&holderCode=' + encodeURIComponent(CODE) + '&holderName=' + encodeURIComponent(pname || '');
     
+    loadBankCodes(); // Fetch all loan types & mapped banks upfront
     loadBizToolSummary();
-    loadBankCodes(); // Load bank codes on startup
-
     var loginMobile = VMW.store.get(MOBILE_KEY);
     $('adminLink').classList.toggle('hidden', loginMobile !== VMW_CONFIG.ADMIN_ACCESS_MOBILE);
     loadMyBankers().then(loadLeads);
@@ -456,7 +464,7 @@
   function closeSheet(id) { $(id).style.display = 'none'; $('sheetBackdrop').style.display = 'none'; }
   $('sheetBackdrop').addEventListener('click', function () { closeSheet('addBankerSheet'); closeSheet('sendToBankerSheet'); });
   $('closeAddBankerSheet').addEventListener('click', function () { closeSheet('addBankerSheet'); });
-  $('closeSendToBankerSheet').addEventListener('click', function () { closeSheet('sendToBankerSheet'); });
+  $('closeSendToBankerSheet').addEventListener('click', function () { closeSendToBankerSheet(); });
 
   function loadMyBankers() {
     var el = $('myBankersArea'); el.innerHTML = '<div style="color:var(--muted);">Loading…</div>';
@@ -480,7 +488,6 @@
   $('addBankerBtn').addEventListener('click', function () { 
     $('abResult').classList.add('hidden'); 
     openSheet('addBankerSheet'); 
-    // Always refresh and populate on open
     if (!BANK_CODES_DATA.products || !BANK_CODES_DATA.products.length) {
       loadBankCodes();
     } else {
@@ -496,7 +503,6 @@
     var mobile = $('abMobile').value.replace(/\D/g, '');
     var box = $('abResult');
     box.className = 'alert hidden';
-
     if (!loanType || !bank) {
       box.className = 'alert error';
       box.textContent = 'Please choose both the loan type and the bank / NBFC.';
@@ -507,11 +513,9 @@
       box.textContent = 'Please fill in the banker\'s full name, email, and 10-digit mobile number.';
       return;
     }
-
     var btn = this, orig = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Adding…';
-
     VMW.post({
       action: 'partnerAddBanker',
       partnerCode: CODE,
@@ -524,7 +528,7 @@
     }).then(function (d) {
       btn.disabled = false;
       btn.textContent = orig;
-      if (d.status === 'success') {
+      if (d.status === 'success' || d.success) {
         box.className = 'alert success';
         box.textContent = d.message || 'Banker added successfully.';
         $('abLoanType').value = '';
@@ -537,7 +541,7 @@
         setTimeout(function () { closeSheet('addBankerSheet'); }, 1400);
       } else {
         box.className = 'alert error';
-        box.textContent = d.message || 'Could not add this banker.';
+        box.textContent = d.message || d.error || 'Could not add this banker.';
       }
     }).catch(function () {
       btn.disabled = false;
@@ -571,10 +575,10 @@
       leadId: SEND_LEAD.leadId, 
       product: SEND_LEAD.product 
     }).then(function (d) {
-      pToast(d.status === 'success' ? d.message : (d.message || 'Could not send'), d.status !== 'success');
+      VMW.toast(d.status === 'success' ? d.message : (d.message || 'Could not send'), d.status !== 'success');
       if (d.status === 'success') { closeSheet('sendToBankerSheet'); loadLeads(); }
       else { b.disabled = false; b.textContent = 'Send ' + esc(SEND_LEAD.name) + ' to them'; }
-    }).catch(function () { pToast('Connection error', true); b.disabled = false; });
+    }).catch(function () { VMW.toast('Connection error', true); b.disabled = false; });
   });
 
   $('leadsArea').addEventListener('click', function (e) {
@@ -589,9 +593,9 @@
         leadId: poolBtn.getAttribute('data-pool'), 
         product: poolBtn.getAttribute('data-product') 
       }).then(function (d) { 
-        pToast(d.status === 'success' ? 'Back in the pool' : (d.message || 'Failed'), d.status !== 'success'); 
+        VMW.toast(d.status === 'success' ? 'Back in the pool' : (d.message || 'Failed'), d.status !== 'success'); 
         loadLeads(); 
-      }).catch(function () { pToast('Connection error', true); poolBtn.disabled = false; });
+      }).catch(function () { VMW.toast('Connection error', true); poolBtn.disabled = false; });
     }
   });
 
