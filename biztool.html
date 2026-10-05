@@ -144,7 +144,7 @@
 <script>
 (function () {
   'use strict';
-  var $ = VMW.$, esc = VMW.esc;
+  var $= VMW.$, esc = VMW.esc;
   var params = new URLSearchParams(location.search);
   var HOLDER = {
     type: params.get('holderType') === 'Partner' ? 'Partner' : 'Banker',
@@ -162,14 +162,14 @@
     window.location.replace(targetBackUrl);
   });
 
-  // Intercept hardware / gesture back button on mobile phones
-  history.pushState({ page: 'biztool' }, '', location.href);
+  // Ensure pressing Android / hardware back returns to caller without closing PWA
+  history.replaceState({ page: 'biztool_root' }, '', location.href);
+  history.pushState({ page: 'biztool_active' }, '', location.href);
   window.addEventListener('popstate', function () {
     window.location.replace(targetBackUrl);
   });
 
-  $('increaseLeadsBtn').addEventListener('click', function () {
-    $('subscribeCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('increaseLeadsBtn').addEventListener('click', function () {$('subscribeCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   if (!HOLDER.code) {
@@ -194,6 +194,7 @@
     { filename: 'partner.png', caption: 'Apply with VastMyWealth — trusted by thousands.' },
     { filename: 'festival-offer.png', caption: 'Festive offer — special rates, limited time.' }
   ];
+
   var ICONS = {
     whatsapp: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#25D366"/><path d="M17 7a7 7 0 0 0-11.3 7.9L5 20l5.2-.7A7 7 0 0 0 17 7Z" fill="#fff" fill-opacity=".92"/><path d="M9.5 9c.2-.4.5-.4.8-.4h.6c.2 0 .4 0 .6.5l.7 1.7c.1.2 0 .4-.1.6l-.5.6c-.1.2-.1.3 0 .5.3.6 1.4 1.8 2.5 2.1.2.1.4 0 .5-.1l.6-.6c.2-.2.3-.2.5-.1l1.5.8c.2.1.3.3.2.6-.2.7-1.1 1.3-1.8 1.3-1.5.1-3.7-.7-5.1-2.1-1.2-1.2-2-2.9-2.1-4.4 0-.8.4-1.7 1.1-2z" fill="#25D366"/></svg>',
     telegram: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#229ED9"/><path d="M17.6 7.2 6.4 11.5c-.6.2-.6.9 0 1.1l2.7.9 1 3.3c.1.4.6.5.9.2l1.5-1.4 2.6 1.9c.4.3 1 .1 1.1-.4l1.8-9c.1-.5-.4-.9-.9-.9Z" fill="#fff"/></svg>',
@@ -230,7 +231,6 @@
       setTimeout(function() { window.location.href = 'instagram://app'; }, 700);
       return;
     }
-
     if (navigator.share) {
       try {
         var resp = await fetch(imgSrc);
@@ -244,7 +244,6 @@
         if (err.name === 'AbortError') return;
       }
     }
-
     if (platform === 'whatsapp') {
       downloadAndCopy('Banner saved! Forwarding to WhatsApp…');
       setTimeout(function () {
@@ -322,159 +321,4 @@
 
   function renderStateChips() {
     $('stateChips').innerHTML = selectedStates.map(function (s) {
-      return '<span class="chip static">' + esc(s) + ' <b data-remove="' + esc(s) + '" style="cursor:pointer;margin-left:4px;">✕</b></span>';
-    }).join('');
-    populateStateDropdown();
-  }
-
-  $('stateSelect').addEventListener('change', function () {
-    var st = this.value;
-    if (!st) return;
-    if (selectedStates.indexOf(st) === -1) {
-      selectedStates.push(st);
-      renderStateChips();
-    }
-    this.value = '';
-  });
-
-  $('stateChips').addEventListener('click', function (e) {
-    var b = e.target.closest('[data-remove]');
-    if (!b) return;
-    var toRemove = b.getAttribute('data-remove');
-    selectedStates = selectedStates.filter(function (s) { return s !== toRemove; });
-    renderStateChips();
-  });
-
-  function updateCityDropdown() {
-    var cSel = $('citySelect');
-    if (!selectedStates.length) {
-      cSel.innerHTML = '<option value="">Select state first</option>';
-      cSel.disabled = true;
-      return;
-    }
-    var pool = {};
-    selectedStates.forEach(function (s) {
-      (STATE_CITY.citiesByState[s] || []).forEach(function (c) { pool[c] = true; });
-    });
-    var cities = Object.keys(pool).sort();
-    if (!cities.length) {
-      cSel.innerHTML = '<option value="">No predefined cities for selected states (type below)</option>';
-      cSel.disabled = true;
-      return;
-    }
-    cSel.innerHTML = '<option value="">Select city to add</option>' +
-      cities.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
-    cSel.disabled = false;
-  }
-
-  // When a city is picked from dropdown, append to input field with comma
-  $('citySelect').addEventListener('change', function () {
-    var pickedCity = this.value;
-    if (!pickedCity) return;
-    var inp = $('cityInput');
-    var existing = inp.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-    if (existing.indexOf(pickedCity) === -1) {
-      existing.push(pickedCity);
-      inp.value = existing.join(', ') + ', ';
-    }
-    this.value = '';
-  });
-
-  function chosenStates() { return selectedStates; }
-  function chosenCity() { return $('cityInput').value.replace(/,\s*$/, '').trim(); }
-
-  function renderStatus(sub) {
-    var box = $('statusBody');
-    if (sub) {
-      var daysLeft = Math.max(0, Math.ceil((sub.endDate - Date.now()) / 86400000));
-      box.innerHTML = '<span class="badge ok">Active</span> ' + esc(sub.plan) + ' plan · ' + esc((sub.states || []).join(', ')) + (sub.city ? (' · ' + esc(sub.city)) : '') +
-        '<div class="small muted mt8">Renews or expires in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + '.</div>';
-      $('subscribeCard').querySelector('.card-title').textContent = 'Add another state or renew early';
-    } else {
-      box.innerHTML = '<span class="badge warn">No active subscription</span>';
-    }
-  }
-
-  function loadExclusiveLeads() {
-    var el = $('exclusiveLeadsList');
-    VMW.post({ action: 'getMyBizToolLeads', holderCode: HOLDER.code }).then(function (r) {
-      var leads = (r.leads || []);
-      if (!leads.length) { el.innerHTML = '<div class="empty">No exclusive leads right now.</div>'; return; }
-      el.innerHTML = leads.map(function (l) {
-        var link = esc(VMW.leadLink({ leadId: l.leadId, product: l.product }));
-        return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(l.name || '—') + '</div>' +
-          '<div class="row-meta">' + esc(VMW.productLabel(l.product)) + (l.loanAmount ? (' · ' + esc(VMW.inr(l.loanAmount))) : '') + (l.state ? (' · ' + esc(l.state)) : '') + '</div></div>' +
-          '<span class="badge ' + (l.daysLeft <= 2 ? 'warn' : 'info') + '">' + l.daysLeft + ' day' + (l.daysLeft === 1 ? '' : 's') + ' left</span></div>' +
-          '<div class="row-actions">' +
-          '<a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="' + link + '">View / follow up</a>' +
-          '<button class="btn btn-ghost btn-sm" data-push="' + esc(l.leadId) + '" data-product="' + esc(l.product) + '">Release to pool early</button>' +
-          '</div></div>';
-      }).join('');
-    }).catch(function () { el.innerHTML = '<div class="alert error">Could not load your exclusive leads.</div>'; });
-  }
-
-  $('exclusiveLeadsList').addEventListener('click', function (e) {
-    var b = e.target.closest('[data-push]');
-    if (!b) return;
-    if (!confirm('Release this lead to the shared pool now? Any banker will then be able to claim it.')) return;
-    VMW.busy(b, 'Releasing…', function () {
-      return VMW.post({ action: 'pushBizToolLead', leadId: b.getAttribute('data-push'), product: b.getAttribute('data-product'), holderCode: HOLDER.code, status: 'PushToPool' })
-        .then(function (r) { VMW.toast(r.success ? 'Released to the pool' : (r.error || 'Could not release'), !r.success); if (r.success) loadExclusiveLeads(); });
-    }).catch(function (err) { VMW.toast(VMW.errMsg(err), 'error'); });
-  });
-
-  function boot() {
-    VMW.post({ action: 'getMySubscription', holderCode: HOLDER.code }).then(function (r) { renderStatus(r.subscription); }).catch(function () { $('statusBody').textContent = 'Could not load your subscription.'; });
-    loadExclusiveLeads();
-  }
-
-  $('payBtn').addEventListener('click', function () {
-    var box = $('subMsg');
-    VMW.hideMsg(box);
-    var states = chosenStates(), city = chosenCity();
-    if (!PLAN) { VMW.showMsg(box, 'Please choose a plan.', 'error'); return; }
-    if (!states.length) { VMW.showMsg(box, 'Please select at least one state from the dropdown.', 'error'); return; }
-    var btn = this;
-    VMW.busy(btn, 'Starting payment…', function () {
-      return VMW.post({ action: 'createRazorpayOrder', holderType: HOLDER.type, holderCode: HOLDER.code, holderName: HOLDER.name, bankName: HOLDER.bankName, plan: PLAN, states: states, city: city })
-        .then(function (r) {
-          if (!r.success) { VMW.showMsg(box, r.error || 'Could not start the payment.', 'error'); return; }
-          openRazorpay(r);
-        });
-    }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
-  });
-
-  function openRazorpay(order) {
-    var rzp = new Razorpay({
-      key: order.keyId, amount: order.amount, currency: order.currency, name: 'VastMyWealth',
-      description: PLAN + ' Biz Tool subscription', order_id: order.orderId,
-      prefill: { name: HOLDER.name },
-      theme: { color: '#D9A94E' },
-      handler: function (resp) {
-        VMW.post({ action: 'confirmRazorpayPayment', orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature, holderCode: HOLDER.code })
-          .then(function (r) {
-            if (r.success) { VMW.toast('Subscribed!', 'success'); boot(); }
-            else VMW.showMsg($('subMsg'), r.error || 'Payment could not be confirmed automatically — if the amount was deducted, it will be corrected within a few hours.', 'warn');
-          }).catch(function () { VMW.showMsg($('subMsg'), 'Payment made, but we could not confirm it immediately — it will be corrected automatically within a few hours.', 'warn'); });
-      },
-      modal: { ondismiss: function () { VMW.toast('Payment cancelled'); } }
-    });
-    rzp.open();
-  }
-})();
-</script>
-<!--Start of Tawk.to Script-->
-<script type="text/javascript">
-var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-(function(){
-var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-s1.async=true;
-s1.src='https://embed.tawk.to/6abe26e4d6b87e34414e927e/1k3rcfrt8';
-s1.charset='UTF-8';
-s1.setAttribute('crossorigin','*');
-s0.parentNode.insertBefore(s1,s0);
-})();
-</script>
-<!--End of Tawk.to Script-->
-</body>
-</html>
+      return '<span class="chip static">' + esc(s) + ' <b data-remove="' + esc(s) + '" style="
