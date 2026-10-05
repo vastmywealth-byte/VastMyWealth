@@ -20,6 +20,28 @@
   .biztool-hero-sub { font-size:14px; color:#c7cfe6; line-height:1.5; margin-bottom:14px; }
   .biztool-feature-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
   .biztool-feature-list li { font-size:13.5px; color:#e4e8f5; line-height:1.4; }
+
+  /* ---- Add a banker form ---- */
+  .field select {
+    width:100%; padding:12px 40px 12px 14px; font:inherit; font-size:15px; line-height:1.3;
+    color:var(--text,#fff); background-color:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.18); border-radius:10px; outline:none;
+    -webkit-appearance:none; appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5l5 5 5-5' fill='none' stroke='%23c7cfe6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat; background-position:right 14px center;
+  }
+  .field select:focus { border-color:#D9A94E; box-shadow:0 0 0 3px rgba(217,169,78,.22); }
+  .field select:disabled { opacity:.55; cursor:not-allowed; }
+  .field select option { color:#0B1A38; background:#fff; }
+  .opt-tag { font-weight:500; color:var(--muted,#9aa6c7); font-size:12px; margin-left:4px; }
+
+  .dsa-card { margin:4px 0 16px; padding:14px 16px; border-radius:12px;
+    border:1px solid rgba(217,169,78,.55); background:rgba(217,169,78,.09); }
+  .dsa-card .dsa-label { font-size:12.5px; color:#e9cf9a; margin-bottom:8px; }
+  .dsa-card .dsa-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .dsa-card .dsa-code { font-family:'Poppins',sans-serif; font-size:24px; font-weight:700; letter-spacing:.06em; color:#D9A94E; word-break:break-all; }
+  .dsa-card .dsa-code.is-missing { font-family:'Inter',sans-serif; font-size:14px; font-weight:600; letter-spacing:0; color:#e4e8f5; }
+  .dsa-card .dsa-note { font-size:12.5px; color:#c7cfe6; line-height:1.45; margin-top:8px; }
 </style>
 </head>
 <body>
@@ -155,12 +177,41 @@
 
 <div class="sheet-backdrop" id="sheetBackdrop"></div>
 
+<!-- ===================== ADD A BANKER ===================== -->
 <div class="sheet" id="addBankerSheet">
   <div class="sheet-head"><h3>Add a banker</h3><button class="sheet-close" id="closeAddBankerSheet" aria-label="Close">✕</button></div>
-  <div class="field"><label for="abName">Banker's full name</label><input type="text" id="abName" autocomplete="off"></div>
-  <div class="field"><label for="abBank">Bank / NBFC name</label><input type="text" id="abBank" autocomplete="off" placeholder="Start typing their bank or NBFC"></div>
-  <div class="field"><label for="abEmail">Banker's official email</label><input type="email" id="abEmail" autocomplete="off"></div>
-  <div class="field"><label for="abMobile">Banker's mobile number</label><input type="tel" id="abMobile" maxlength="10" inputmode="numeric"></div>
+  <p class="small muted" style="margin-bottom:14px;">Tell us who you work with at the lender. Our team approves each new banker before you can send them leads.</p>
+
+  <div class="field">
+    <label for="abLoanType">Loan type<span class="req">*</span></label>
+    <select id="abLoanType"><option value="">Loading…</option></select>
+  </div>
+  <div class="field">
+    <label for="abName">Banker's full name<span class="req">*</span></label>
+    <input type="text" id="abName" autocomplete="off" placeholder="As on their visiting card">
+  </div>
+  <div class="field">
+    <label for="abBank">Bank / NBFC<span class="req">*</span></label>
+    <select id="abBank" disabled><option value="">Select a loan type first</option></select>
+  </div>
+  <div class="field">
+    <label for="abMobile">Banker's mobile number<span class="req">*</span></label>
+    <input type="tel" id="abMobile" maxlength="10" inputmode="numeric" autocomplete="off" placeholder="10-digit mobile">
+  </div>
+  <div class="field">
+    <label for="abEmail">Banker's official email<span class="opt-tag">(optional)</span></label>
+    <input type="email" id="abEmail" autocomplete="off" placeholder="name@bank.com">
+  </div>
+
+  <div id="abDsaCard" class="dsa-card hidden" aria-live="polite">
+    <div class="dsa-label" id="abDsaLabel">Your DSA code</div>
+    <div class="dsa-row">
+      <span class="dsa-code" id="abDsaCode"></span>
+      <button type="button" class="btn btn-ghost btn-sm" id="abDsaCopy">Copy</button>
+    </div>
+    <div class="dsa-note" id="abDsaNote">Quote this code when you speak to your banker at this lender.</div>
+  </div>
+
   <button class="btn btn-primary btn-block" id="abSubmitBtn">Add banker</button>
   <div id="abResult" class="alert hidden"></div>
 </div>
@@ -178,10 +229,11 @@
   'use strict';
   var $ = VMW.$, esc = VMW.esc, C = VMW_CONFIG;
   var CODE_KEY = 'vmw_partner_code', NAME_KEY = 'vmw_partner_name', MOBILE_KEY = 'vmw_partner_mobile';
+  // Fallback so a missing toast helper can never break the banker actions.
+  var pToast = window.pToast || function (msg) { alert(msg); };
   $('termsLink').href = C.PARTNER_TERMS_URL;
   ['loginMobile', 'fpMobile', 'mobile', 'newAppMobile', 'abMobile'].forEach(function (id) { VMW.wireDigits($(id), 10); });
   VMW.wireDigits($('loginPin'), 4); VMW.wireDigits($('pin'), 4);
-  VMW.autosuggest($('abBank'), function () { return VMW.lists.banks; });
   VMW.loadLists('both');
 
   /* ---------- views ---------- */
@@ -346,22 +398,136 @@
     el.innerHTML = MY_BANKERS.map(function (b) {
       return '<div class="lead-card"><div class="lead-card-top"><b>' + esc(b.name) + '</b>' +
         '<span class="status-pill">' + (b.approved ? 'Approved' : 'Awaiting approval') + '</span></div>' +
-        '<div class="lead-card-meta">' + esc(b.bankName || '—') + ' · ' + esc(b.mobile || '') + '</div></div>';
+        '<div class="lead-card-meta">' + esc(b.bankName || '—') + (b.loanType ? ' · ' + esc(VMW.productLabel(b.loanType)) : '') + ' · ' + esc(b.mobile || '') + '</div></div>';
     }).join('');
   }
-  $('addBankerBtn').addEventListener('click', function () { $('abResult').classList.add('hidden'); openSheet('addBankerSheet'); });
-  $('abSubmitBtn').addEventListener('click', function () {
-    var name = $('abName').value.trim(), bank = $('abBank').value.trim(), email = $('abEmail').value.trim(), mobile = $('abMobile').value.replace(/\D/g, '');
-    var box = $('abResult'); box.className = 'alert hidden';
-    if (!name || !email || mobile.length !== 10) { box.className = 'alert error'; box.textContent = 'Please fill in the banker\'s name, email and a 10-digit mobile number.'; return; }
-    var btn = this, orig = btn.textContent; btn.disabled = true; btn.textContent = 'Adding…';
-    VMW.post({ action: 'partnerAddBanker', partnerCode: CODE, partnerName: localStorage.getItem('vmw_partner_name'), name: name, bankName: bank, officialEmail: email, mobileNumber: mobile }).then(function (d) {
-        btn.disabled = false; btn.textContent = orig;
-        if (d.status === 'success') { box.className = 'alert success'; box.textContent = d.message; $('abName').value = ''; $('abBank').value = ''; $('abEmail').value = ''; $('abMobile').value = ''; loadMyBankers(); setTimeout(function () { closeSheet('addBankerSheet'); }, 1400); }
-        else { box.className = 'alert error'; box.textContent = d.message || 'Could not add this banker.'; }
-      }).catch(function () { btn.disabled = false; btn.textContent = orig; box.className = 'alert error'; box.textContent = 'Connection error.'; });
+
+  /* ---------- add a banker ---------- */
+  var BANK_DATA = null;      // { products: [{code,label}], byProduct: { HL: [{name,code}] } }
+  var BANK_DATA_LOADING = null;
+
+  function fillSelect(sel, placeholder, items) {
+    sel.innerHTML = '';
+    var first = document.createElement('option');
+    first.value = ''; first.textContent = placeholder;
+    sel.appendChild(first);
+    items.forEach(function (it) {
+      var o = document.createElement('option');
+      o.value = it.value; o.textContent = it.label;
+      sel.appendChild(o);
+    });
+  }
+  function showAbError(msg) { var box = $('abResult'); box.className = 'alert error'; box.textContent = msg; }
+  function hideDsaCard() { $('abDsaCard').classList.add('hidden'); }
+
+  // Loads the loan types + Bank/NBFC lists once per page visit.
+  function ensureBankData() {
+    if (BANK_DATA) return Promise.resolve(BANK_DATA);
+    if (BANK_DATA_LOADING) return BANK_DATA_LOADING;
+    BANK_DATA_LOADING = VMW.post({ action: 'partnerGetBankCodes', partnerCode: CODE }).then(function (d) {
+      BANK_DATA_LOADING = null;
+      if (!d || d.status !== 'success') throw new Error((d && d.message) || 'Could not load the bank list.');
+      BANK_DATA = { products: d.products || [], byProduct: d.byProduct || {} };
+      return BANK_DATA;
+    }, function (err) { BANK_DATA_LOADING = null; throw err; });
+    return BANK_DATA_LOADING;
+  }
+
+  function resetAddBankerForm() {
+    ['abName', 'abMobile', 'abEmail'].forEach(function (id) { $(id).value = ''; });
+    $('abResult').className = 'alert hidden';
+    hideDsaCard();
+    fillSelect($('abBank'), 'Select a loan type first', []);
+    $('abBank').disabled = true;
+  }
+
+  function openAddBanker() {
+    resetAddBankerForm();
+    fillSelect($('abLoanType'), 'Loading…', []);
+    openSheet('addBankerSheet');
+    ensureBankData().then(function (data) {
+      fillSelect($('abLoanType'), data.products.length ? 'Select loan type' : 'No loan types available',
+        data.products.map(function (p) { return { value: p.code, label: p.label }; }));
+    }).catch(function (err) {
+      fillSelect($('abLoanType'), 'Could not load — close and try again', []);
+      showAbError(err && err.message ? err.message : 'Could not load the bank list. Please try again.');
+    });
+  }
+  $('addBankerBtn').addEventListener('click', openAddBanker);
+
+  $('abLoanType').addEventListener('change', function () {
+    var product = this.value, bank = $('abBank');
+    hideDsaCard();
+    if (!product || !BANK_DATA) { fillSelect(bank, 'Select a loan type first', []); bank.disabled = true; return; }
+    var list = BANK_DATA.byProduct[product] || [];
+    fillSelect(bank, list.length ? 'Select bank / NBFC' : 'No lenders listed for this loan type',
+      list.map(function (b) { return { value: b.name, label: b.name }; }));
+    bank.disabled = !list.length;
   });
 
+  // Shows the DSA code as soon as a Bank / NBFC is chosen.
+  $('abBank').addEventListener('change', function () {
+    var product = $('abLoanType').value, bankName = this.value;
+    if (!product || !bankName || !BANK_DATA) { hideDsaCard(); return; }
+    var list = BANK_DATA.byProduct[product] || [], entry = null;
+    for (var i = 0; i < list.length; i++) { if (list[i].name === bankName) { entry = list[i]; break; } }
+    if (!entry) { hideDsaCard(); return; }
+    var label = (BANK_DATA.products.filter(function (p) { return p.code === product; })[0] || {}).label || product;
+    $('abDsaLabel').textContent = 'Your DSA code · ' + entry.name + ' · ' + label;
+    var codeEl = $('abDsaCode');
+    if (entry.code) {
+      codeEl.textContent = entry.code; codeEl.classList.remove('is-missing');
+      $('abDsaCopy').classList.remove('hidden');
+      $('abDsaNote').textContent = 'Quote this code when you speak to your banker at this lender.';
+    } else {
+      codeEl.textContent = 'Code not available yet'; codeEl.classList.add('is-missing');
+      $('abDsaCopy').classList.add('hidden');
+      $('abDsaNote').textContent = 'Our team will share the DSA code for this lender once your banker is approved.';
+    }
+    $('abDsaCard').classList.remove('hidden');
+  });
+
+  $('abDsaCopy').addEventListener('click', function () {
+    var btn = this, text = $('abDsaCode').textContent;
+    function done() { btn.textContent = 'Copied ✓'; setTimeout(function () { btn.textContent = 'Copy'; }, 1500); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+  function fallbackCopy(text) {
+    var t = document.createElement('textarea'); t.value = text; t.style.position = 'fixed'; t.style.opacity = '0';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); } catch (e) { /* ignore */ }
+    document.body.removeChild(t);
+  }
+
+  $('abSubmitBtn').addEventListener('click', function () {
+    var loanType = $('abLoanType').value, bankName = $('abBank').value;
+    var name = $('abName').value.trim(), email = $('abEmail').value.trim(), mobile = $('abMobile').value.replace(/\D/g, '');
+    var box = $('abResult'); box.className = 'alert hidden';
+
+    if (!loanType) { showAbError('Please choose the loan type.'); $('abLoanType').focus(); return; }
+    if (name.length < 2) { showAbError('Please enter the banker\'s full name.'); $('abName').focus(); return; }
+    if (!bankName) { showAbError('Please choose the bank / NBFC.'); $('abBank').focus(); return; }
+    if (!/^[6-9]\d{9}$/.test(mobile)) { showAbError('Enter a valid 10-digit mobile number for the banker.'); $('abMobile').focus(); return; }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { showAbError('That email address doesn\'t look right. Check it or leave it blank.'); $('abEmail').focus(); return; }
+
+    var list = (BANK_DATA && BANK_DATA.byProduct[loanType]) || [], dsaCode = '';
+    for (var i = 0; i < list.length; i++) { if (list[i].name === bankName) { dsaCode = list[i].code; break; } }
+
+    var btn = this, orig = btn.textContent; btn.disabled = true; btn.textContent = 'Adding…';
+    VMW.post({ action: 'partnerAddBanker', partnerCode: CODE, partnerName: localStorage.getItem('vmw_partner_name'),
+      name: name, loanType: loanType, bankName: bankName, dsaCode: dsaCode, officialEmail: email, mobileNumber: mobile }).then(function (d) {
+        btn.disabled = false; btn.textContent = orig;
+        if (d.status === 'success') {
+          box.className = 'alert success'; box.textContent = d.message || 'Banker added. We\'ll confirm once our team approves them.';
+          loadMyBankers();
+          setTimeout(function () { closeSheet('addBankerSheet'); }, 1800);
+        } else { showAbError(d.message || 'Could not add this banker.'); }
+      }).catch(function () { btn.disabled = false; btn.textContent = orig; showAbError('Connection error. Please try again.'); });
+  });
+
+  /* ---------- send a lead to a banker ---------- */
   var SEND_LEAD = null;
   function openSendToBanker(leadId, product, name) {
     SEND_LEAD = { leadId: leadId, product: product, name: name };
@@ -379,7 +545,7 @@
     VMW.post({ action: 'partnerRouteLeadToBanker', partnerCode: CODE, partnerName: localStorage.getItem('vmw_partner_name'), partnerEmail: '', bankerId: b.getAttribute('data-pick-banker'), leadId: SEND_LEAD.leadId, product: SEND_LEAD.product }).then(function (d) {
         pToast(d.status === 'success' ? d.message : (d.message || 'Could not send'), d.status !== 'success');
         if (d.status === 'success') { closeSheet('sendToBankerSheet'); loadLeads(); }
-        else { b.disabled = false; b.textContent = 'Send ' + esc(SEND_LEAD.name) + ' to them'; }
+        else { b.disabled = false; b.textContent = 'Send ' + SEND_LEAD.name + ' to them'; }
       }).catch(function () { pToast('Connection error', true); b.disabled = false; });
   });
   $('leadsArea').addEventListener('click', function (e) {
