@@ -20,10 +20,25 @@
   .biztool-hero-sub { font-size:14px; color:#c7cfe6; line-height:1.5; margin-bottom:14px; }
   .biztool-feature-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
   .biztool-feature-list li { font-size:13.5px; color:#e4e8f5; line-height:1.4; }
+  select.field-select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border, #2a3b61);
+    background-color: var(--input-bg, #0d1e3d);
+    color: var(--text, #fff);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    box-sizing: border-box;
+  }
+  select.field-select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 </style>
 </head>
 <body>
-
 <div id="bootScreen" class="wrap narrow">
   <div class="card state-box" style="margin-top:80px;"><div class="spinner"></div><p>Loading…</p></div>
 </div>
@@ -34,7 +49,6 @@
     <a class="brand" href="index.html"><img src="1000550390.png" alt="" onerror="this.style.display='none'"><div><b>VastMyWealth</b><small>DSA / Partner</small></div></a>
     <div class="hdr-right"><a class="hdr-link" href="index.html">← Home</a></div>
   </div></header>
-
   <main class="wrap narrow">
     <div id="loginView" class="view active">
       <div class="hero"><h1>DSA / Partner login</h1><p>Log in to submit applications, track referrals and see commission updates.</p></div>
@@ -51,7 +65,6 @@
         </div>
       </div>
     </div>
-
     <div id="forgotView" class="view">
       <div class="hero"><h1>Reset your PIN</h1><p>We'll email your PIN to the email address on your partner account.</p></div>
       <div class="card">
@@ -63,7 +76,6 @@
         <button class="link-btn mt16" id="fpBack" type="button">← Back to login</button>
       </div>
     </div>
-
     <div id="registerView" class="view">
       <div class="hero"><h1>Register as a partner</h1><p>Create your partner account to get your personal application link.</p></div>
       <div class="card">
@@ -97,7 +109,6 @@
     <a class="brand" href="index.html"><img src="1000550390.png" alt="" onerror="this.style.display='none'"><div><b>VastMyWealth</b><small>DSA Partner</small></div></a>
     <div class="hdr-right"><a class="btn btn-outline btn-sm hidden" id="adminLink" href="admin.html" target="_blank" rel="noopener">Admin</a><button class="btn btn-ghost btn-sm" id="logoutBtn">Log out</button></div>
   </div></header>
-
   <main class="wrap">
     <div class="card">
       <h2 id="welcomeMsg">Welcome</h2>
@@ -107,7 +118,6 @@
       <a class="btn btn-ghost btn-block mt12" id="waShareBtn" href="#" target="_blank" rel="noopener">💬 Share on WhatsApp</a>
       <p class="small muted mt8">Anyone who applies through this link is credited to you.</p>
     </div>
-
     <div class="card">
       <div class="card-title">Start or continue an application</div>
       <p class="card-sub">Type your customer's mobile number. If they already applied you'll see their status and can upload their documents; otherwise a new application opens, credited to you.</p>
@@ -115,20 +125,17 @@
         <input type="tel" id="newAppMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
       <button id="newAppBtn" class="btn btn-primary btn-block">＋ Start / continue application</button>
     </div>
-
     <div class="card">
       <div class="row-top"><div class="card-title">My bankers</div><button class="btn btn-gold btn-sm" id="addBankerBtn">+ Add a banker</button></div>
       <p class="card-sub">Add a banker you know so you can send them your leads directly. New ones need a quick approval from our team before you can start sharing.</p>
       <div id="myBankersArea" class="mt12"></div>
     </div>
-
     <div class="card">
       <div class="row-top"><div class="card-title">Your applications</div><button class="btn btn-ghost btn-sm" id="leadsRefresh">↻ Refresh</button></div>
       <div id="statsBar" class="stats hidden"></div>
       <div id="leadsArea" class="mt12"></div>
     </div>
-
-        <!-- BUSINESS TOOL -->
+    <!-- BUSINESS TOOL -->
     <div id="tabBizTool" class="tab-pane">
       <div class="card biztool-hero">
         <img src="biz-tool-banner.jpg" alt="" class="biztool-hero-img" onerror="this.style.display='none'">
@@ -153,14 +160,26 @@
   </main>
 </div>
 
+<!-- ===================== BOTTOM SHEETS / MODALS ===================== -->
 <div class="sheet-backdrop" id="sheetBackdrop"></div>
 
 <div class="sheet" id="addBankerSheet">
   <div class="sheet-head"><h3>Add a banker</h3><button class="sheet-close" id="closeAddBankerSheet" aria-label="Close">✕</button></div>
-  <div class="field"><label for="abName">Banker's full name</label><input type="text" id="abName" autocomplete="off"></div>
-  <div class="field"><label for="abBank">Bank / NBFC name</label><input type="text" id="abBank" autocomplete="off" placeholder="Start typing their bank or NBFC"></div>
-  <div class="field"><label for="abEmail">Banker's official email</label><input type="email" id="abEmail" autocomplete="off"></div>
-  <div class="field"><label for="abMobile">Banker's mobile number</label><input type="tel" id="abMobile" maxlength="10" inputmode="numeric"></div>
+  <div class="field">
+    <label for="abLoanType">Loan Type / Product<span class="req">*</span></label>
+    <select id="abLoanType" class="field-select">
+      <option value="">Select Loan Type</option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="abBank">Bank / NBFC name<span class="req">*</span></label>
+    <select id="abBank" class="field-select" disabled>
+      <option value="">Choose loan type first</option>
+    </select>
+  </div>
+  <div class="field"><label for="abName">Banker's full name<span class="req">*</span></label><input type="text" id="abName" autocomplete="off" placeholder="Banker's name"></div>
+  <div class="field"><label for="abEmail">Banker's official email<span class="req">*</span></label><input type="email" id="abEmail" autocomplete="off" placeholder="banker@bank.com"></div>
+  <div class="field"><label for="abMobile">Banker's mobile number<span class="req">*</span></label><input type="tel" id="abMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile"></div>
   <button class="btn btn-primary btn-block" id="abSubmitBtn">Add banker</button>
   <div id="abResult" class="alert hidden"></div>
 </div>
@@ -178,40 +197,97 @@
   'use strict';
   var $ = VMW.$, esc = VMW.esc, C = VMW_CONFIG;
   var CODE_KEY = 'vmw_partner_code', NAME_KEY = 'vmw_partner_name', MOBILE_KEY = 'vmw_partner_mobile';
+
   $('termsLink').href = C.PARTNER_TERMS_URL;
   ['loginMobile', 'fpMobile', 'mobile', 'newAppMobile', 'abMobile'].forEach(function (id) { VMW.wireDigits($(id), 10); });
-  VMW.wireDigits($('loginPin'), 4); VMW.wireDigits($('pin'), 4);
-  VMW.autosuggest($('abBank'), function () { return VMW.lists.banks; });
+  VMW.wireDigits($('loginPin'), 4);
+  VMW.wireDigits($('pin'), 4);
   VMW.loadLists('both');
 
-  /* ---------- views ---------- */
+  /* ---------- Dynamic Bank Codes ---------- */
+  var BANK_CODES_DATA = { products: [], byProduct: {} };
+
+  function loadBankCodes() {
+    if (!CODE) return;
+    VMW.post({ action: 'partnerGetBankCodes', partnerCode: CODE }).then(function (r) {
+      if (r && r.products) {
+        BANK_CODES_DATA = r;
+        populateLoanTypes();
+      }
+    }).catch(function (err) {
+      console.warn('Could not load bank codes:', err);
+    });
+  }
+
+  function populateLoanTypes() {
+    var sel = $('abLoanType');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Select Loan Type</option>' +
+      BANK_CODES_DATA.products.map(function (p) {
+        return '<option value="' + esc(p.code) + '">' + esc(p.label || p.code) + '</option>';
+      }).join('');
+  }
+
+  $('abLoanType').addEventListener('change', function () {
+    var pCode = this.value;
+    var bSel = $('abBank');
+    if (!pCode || !BANK_CODES_DATA.byProduct[pCode]) {
+      bSel.innerHTML = '<option value="">Choose loan type first</option>';
+      bSel.disabled = true;
+      return;
+    }
+    var list = BANK_CODES_DATA.byProduct[pCode] || [];
+    bSel.innerHTML = '<option value="">Select Bank / NBFC</option>' +
+      list.map(function (b) {
+        return '<option value="' + esc(b.name) + '">' + esc(b.name) + '</option>';
+      }).join('');
+    bSel.disabled = false;
+  });
+
+  /* ---------- Views Navigation ---------- */
   function showAuth(view) {
-    $('bootScreen').classList.add('hidden'); $('dashboardView').classList.add('hidden'); $('authScreen').classList.remove('hidden');
+    $('bootScreen').classList.add('hidden'); 
+    $('dashboardView').classList.add('hidden'); 
+    $('authScreen').classList.remove('hidden');
     document.querySelectorAll('#authScreen .view').forEach(function (v) { v.classList.toggle('active', v.id === view); });
     window.scrollTo(0, 0);
   }
+
   function showDashboard() {
-    $('bootScreen').classList.add('hidden'); $('authScreen').classList.add('hidden'); $('dashboardView').classList.remove('hidden');
+    $('bootScreen').classList.add('hidden'); 
+    $('authScreen').classList.add('hidden'); 
+    $('dashboardView').classList.remove('hidden');
     initDashboard();
   }
+
   $('gotoRegister').onclick = function () { showAuth('registerView'); };
   $('gotoLogin').onclick = function () { showAuth('loginView'); };
   $('gotoForgot').onclick = function () { showAuth('forgotView'); };
   $('fpBack').onclick = function () { showAuth('loginView'); };
 
-  /* ---------- login (POST, so the PIN never appears in the web address) ---------- */
+  /* ---------- Login (POST) ---------- */
   $('loginForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var box = $('loginMsgBox'); VMW.hideMsg(box);
     var mobile = VMW.mobile10($('loginMobile').value), pin = $('loginPin').value;
-    if (mobile.length !== 10 || pin.length !== 4) { VMW.showMsg(box, 'Enter your 10-digit mobile number and 4-digit PIN.', 'error'); return; }
+    if (mobile.length !== 10 || pin.length !== 4) { 
+      VMW.showMsg(box, 'Enter your 10-digit mobile number and 4-digit PIN.', 'error'); 
+      return; 
+    }
     VMW.busy($('loginSubmitBtn'), 'Logging in…', function () {
       return VMW.post({ action: 'loginPartner', mobile: mobile, pin: pin }).then(function (d) {
-        if (d.success) { VMW.store.set(CODE_KEY, d.partnerCode); VMW.store.set(NAME_KEY, d.name); VMW.store.set(MOBILE_KEY, mobile); showDashboard(); }
-        else VMW.showMsg(box, d.error || 'Login failed.', 'error');
+        if (d.success) { 
+          VMW.store.set(CODE_KEY, d.partnerCode); 
+          VMW.store.set(NAME_KEY, d.name); 
+          VMW.store.set(MOBILE_KEY, mobile); 
+          showDashboard(); 
+        } else {
+          VMW.showMsg(box, d.error || 'Login failed.', 'error');
+        }
       });
     }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
   });
+
   $('forgotForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var box = $('fpMsg'); VMW.hideMsg(box);
@@ -224,13 +300,14 @@
     }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
   });
 
-  /* ---------- register ---------- */
+  /* ---------- Registration ---------- */
   $('regForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var box = $('msgBox'); VMW.hideMsg(box); VMW.clearErrors($('regForm'));
     var ok = true; function bad(id, m) { VMW.setErr(id, m); ok = false; }
     var name = $('name').value.trim(), mobile = VMW.mobile10($('mobile').value), email = $('email').value.trim(), bank = $('bankName').value.trim();
     var acc = VMW.digits($('accountNo').value), ifsc = $('ifsc').value.trim().toUpperCase(), pin = $('pin').value, file = $('cheque').files[0];
+    
     if (name.length < 2) bad('name', 'Please enter your full name.');
     if (!/^[6-9]\d{9}$/.test(mobile)) bad('mobile', 'Enter a valid 10-digit mobile number.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) bad('email', 'Enter a valid email address.');
@@ -247,22 +324,35 @@
     reader.onerror = function () { VMW.showMsg(box, 'Could not read the cheque file. Please choose it again.', 'error'); };
     reader.onload = function () {
       VMW.busy($('submitBtn'), 'Registering…', function () {
-        return VMW.post({ action: 'registerPartner', name: name, mobile: mobile, email: email, bankName: bank, accountNo: acc, ifsc: ifsc, pin: pin, consentGiven: true,
-          cancelledCheque: { name: file.name, mimeType: file.type, base64: String(reader.result).split(',')[1] } }, { timeout: 90000 }).then(function (d) {
+        return VMW.post({ 
+          action: 'registerPartner', 
+          name: name, 
+          mobile: mobile, 
+          email: email, 
+          bankName: bank, 
+          accountNo: acc, 
+          ifsc: ifsc, 
+          pin: pin, 
+          consentGiven: true,
+          cancelledCheque: { name: file.name, mimeType: file.type, base64: String(reader.result).split(',')[1] } 
+        }, { timeout: 90000 }).then(function (d) {
           if (d.success) {
             VMW.showMsg(box, 'You\'re registered! Your partner code is ' + d.partnerCode + '. Taking you to login…', 'success');
             $('loginMobile').value = mobile;
             setTimeout(function () { showAuth('loginView'); }, 2200);
-          } else VMW.showMsg(box, d.error || 'Registration failed.', 'error');
+          } else {
+            VMW.showMsg(box, d.error || 'Registration failed.', 'error');
+          }
         });
       }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
     };
     reader.readAsDataURL(file);
   });
 
-  /* ---------- dashboard ---------- */
+  /* ---------- Dashboard Initialization ---------- */
+  var CODE = '';
   function loadBizToolSummary() {
-    var box = $('bizSubStatus'); // ⚠️ change this to match your actual status element's id
+    var box = $('bizSubStatus');
     if (!box) return;
     VMW.post({ action: 'getMySubscription', holderCode: CODE }).then(function (r) {
       var sub = r.subscription;
@@ -275,7 +365,7 @@
       }
     }).catch(function () { box.textContent = 'Could not load your subscription.'; });
   }
-  var CODE = '';
+
   function initDashboard() {
     CODE = VMW.store.get(CODE_KEY) || '';
     var pname = VMW.store.get(NAME_KEY);
@@ -285,18 +375,18 @@
     $('refLink').textContent = link;
     $('waShareBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + link);
     $('openBizToolBtn').href = 'biztool.html?holderType=Partner&holderCode=' + encodeURIComponent(CODE) + '&holderName=' + encodeURIComponent(pname || '');
+    
     loadBizToolSummary();
+    loadBankCodes(); // Fetch live sheet-driven bank/NBFC codes
 
-    // Shown ONLY when logging in with this exact mobile number — a convenience shortcut for
-    // whoever owns that number, not a security boundary. admin.html's own password is the
-    // real gate; the underlying admin URL is never listed anywhere public.
     var loginMobile = VMW.store.get(MOBILE_KEY);
     $('adminLink').classList.toggle('hidden', loginMobile !== VMW_CONFIG.ADMIN_ACCESS_MOBILE);
-
     loadMyBankers().then(loadLeads);
     setTimeout(function () { VMW.showAnnouncement('Partner'); }, 1500);
   }
-    function leadRow(l) {
+
+  /* ---------- Lead Rows & Bankers Management ---------- */
+  function leadRow(l) {
     var pending = String(l.documentStatus || '').toLowerCase() !== 'submitted';
     var notElig = String(l.status).toLowerCase() === 'not eligible';
     var name = (l.employmentType === 'Self-Employed' && l.companyName) ? l.companyName : (l.customerName || '—');
@@ -305,7 +395,10 @@
     if (l.state) tags += '<span class="tag">📍 ' + esc(l.state) + '</span>';
     if (l.pincode) tags += '<span class="tag">Pincode ' + esc(l.pincode) + '</span>';
     if (l.processingBank) tags += '<span class="tag">🏦 ' + esc(l.processingBank) + '</span>';
-    if (l.routedToBanker) { var rb = MY_BANKERS_BY_ID[l.routedToBanker]; tags += '<span class="tag ok">Sent to ' + esc(rb ? rb.name : l.routedToBanker) + '</span>'; }
+    if (l.routedToBanker) { 
+      var rb = MY_BANKERS_BY_ID[l.routedToBanker]; 
+      tags += '<span class="tag ok">Sent to ' + esc(rb ? rb.name : l.routedToBanker) + '</span>'; 
+    }
     var m = VMW.mobile10(l.mobile), main = '', contact = '';
     var routing = '';
     if (l.leadId && !notElig && String(l.status).toLowerCase() !== 'disbursed') {
@@ -318,13 +411,16 @@
       main = pending ? '<a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="' + href + '">📤 Upload documents</a>'
                      : '<a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="' + href + '">View status</a>';
     }
-    if (m.length === 10) contact = '<a class="btn btn-ghost btn-sm" href="tel:' + m + '">📞 Call</a>' +
-      '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(VMW.docChecklistWaLink(m, { name: l.customerName, companyName: l.companyName, product: l.product, employmentType: l.employmentType, companyType: l.companyType, loanAmount: l.loanAmount })) + '">💬 Ask for documents</a>';
+    if (m.length === 10) {
+      contact = '<a class="btn btn-ghost btn-sm" href="tel:' + m + '">📞 Call</a>' +
+        '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(VMW.docChecklistWaLink(m, { name: l.customerName, companyName: l.companyName, product: l.product, employmentType: l.employmentType, companyType: l.companyType, loanAmount: l.loanAmount })) + '">💬 Ask for documents</a>';
+    }
     return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(name) + '</div>' +
       '<div class="row-meta">' + esc(VMW.productLabel(l.product)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + (m ? ' · 📱 ' + esc(m) : '') + '</div></div>' +
       '<div class="row-badges">' + VMW.badge(l.status) + (pending && !notElig ? VMW.docBadge('Pending') : '') + '</div></div>' +
       (tags ? '<div class="row-tags">' + tags + '</div>' : '') + '<div class="row-actions">' + main + contact + routing + '</div></div>';
   }
+
   var MY_BANKERS = [], MY_BANKERS_BY_ID = {};
   function openSheet(id) { $('sheetBackdrop').style.display = 'block'; $(id).style.display = 'block'; }
   function closeSheet(id) { $(id).style.display = 'none'; $('sheetBackdrop').style.display = 'none'; }
@@ -340,6 +436,7 @@
       renderMyBankers();
     }).catch(function () { el.innerHTML = '<div style="color:#FFC5C1;">Could not load your bankers.</div>'; });
   }
+
   function renderMyBankers() {
     var el = $('myBankersArea');
     if (!MY_BANKERS.length) { el.innerHTML = '<div style="color:var(--ink-400);">No bankers added yet.</div>'; return; }
@@ -349,17 +446,69 @@
         '<div class="lead-card-meta">' + esc(b.bankName || '—') + ' · ' + esc(b.mobile || '') + '</div></div>';
     }).join('');
   }
-  $('addBankerBtn').addEventListener('click', function () { $('abResult').classList.add('hidden'); openSheet('addBankerSheet'); });
+
+  $('addBankerBtn').addEventListener('click', function () { 
+    $('abResult').classList.add('hidden'); 
+    openSheet('addBankerSheet'); 
+  });
+
   $('abSubmitBtn').addEventListener('click', function () {
-    var name = $('abName').value.trim(), bank = $('abBank').value.trim(), email = $('abEmail').value.trim(), mobile = $('abMobile').value.replace(/\D/g, '');
-    var box = $('abResult'); box.className = 'alert hidden';
-    if (!name || !email || mobile.length !== 10) { box.className = 'alert error'; box.textContent = 'Please fill in the banker\'s name, email and a 10-digit mobile number.'; return; }
-    var btn = this, orig = btn.textContent; btn.disabled = true; btn.textContent = 'Adding…';
-    VMW.post({ action: 'partnerAddBanker', partnerCode: CODE, partnerName: localStorage.getItem('vmw_partner_name'), name: name, bankName: bank, officialEmail: email, mobileNumber: mobile }).then(function (d) {
-        btn.disabled = false; btn.textContent = orig;
-        if (d.status === 'success') { box.className = 'alert success'; box.textContent = d.message; $('abName').value = ''; $('abBank').value = ''; $('abEmail').value = ''; $('abMobile').value = ''; loadMyBankers(); setTimeout(function () { closeSheet('addBankerSheet'); }, 1400); }
-        else { box.className = 'alert error'; box.textContent = d.message || 'Could not add this banker.'; }
-      }).catch(function () { btn.disabled = false; btn.textContent = orig; box.className = 'alert error'; box.textContent = 'Connection error.'; });
+    var loanType = $('abLoanType').value;
+    var bank = $('abBank').value.trim();
+    var name = $('abName').value.trim();
+    var email = $('abEmail').value.trim();
+    var mobile = $('abMobile').value.replace(/\D/g, '');
+    var box = $('abResult');
+    box.className = 'alert hidden';
+
+    if (!loanType || !bank) {
+      box.className = 'alert error';
+      box.textContent = 'Please choose the loan type and the bank / NBFC.';
+      return;
+    }
+    if (!name || !email || mobile.length !== 10) {
+      box.className = 'alert error';
+      box.textContent = 'Please fill in the banker\'s name, email, and a valid 10-digit mobile number.';
+      return;
+    }
+
+    var btn = this, orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Adding…';
+
+    VMW.post({
+      action: 'partnerAddBanker',
+      partnerCode: CODE,
+      partnerName: localStorage.getItem('vmw_partner_name') || '',
+      loanType: loanType,
+      bankName: bank,
+      name: name,
+      officialEmail: email,
+      mobileNumber: mobile
+    }).then(function (d) {
+      btn.disabled = false;
+      btn.textContent = orig;
+      if (d.status === 'success') {
+        box.className = 'alert success';
+        box.textContent = d.message || 'Banker added successfully.';
+        $('abLoanType').value = '';
+        $('abBank').innerHTML = '<option value="">Choose loan type first</option>';
+        $('abBank').disabled = true;
+        $('abName').value = '';
+        $('abEmail').value = '';
+        $('abMobile').value = '';
+        loadMyBankers();
+        setTimeout(function () { closeSheet('addBankerSheet'); }, 1400);
+      } else {
+        box.className = 'alert error';
+        box.textContent = d.message || 'Could not add this banker.';
+      }
+    }).catch(function () {
+      btn.disabled = false;
+      btn.textContent = orig;
+      box.className = 'alert error';
+      box.textContent = 'Connection error.';
+    });
   });
 
   var SEND_LEAD = null;
@@ -373,23 +522,40 @@
     }).join('') : '<div style="color:var(--ink-400);">You have no approved bankers yet — add one and wait for approval first.</div>';
     openSheet('sendToBankerSheet');
   }
+
   $('sendToBankerList').addEventListener('click', function (e) {
     var b = e.target.closest('[data-pick-banker]'); if (!b || !SEND_LEAD) return;
     b.disabled = true; b.textContent = 'Sending…';
-    VMW.post({ action: 'partnerRouteLeadToBanker', partnerCode: CODE, partnerName: localStorage.getItem('vmw_partner_name'), partnerEmail: '', bankerId: b.getAttribute('data-pick-banker'), leadId: SEND_LEAD.leadId, product: SEND_LEAD.product }).then(function (d) {
-        pToast(d.status === 'success' ? d.message : (d.message || 'Could not send'), d.status !== 'success');
-        if (d.status === 'success') { closeSheet('sendToBankerSheet'); loadLeads(); }
-        else { b.disabled = false; b.textContent = 'Send ' + esc(SEND_LEAD.name) + ' to them'; }
-      }).catch(function () { pToast('Connection error', true); b.disabled = false; });
+    VMW.post({ 
+      action: 'partnerRouteLeadToBanker', 
+      partnerCode: CODE, 
+      partnerName: localStorage.getItem('vmw_partner_name') || '', 
+      partnerEmail: '', 
+      bankerId: b.getAttribute('data-pick-banker'), 
+      leadId: SEND_LEAD.leadId, 
+      product: SEND_LEAD.product 
+    }).then(function (d) {
+      pToast(d.status === 'success' ? d.message : (d.message || 'Could not send'), d.status !== 'success');
+      if (d.status === 'success') { closeSheet('sendToBankerSheet'); loadLeads(); }
+      else { b.disabled = false; b.textContent = 'Send ' + esc(SEND_LEAD.name) + ' to them'; }
+    }).catch(function () { pToast('Connection error', true); b.disabled = false; });
   });
+
   $('leadsArea').addEventListener('click', function (e) {
     var sendBtn = e.target.closest('[data-send]');
     if (sendBtn) { openSendToBanker(sendBtn.getAttribute('data-send'), sendBtn.getAttribute('data-product'), sendBtn.getAttribute('data-name')); return; }
     var poolBtn = e.target.closest('[data-pool]');
     if (poolBtn) {
       poolBtn.disabled = true; poolBtn.textContent = 'Moving…';
-      VMW.post({ action: 'partnerPushLeadToPool', partnerCode: CODE, leadId: poolBtn.getAttribute('data-pool'), product: poolBtn.getAttribute('data-product') }).then(function (d) { pToast(d.status === 'success' ? 'Back in the pool' : (d.message || 'Failed'), d.status !== 'success'); loadLeads(); })
-        .catch(function () { pToast('Connection error', true); poolBtn.disabled = false; });
+      VMW.post({ 
+        action: 'partnerPushLeadToPool', 
+        partnerCode: CODE, 
+        leadId: poolBtn.getAttribute('data-pool'), 
+        product: poolBtn.getAttribute('data-product') 
+      }).then(function (d) { 
+        pToast(d.status === 'success' ? 'Back in the pool' : (d.message || 'Failed'), d.status !== 'success'); 
+        loadLeads(); 
+      }).catch(function () { pToast('Connection error', true); poolBtn.disabled = false; });
     }
   });
 
@@ -408,8 +574,35 @@
     }).catch(function (err) { area.innerHTML = '<div class="alert error">' + esc(VMW.errMsg(err)) + ' Tap Refresh to try again.</div>'; });
   }
 
-  /* ---------- start: stay logged in ---------- */
-  if (VMW.store.get(CODE_KEY)) showDashboard(); else showAuth('loginView');
+  /* ---------- Start Application Flow ---------- */
+  $('newAppBtn').addEventListener('click', function () {
+    var m = VMW.mobile10($('newAppMobile').value);
+    if (m.length !== 10) { alert('Please enter a valid 10-digit mobile number.'); return; }
+    window.open('apply.html?ref=' + encodeURIComponent(CODE) + '&mobile=' + encodeURIComponent(m), '_blank');
+  });
+
+  $('leadsRefresh').addEventListener('click', loadLeads);
+
+  $('logoutBtn').addEventListener('click', function () {
+    VMW.store.remove(CODE_KEY);
+    VMW.store.remove(NAME_KEY);
+    VMW.store.remove(MOBILE_KEY);
+    showAuth('loginView');
+  });
+
+  $('copyBtn').addEventListener('click', function () {
+    var link = $('refLink').textContent;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(link).then(function () { alert('Link copied to clipboard!'); });
+    }
+  });
+
+  /* ---------- Session Boot Check ---------- */
+  if (VMW.store.get(CODE_KEY)) {
+    showDashboard();
+  } else {
+    showAuth('loginView');
+  }
 })();
 </script>
 </body>
