@@ -466,9 +466,16 @@
     VMW.post({ action: 'checkBankCode', bankerId: SESSION.bankerId, bankName: bank, loanTypes: lts }).then(function (r) {
       if (mine !== SC.token) return;
       if (r.status !== 'success') { VMW.hideMsg(hint); return; }
-      var lines = lts.map(function (lt) { return VMW.productLabel(lt) + ': ' + (r.existing[lt] ? 'an existing code will be reused automatically' : 'no existing code — enter yours below'); });
+      var suggestedCode = '';
+      var lines = lts.map(function (lt) {
+        if (r.existing[lt]) return VMW.productLabel(lt) + ': an existing code will be reused automatically';
+        if (r.suggested && r.suggested[lt]) { suggestedCode = r.suggested[lt]; return VMW.productLabel(lt) + ': suggested code pre-filled below — check it\'s right, then submit'; }
+        return VMW.productLabel(lt) + ': no code on file — enter yours below';
+      });
       hint.className = 'alert info'; hint.innerHTML = lines.map(esc).join('<br>');
-      $('scCodeGroup').classList.toggle('hidden', lts.every(function (lt) { return !!r.existing[lt]; }));
+      var allExisting = lts.every(function (lt) { return !!r.existing[lt]; });
+      $('scCodeGroup').classList.toggle('hidden', allExisting);
+      if (!allExisting && suggestedCode && !$('scCode').value) $('scCode').value = suggestedCode;
     }).catch(function () { if (mine === SC.token) VMW.hideMsg(hint); });
   }
   $('submitCodeForm').addEventListener('submit', function (e) {
@@ -702,18 +709,5 @@
   }
 })();
 </script>
-  <!--Start of Tawk.to Script-->
-<script type="text/javascript">
-var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-(function(){
-var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-s1.async=true;
-s1.src='https://embed.tawk.to/6abe26e4d6b87e34414e927e/1k3rcfrt8';
-s1.charset='UTF-8';
-s1.setAttribute('crossorigin','*');
-s0.parentNode.insertBefore(s1,s0);
-})();
-</script>
-<!--End of Tawk.to Script-->
 </body>
 </html>
