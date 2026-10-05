@@ -378,28 +378,12 @@
     $('shareWaBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + VMW.refLink(SESSION.refCode));
         $('openBizToolBtn').href = 'biztool.html?holderType=Banker&holderCode=' + encodeURIComponent(SESSION.refCode) +
       '&holderName=' + encodeURIComponent(SESSION.bankerName || '') + '&bankName=' + encodeURIComponent(SESSION.currentBankName || '');
-    $('bizToolLink').href = 'biztool.html?holderType=Banker&holderCode=' + encodeURIComponent(SESSION.bankerId) + '&holderName=' + encodeURIComponent(SESSION.bankerName || '') + '&bankName=' + encodeURIComponent(SESSION.currentBankName || '');
-    loadBizToolSummary();
-    LOADED = {};
+       LOADED = {};
     selectTab('tabLog');
     loadCodes();
     setTimeout(function () { VMW.showAnnouncement('Banker'); }, 1500);
   }
-  function loadBizToolSummary() {
-    var el = $('bizToolSummary');
-    VMW.post({ action: 'getMySubscription', holderCode: SESSION.bankerId }).then(function (r) {
-      if (r.subscription) {
-        var days = Math.max(0, Math.ceil((r.subscription.endDate - Date.now()) / 86400000));
-        el.className = 'alert success';
-        el.textContent = 'Active — ' + r.subscription.plan + ' plan, ' + days + ' day' + (days === 1 ? '' : 's') + ' left.';
-      } else {
-        el.className = 'alert info';
-        el.textContent = 'No active subscription yet.';
-      }
-    }).catch(function () { el.className = 'alert info'; el.textContent = 'Open Biz Tool to subscribe or check your status.'; });
-  }
-
-  function selectTab(id) {
+    function selectTab(id) {
     document.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.toggle('active', p.id === id); });
     document.querySelectorAll('.nav-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === id); });
     window.scrollTo(0, 0);
