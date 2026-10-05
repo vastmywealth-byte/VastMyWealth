@@ -284,7 +284,7 @@
     var link = VMW.refLink(CODE);
     $('refLink').textContent = link;
     $('waShareBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + link);
-    $('bizToolLink').href = 'biztool.html?holderType=Partner&holderCode=' + encodeURIComponent(CODE) + '&holderName=' + encodeURIComponent(pname || '');
+    $('openBizToolBtn').href = 'biztool.html?holderType=Partner&holderCode=' + encodeURIComponent(CODE) + '&holderName=' + encodeURIComponent(pname || '');
     loadBizToolSummary();
 
     // Shown ONLY when logging in with this exact mobile number — a convenience shortcut for
@@ -296,37 +296,7 @@
     loadMyBankers().then(loadLeads);
     setTimeout(function () { VMW.showAnnouncement('Partner'); }, 1500);
   }
-  function loadBizToolSummary() {
-    var el = $('bizToolSummary');
-    VMW.post({ action: 'getMySubscription', holderCode: CODE }).then(function (r) {
-      if (r.subscription) {
-        var days = Math.max(0, Math.ceil((r.subscription.endDate - Date.now()) / 86400000));
-        el.className = 'alert success'; el.style.marginBottom = '0';
-        el.textContent = 'Active — ' + r.subscription.plan + ' plan, ' + days + ' day' + (days === 1 ? '' : 's') + ' left.';
-      } else {
-        el.className = 'alert info'; el.style.marginBottom = '0';
-        el.textContent = 'No active subscription yet.';
-      }
-    }).catch(function () { el.className = 'alert info'; el.style.marginBottom = '0'; el.textContent = 'Open Biz Tool to subscribe or check your status.'; });
-  }
-  $('copyBtn').onclick = function () {
-    VMW.copy(VMW.refLink(CODE)).then(function () { VMW.toast('Link copied — share it with your customer', 'success'); })
-      .catch(function () { VMW.toast('Could not copy. Long-press the link to copy it.', 'error'); });
-  };
-  $('logoutBtn').onclick = function () { VMW.store.del(CODE_KEY); VMW.store.del(NAME_KEY); VMW.store.del(MOBILE_KEY); CODE = ''; showAuth('loginView'); VMW.toast('Logged out'); };
-  $('adminLink').addEventListener('click', function (e) {
-    e.preventDefault();
-    var w = window.open('admin.html', '_blank', 'noopener,noreferrer');
-    if (!w) location.href = 'admin.html'; // pop-up blocked — fall back to normal navigation rather than doing nothing
-  });
-  $('newAppBtn').onclick = function () {
-    var m = VMW.mobile10($('newAppMobile').value);
-    if (m.length !== 10) { VMW.toast('Enter a valid 10-digit mobile number', 'error'); return; }
-    window.open(VMW.startLink(m, CODE), '_blank');
-  };
-  $('leadsRefresh').onclick = loadLeads;
-
-  function leadRow(l) {
+    function leadRow(l) {
     var pending = String(l.documentStatus || '').toLowerCase() !== 'submitted';
     var notElig = String(l.status).toLowerCase() === 'not eligible';
     var name = (l.employmentType === 'Self-Employed' && l.companyName) ? l.companyName : (l.customerName || '—');
