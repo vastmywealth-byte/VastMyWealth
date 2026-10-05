@@ -18,15 +18,15 @@
 
   window.VMW_CONFIG = {
     // Apps Script Web App (/exec) — the ONE backend for every page
-    //BACKEND_URL: "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec",
-BACKEND_URL: "https://vmw-portal-api.vastmywealth.workers.dev",
+    BACKEND_URL: "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec",
+
     SITE_URL: base,
     APPLY_URL: base + "apply.html",
     VL_EL_URL: base + "vl-el-application.html",
 
     WHATSAPP_NUMBER: "919594592020",
     SUPPORT_MOBILE: "9594592020",
-    PARTNER_TERMS_URL: "https://loan.vastmywealth.com/partner-terms.pdf",
+    PARTNER_TERMS_URL: "https://app.vastmywealth.com/partner-terms.pdf",
 
     // Shows a hidden "Admin" shortcut on the partner dashboard ONLY when that
     // account's login mobile matches this number. This is a convenience for
