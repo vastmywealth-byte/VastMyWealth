@@ -17,6 +17,13 @@
   .rm-card{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:14px}
   .rm-card small{display:block;color:var(--muted);font-size:12px}
   .rm-card b{color:#fff;font-size:14.5px}
+    .biztool-hero { padding:0; overflow:hidden; }
+  .biztool-hero-img { width:100%; aspect-ratio:3/1; object-fit:cover; display:block; background:linear-gradient(135deg,#1a2440,#0B1A38); }
+  .biztool-hero-body { padding:18px 20px; }
+  .biztool-hero-title { font-family:'Poppins',sans-serif; font-size:20px; font-weight:800; color:#D9A94E; margin-bottom:8px; }
+  .biztool-hero-sub { font-size:14px; color:#c7cfe6; line-height:1.5; margin-bottom:14px; }
+  .biztool-feature-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+  .biztool-feature-list li { font-size:13.5px; color:#e4e8f5; line-height:1.4; }
 </style>
 </head>
 <body>
@@ -163,16 +170,28 @@
       </div>
     </div>
 
-    <!-- BUSINESS TOOL -->
+   <!-- BUSINESS TOOL -->
     <div id="tabBizTool" class="tab-pane">
-      <div class="card">
-        <div class="card-title">Biz Tool — exclusive leads</div>
-        <p class="card-sub">Subscribe for 7-day exclusive access to matching leads in your chosen state, before they reach the shared pool.</p>
-        <div id="bizToolSummary" class="alert info">Loading…</div>
-        <a class="btn btn-primary btn-block mt12" id="bizToolLink" href="#">Open Biz Tool</a>
+      <div class="card biztool-hero">
+        <img src="biz-tool-banner.jpg" alt="" class="biztool-hero-img" onerror="this.style.display='none'">
+        <div class="biztool-hero-body">
+          <div class="biztool-hero-title">Unlock Exclusive Leads with Biz Tool</div>
+          <p class="biztool-hero-sub">Subscribe and get leads exclusively yours for 7 days, earn up to <b>85% commission</b>, and get your own <b>free personal Sales Bot</b>.</p>
+          <ul class="biztool-feature-list">
+            <li>🎯 <b>Exclusive leads</b> — matched to your chosen states &amp; cities, yours alone for 7 days</li>
+            <li>💰 <b>Earn up to 85%</b> commission on every lead you source</li>
+            <li>🤖 <b>Free Sales Bot</b> — instant Telegram alerts for leads, pool leads &amp; pending documents</li>
+            <li>📈 <b>Guaranteed leads</b> — minimum 6/month or 22/quarter, delivered straight to you</li>
+            <li>🎨 <b>Ready-made creatives</b> — share on WhatsApp, Telegram, Facebook &amp; Instagram in one tap</li>
+          </ul>
+        </div>
       </div>
-    </div>
-  </main>
+      <div class="card">
+        <div class="card-title">Your subscription</div>
+        <div id="bizSubStatus" class="mt8">Loading…</div>
+        <a class="btn btn-primary btn-block mt16" id="openBizToolBtn" target="_blank" rel="noopener">🚀 Open Biz Tool</a>
+      </div>
+    </div>  </main>
 
   <nav class="bottom-nav" aria-label="Sections">
     <button class="nav-btn active" data-tab="tabLog"><span class="ic">＋</span>Log</button>
@@ -357,6 +376,8 @@
     var gated = !SESSION.hasActiveCode;
     $('logGate').classList.toggle('hidden', !gated); $('newAppArea').classList.toggle('hidden', gated);
     $('shareWaBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + VMW.refLink(SESSION.refCode));
+        $('openBizToolBtn').href = 'biztool.html?holderType=Banker&holderCode=' + encodeURIComponent(SESSION.refCode) +
+      '&holderName=' + encodeURIComponent(SESSION.bankerName || '') + '&bankName=' + encodeURIComponent(SESSION.currentBankName || '');
     $('bizToolLink').href = 'biztool.html?holderType=Banker&holderCode=' + encodeURIComponent(SESSION.bankerId) + '&holderName=' + encodeURIComponent(SESSION.bankerName || '') + '&bankName=' + encodeURIComponent(SESSION.currentBankName || '');
     loadBizToolSummary();
     LOADED = {};
@@ -385,6 +406,7 @@
     if (!SESSION) return;
     if (id === 'tabTrack' && (!LOADED.track || Date.now() - (LOADED.trackAt || 0) > 30000)) loadTrack();
     if (id === 'tabBizLeads' && (!LOADED.leads || Date.now() - (LOADED.leadsAt || 0) > 20000)) loadLeads(false);
+        if (id === 'tabBizTool') loadBizToolStatus();
   }
   document.querySelectorAll('.nav-btn').forEach(function (b) { b.addEventListener('click', function () { selectTab(b.dataset.tab); }); });
   $('trackRefresh').onclick = loadTrack;
@@ -401,7 +423,21 @@
     VMW.copy(VMW.refLink(SESSION.refCode)).then(function () { VMW.toast('Link copied — share it with your customer', 'success'); })
       .catch(function () { VMW.toast(VMW.refLink(SESSION.refCode)); });
   });
-
+  function loadBizToolStatus() {
+    if (LOADED.bizStatus) return;
+    LOADED.bizStatus = true;
+    var box = $('bizSubStatus');
+    VMW.post({ action: 'getMySubscription', holderCode: SESSION.refCode }).then(function (r) {
+      var sub = r.subscription;
+      if (sub) {
+        var daysLeft = Math.max(0, Math.ceil((sub.endDate - Date.now()) / 86400000));
+        box.innerHTML = '<span class="badge ok">Active</span> ' + esc(sub.plan) + ' plan · ' + esc((sub.states || []).join(', ')) +
+          '<div class="small muted mt8">Renews or expires in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + '.</div>';
+      } else {
+        box.innerHTML = '<span class="badge warn">No active subscription</span><div class="small muted mt8">Subscribe to start getting exclusive leads.</div>';
+      }
+    }).catch(function () { box.textContent = 'Could not load your subscription.'; });
+  }
   /* ---------- DSA codes ---------- */
   function loadCodes() {
     var el = $('codesList'); el.innerHTML = '<div class="skeleton"></div>';
@@ -430,6 +466,7 @@
       }
     }).catch(function () { /* the chip we already have is enough */ });
   }
+  
   function renderBankChips() {
     var el = $('scBankChips');
     el.innerHTML = SC.banks.map(function (b) { return '<button type="button" class="chip' + (!SC.newMode && b === SC.bank ? ' selected' : '') + '" data-bank="' + esc(b) + '">' + esc(b) + '</button>'; }).join('') +
