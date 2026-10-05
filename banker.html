@@ -442,15 +442,23 @@
     $('scNewBankFields').classList.add('hidden'); $('scCodeGroup').classList.remove('hidden');
     renderBankChips(); renderLoanTypeChips();
     openSheet('submitCodeSheet');
+
+    // 1. Fetch user's existing banks
     VMW.post({ action: 'getBankerBanks', bankerId: SESSION.bankerId }).then(function (r) {
       if (r.status === 'success' && r.banks && r.banks.length) {
         SC.banks = r.banks;
         if (!SC.bank || SC.banks.indexOf(SC.bank) === -1) SC.bank = r.primaryBank || r.banks[0];
         renderBankChips(); refreshCodeHint();
       }
-    }).catch(function () { /* the chip we already have is enough */ });
-  }
-  
+    }).catch(function () {});
+
+    // 2. Fetch master Lender Name list from "Bank Codes" tab for autosuggest
+    VMW.post({ action: 'getBankCodesLenders' }).then(function (r) {
+      if (r.status === 'success' && r.lenders && r.lenders.length) {
+        SC.masterLenders = r.lenders;
+      }
+    }).catch(function () {});
+  }  
   function renderBankChips() {
     var el = $('scBankChips');
     el.innerHTML = SC.banks.map(function (b) { return '<button type="button" class="chip' + (!SC.newMode && b === SC.bank ? ' selected' : '') + '" data-bank="' + esc(b) + '">' + esc(b) + '</button>'; }).join('') +
@@ -462,8 +470,53 @@
     else { SC.newMode = false; SC.bank = b.getAttribute('data-bank'); $('scNewBankFields').classList.add('hidden'); }
     renderBankChips(); refreshCodeHint();
   });
-  VMW.autosuggest($('scNewBankName'), function () { return VMW.lists.banks; }, function () { refreshCodeHint(); });
+  // Autosuggest from Bank Codes master lenders list
+  VMW.autosuggest($('scNewBankName'), function () { 
+    return (SC.masterLenders && SC.masterLenders.length) ? SC.masterLenders : VMW.lists.banks; 
+  }, function () { 
+    refreshCodeHint(); 
+  });
   $('scNewBankName').addEventListener('input', refreshCodeHint);
+
+  function refreshCodeHint() {
+    var bank = currentBank(), lts = loanTypesChosen(), hint = $('scCodeHint');
+    if (!bank || !lts.length) { 
+      VMW.hideMsg(hint); 
+      $('scCodeGroup').classList.remove('hidden'); 
+      return; 
+    }
+    var mine = ++SC.token;
+    VMW.showMsg(hint, 'Checking for DSA code…', 'info');
+    VMW.post({ action: 'checkBankCode', bankerId: SESSION.bankerId, bankName: bank, loanTypes: lts }).then(function (r) {
+      if (mine !== SC.token) return;
+      if (r.status !== 'success') { VMW.hideMsg(hint); return; }
+      
+      var suggestedCode = '';
+      var lines = lts.map(function (lt) {
+        if (r.existing && r.existing[lt]) {
+          return VMW.productLabel(lt) + ': Active code (' + r.existing[lt] + ') already on file — reused automatically';
+        }
+        if (r.suggested && r.suggested[lt]) { 
+          suggestedCode = r.suggested[lt]; 
+          return VMW.productLabel(lt) + ': Urban Money Code (' + suggestedCode + ') found and pre-filled below'; 
+        }
+        return VMW.productLabel(lt) + ': No code found in Bank Codes — enter yours manually below';
+      });
+
+      hint.className = 'alert info'; 
+      hint.innerHTML = lines.map(esc).join('<br>');
+
+      var allExisting = lts.every(function (lt) { return r.existing && !!r.existing[lt]; });
+      $('scCodeGroup').classList.toggle('hidden', allExisting);
+
+      // Pre-fill the input with the Urban Money Code if found
+      if (!allExisting && suggestedCode) {
+        $('scCode').value = suggestedCode;
+      }
+    }).catch(function () { 
+      if (mine === SC.token) VMW.hideMsg(hint); 
+    });
+  }
   $('scLoanTypeChips').addEventListener('click', function (e) {
     var b = e.target.closest('.chip'); if (!b) return;
     SC.loanType = (SC.loanType === b.getAttribute('data-lt')) ? '' : b.getAttribute('data-lt');
