@@ -12,14 +12,39 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-  /* Scoped to this page only — a 2-up grid of vertical (9:16) share creatives */
-  .creatives-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .creative-card{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
-  .creative-card img{width:100%;aspect-ratio:9/16;object-fit:cover;background:#0005;display:block}
-  .creative-card .cc-body{padding:8px;display:flex;flex-direction:column;gap:6px}
-  .creative-card .cc-caption{font-size:11.5px;color:var(--muted);line-height:1.3;min-height:1.2em}
-  .creative-card .cc-actions{display:flex;gap:6px}
-  .creative-card .btn{flex:1;padding:8px 6px;font-size:11.5px}
+  .banner-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+  .banner-card { background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+  .banner-card img { width:100%; aspect-ratio:4/5; object-fit:cover; display:block; background:#1a2440; }
+  .banner-card .bc-body { padding:12px 14px; display:flex; flex-direction:column; flex:1; justify-content:space-between; }
+  .banner-card .bc-caption { font-size:13px; color:var(--muted); margin-bottom:10px; line-height:1.4; }
+  .bc-share-row { display:flex; gap:8px; }
+  .bc-share-btn { flex:1; display:flex; align-items:center; justify-content:center; height:38px; border-radius:9px; border:none; cursor:pointer; text-decoration:none; padding:0; }
+  .bc-share-btn svg { width:18px; height:18px; pointer-events:none; }
+  #planToggle { display:flex; gap:12px; }
+  #planToggle .toggle-btn {
+    flex:1; min-width:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    padding:16px 8px;
+    border-radius:12px;
+    border:1.5px solid var(--line);
+    background:#101b36;
+    color:#fff;
+    cursor:pointer;
+    text-align:center;
+    transition:all .15s ease;
+  }
+  #planToggle .plan-name { font-size:13px; font-weight:600; color:#aab4d4; text-transform:uppercase; letter-spacing:.03em; }
+  #planToggle .plan-price { font-size:19px; font-weight:800; margin:2px 0; }
+  #planToggle .small { font-size:11px; color:#8b96b8; }
+  #planToggle .toggle-btn:hover { border-color:#D9A94E; }
+  #planToggle .toggle-btn.active {
+    background:linear-gradient(135deg,#D9A94E,#B8860B);
+    border-color:#D9A94E;
+    box-shadow:0 4px 16px rgba(217,169,78,.35);
+  }
+  #planToggle .toggle-btn.active .plan-name { color:#3a2c0a; }
+  #planToggle .toggle-btn.active .plan-price,
+  #planToggle .toggle-btn.active .small { color:#1a1304; }
 </style>
 </head>
 <body>
@@ -39,7 +64,10 @@
   </div>
 
   <div id="statusCard" class="card">
-    <div class="card-title">Your subscription</div>
+    <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <span>Premium subscription</span>
+      <button type="button" class="btn btn-primary btn-sm" id="increaseLeadsBtn">📈 Increase Biz Leads by 4X</button>
+    </div>
     <div id="statusBody" class="mt8">Loading…</div>
   </div>
 
@@ -50,31 +78,47 @@
   </div>
 
   <div class="card">
-    <div class="card-title">Share these with your network</div>
-    <p class="card-sub">Download and post these on WhatsApp Status, Instagram or Facebook — each one links back to you.</p>
-    <div id="creativesGrid" class="creatives-grid"><div class="skeleton"></div><div class="skeleton"></div></div>
+    <div class="card-title">Your Personal Sales Bot</div>
+    <p class="card-sub">Automate your sales follow-ups — every lead, every pool opportunity, and every pending document, pushed straight to you the instant it happens.</p>
+    <a class="btn btn-primary btn-block" id="connectBotBtn" target="_blank" rel="noopener">🚀 Create Your Sales Bot — free</a>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Marketing creatives</div>
+    <p class="card-sub">Forward these to your customers — your personal link is already included in the message.</p>
+    <div class="banner-grid" id="bannerGrid"></div>
   </div>
 
   <div id="subscribeCard" class="card">
     <div class="card-title">Subscribe</div>
-    <p class="card-sub">Choose a plan and the state(s) you want leads from.</p>
+    <p class="card-sub">Increase Biz leads by 4X.</p>
 
     <div class="field">
       <label>Plan</label>
       <div class="toggle-row" id="planToggle">
-        <button type="button" class="toggle-btn" data-plan="Monthly">Monthly — ₹7,000<br><span class="small">min. 6 leads expected</span></button>
-        <button type="button" class="toggle-btn" data-plan="Quarterly">Quarterly — ₹18,000<br><span class="small">min. 22 leads expected</span></button>
+        <button type="button" class="toggle-btn" data-plan="Monthly">
+          <span class="plan-name">Monthly</span>
+          <span class="plan-price">₹7,000</span>
+          <span class="small">min. 6 leads</span>
+        </button>
+        <button type="button" class="toggle-btn" data-plan="Quarterly">
+          <span class="plan-name">Quarterly</span>
+          <span class="plan-price">₹18,000</span>
+          <span class="small">min. 22 leads</span>
+        </button>
       </div>
     </div>
 
     <div class="field">
       <label>State(s)</label>
-      <div class="checkbox-grid" id="stateChecks" style="grid-template-columns:1fr 1fr;max-height:220px;overflow-y:auto;"></div>
+      <div class="chip-row" id="stateChips"></div>
+      <input type="text" id="stateInput" placeholder="Start typing a state and select it" autocomplete="off">
     </div>
 
     <div class="field">
-      <label for="cityInput">City (optional — leave blank for the whole state)</label>
-      <input type="text" id="cityInput" placeholder="e.g. Pune">
+      <label for="cityInput">City / Cities <span class="small muted">(optional — leave blank for the whole state)</span></label>
+      <input type="text" id="cityInput" placeholder="Start typing a city — add more separated by commas" autocomplete="off">
+      <div class="hint">Can't find a city? Just type it — it'll be saved as entered.</div>
     </div>
 
     <div id="subMsg" class="alert hidden"></div>
@@ -94,10 +138,14 @@
   var HOLDER = {
     type: params.get('holderType') === 'Partner' ? 'Partner' : 'Banker',
     code: params.get('holderCode') || '',
-    name: params.get('holderName') || '',
+    name: params.get('holderName') || (VMW.store ? VMW.store.get('vmw_partner_name') : '') || localStorage.getItem('vmw_partner_name') || '',
+    mobile: params.get('holderMobile') || (VMW.store ? VMW.store.get('vmw_partner_mobile') : '') || localStorage.getItem('vmw_partner_mobile') || '',
     bankName: params.get('bankName') || ''
   };
   $('backLink').href = HOLDER.type === 'Partner' ? 'partner.html' : 'banker.html';
+  $('increaseLeadsBtn').addEventListener('click', function () {
+    $('subscribeCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   if (!HOLDER.code) {
     $('statusBody').innerHTML = '<div class="alert error">This page needs to be opened from your dashboard\'s Biz Tool card.</div>';
@@ -106,24 +154,218 @@
     boot();
   }
 
+  // ---- Personal Marketing Bot ----
+  $('connectBotBtn').href = 'https://t.me/vastmywealthBot?start=' + HOLDER.type + '_' + encodeURIComponent(HOLDER.code);
+
+  // ---- Marketing creatives ----
+  var CREATIVES_BASE_URL = 'https://raw.githubusercontent.com/vastmywealth-byte/VastMyWealth/main/';
+  var BANNERS = [
+    { filename: 'pl.png', caption: 'Personal Loan — quick approval, competitive rates.' },
+    { filename: 'bl.png', caption: 'Business Loan — fuel your growth, minimal paperwork.' },
+    { filename: 'hl.png', caption: 'Home Loan — your dream home, made affordable.' },
+    { filename: 'lap.png', caption: 'Loan Against Property — unlock the value you already own.' },
+    { filename: 'vl.png', caption: 'Vehicle Loan — drive home today, pay comfortably.' },
+    { filename: 'el.png', caption: 'Education Loan — invest in your future, stress-free.' },
+    { filename: 'partner.png', caption: 'Apply with VastMyWealth — trusted by thousands.' },
+    { filename: 'festival-offer.png', caption: 'Festive offer — special rates, limited time.' }
+  ];
+
+  var ICONS = {
+    whatsapp: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#25D366"/><path d="M17 7a7 7 0 0 0-11.3 7.9L5 20l5.2-.7A7 7 0 0 0 17 7Z" fill="#fff" fill-opacity=".92"/><path d="M9.5 9c.2-.4.5-.4.8-.4h.6c.2 0 .4 0 .6.5l.7 1.7c.1.2 0 .4-.1.6l-.5.6c-.1.2-.1.3 0 .5.3.6 1.4 1.8 2.5 2.1.2.1.4 0 .5-.1l.6-.6c.2-.2.3-.2.5-.1l1.5.8c.2.1.3.3.2.6-.2.7-1.1 1.3-1.8 1.3-1.5.1-3.7-.7-5.1-2.1-1.2-1.2-2-2.9-2.1-4.4 0-.8.4-1.7 1.1-2z" fill="#25D366"/></svg>',
+    telegram: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#229ED9"/><path d="M17.6 7.2 6.4 11.5c-.6.2-.6.9 0 1.1l2.7.9 1 3.3c.1.4.6.5.9.2l1.5-1.4 2.6 1.9c.4.3 1 .1 1.1-.4l1.8-9c.1-.5-.4-.9-.9-.9Z" fill="#fff"/></svg>',
+    facebook: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#1877F2"/><path d="M13.5 20v-6.2h2.1l.3-2.4h-2.4v-1.5c0-.7.2-1.2 1.2-1.2h1.3V6.6c-.2 0-1-.1-1.9-.1-1.9 0-3.1 1.1-3.1 3.2v1.8H8.9v2.4h2.1V20h2.5Z" fill="#fff"/></svg>',
+    instagram: '<svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="url(#ig)"/><defs><linearGradient id="ig" x1="0" y1="24" x2="24" y2="0"><stop stop-color="#FEDA75"/><stop offset=".3" stop-color="#FA7E1E"/><stop offset=".6" stop-color="#D62976"/><stop offset=".8" stop-color="#962FBF"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><rect x="6" y="6" width="12" height="12" rx="3.5" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="12" r="3" stroke="#fff" stroke-width="1.5"/><circle cx="16.3" cy="7.7" r="1" fill="#fff"/></svg>'
+  };
+
+  // Pre-cached or instant share handler
+  // Pre-cached or instant share handler
+  async function triggerShare(index, platform) {
+    var b = BANNERS[index];
+    var baseLink = VMW.refLink(HOLDER.code);
+    var referralLink = baseLink + (baseLink.indexOf('?') > -1 ? '&' : '?') + 'pname=' + encodeURIComponent(HOLDER.name) + '&pmob=' + encodeURIComponent(HOLDER.mobile);
+    var imgSrc = b.filename ? (CREATIVES_BASE_URL + b.filename) : '';
+    var fullMessage = b.caption + '\n\nApply here: ' + referralLink;
+    // Helper: direct file download & copy
+    function downloadAndCopy(customMsg) {
+      if (!imgSrc) return;
+      var a = document.createElement('a');
+      a.href = imgSrc;
+      a.download = b.filename || 'banner.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(fullMessage).then(function () {
+          VMW.toast(customMsg || 'Image saved to gallery! Caption copied.');
+        }).catch(function() {
+          VMW.toast('Image downloaded!');
+        });
+      } else {
+        VMW.toast('Image downloaded!');
+      }
+    }
+
+    // Instagram: Cannot receive attachments via web links -> Auto download & copy
+    if (platform === 'instagram') {
+      downloadAndCopy('Banner saved! Paste copied caption on Instagram.');
+      setTimeout(function() {
+        window.location.href = 'instagram://app';
+      }, 700);
+      return;
+    }
+
+    // For WhatsApp & System Share: Try direct file share
+    if (navigator.share) {
+      try {
+        var resp = await fetch(imgSrc);
+        var blob = await resp.blob();
+        var file = new File([blob], b.filename || 'creative.png', { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'VastMyWealth',
+            text: fullMessage
+          });
+          return;
+        }
+      } catch (err) {
+        // If aborted by user, do nothing
+        if (err.name === 'AbortError') return;
+        console.warn('Native share error, using fallback:', err);
+      }
+    }
+
+    // Fallbacks if native file share is unsupported on device
+    if (platform === 'whatsapp') {
+      // WhatsApp fallback: copies text, downloads photo, then opens WhatsApp
+      downloadAndCopy('Banner saved! Forwarding to WhatsApp…');
+      setTimeout(function () {
+        window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(fullMessage), '_blank');
+      }, 600);
+    } else if (platform === 'telegram') {
+      window.open('https://t.me/share/url?url=' + encodeURIComponent(referralLink) + '&text=' + encodeURIComponent(b.caption), '_blank');
+    } else if (platform === 'facebook') {
+      // Facebook app will create a post with your referral link
+      window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(referralLink) + '&quote=' + encodeURIComponent(b.caption), '_blank');
+    }
+  }
+  function renderBanners() {
+    $('bannerGrid').innerHTML = BANNERS.map(function (b, i) {
+      var imgSrc = b.filename ? (CREATIVES_BASE_URL + b.filename) : '';
+      return '<div class="banner-card">' +
+        (imgSrc ? '<img src="' + esc(imgSrc) + '" alt="" loading="lazy">' : '<img alt="" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;">') +
+        '<div class="bc-body">' +
+        '<div class="bc-caption">' + esc(b.caption) + '</div>' +
+        '<div class="bc-share-row">' +
+        '<button type="button" class="bc-share-btn" data-share="whatsapp" data-i="' + i + '" style="background:#25D36622" title="Share via WhatsApp">' + ICONS.whatsapp + '</button>' +
+        '<button type="button" class="bc-share-btn" data-share="telegram" data-i="' + i + '" style="background:#229ED922" title="Share via Telegram">' + ICONS.telegram + '</button>' +
+        '<button type="button" class="bc-share-btn" data-share="facebook" data-i="' + i + '" style="background:#1877F222" title="Share via Facebook">' + ICONS.facebook + '</button>' +
+        '<button type="button" class="bc-share-btn" data-share="instagram" data-i="' + i + '" style="background:#96151522" title="Share on Instagram">' + ICONS.instagram + '</button>' +
+        '</div></div></div>';
+    }).join('');
+  }
+  renderBanners();
+
+  $('bannerGrid').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-share]');
+    if (!btn) return;
+    var idx = parseInt(btn.getAttribute('data-i'), 10);
+    var platform = btn.getAttribute('data-share');
+    triggerShare(idx, platform);
+  });
+
+  // ---- Plan selection ----
   var PLAN = '';
   document.querySelectorAll('#planToggle .toggle-btn').forEach(function (b) {
     b.addEventListener('click', function () {
       document.querySelectorAll('#planToggle .toggle-btn').forEach(function (x) { x.classList.remove('active'); });
-      b.classList.add('active'); PLAN = b.getAttribute('data-plan');
+      b.classList.add('active');
+      PLAN = b.getAttribute('data-plan');
     });
   });
 
-  function renderStateChecks() {
-    var el = $('stateChecks');
-    el.innerHTML = VMW.lists.states.map(function (s) {
-      return '<label><input type="checkbox" name="stState" value="' + esc(s) + '"> ' + esc(s) + '</label>';
+  // ---- State / City autosuggest ----
+  var STATE_CITY = { states: [], citiesByState: {} };
+  var selectedStates = [];
+
+  function loadStateCityList() {
+    return VMW.get('getStateCityList', null, { tries: 2 }).then(function (r) {
+      if (r && r.success) {
+        STATE_CITY.states = r.states || [];
+        STATE_CITY.citiesByState = r.citiesByState || {};
+      }
+    }).catch(function () {});
+  }
+  loadStateCityList();
+
+  function renderStateChips() {
+    $('stateChips').innerHTML = selectedStates.map(function (s) {
+      return '<span class="chip static">' + esc(s) + ' <b data-remove="' + esc(s) + '" style="cursor:pointer;">✕</b></span>';
     }).join('');
   }
-  VMW.loadLists('states').then(renderStateChecks);
-  renderStateChecks();
 
-  function chosenStates() { return Array.prototype.map.call(document.querySelectorAll('input[name="stState"]:checked'), function (c) { return c.value; }); }
+  $('stateChips').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-remove]');
+    if (!b) return;
+    selectedStates = selectedStates.filter(function (s) { return s !== b.getAttribute('data-remove'); });
+    renderStateChips();
+  });
+
+  function wireSimpleAutosuggest(input, getItems, onPick) {
+    var box = document.createElement('div');
+    box.className = 'suggest';
+    input.parentNode.appendChild(box);
+
+    function hide() { box.style.display = 'none'; }
+    function render() {
+      var q = input.value.trim().toLowerCase();
+      var lastPart = q.indexOf(',') !== -1 ? q.split(',').pop().trim() : q;
+      if (!lastPart) { hide(); return; }
+      var items = getItems().filter(function (it) { return it.toLowerCase().indexOf(lastPart) === 0; }).slice(0, 8);
+      if (!items.length) { hide(); return; }
+      box.innerHTML = items.map(function (it, i) { return '<div data-i="' + i + '">' + esc(it) + '</div>'; }).join('');
+      box.style.display = 'block';
+      box._items = items;
+    }
+
+    input.addEventListener('input', render);
+    input.addEventListener('focus', render);
+    box.addEventListener('mousedown', function (e) {
+      var el = e.target.closest('[data-i]');
+      if (!el) return;
+      e.preventDefault();
+      onPick(box._items[parseInt(el.getAttribute('data-i'), 10)]);
+      hide();
+    });
+    document.addEventListener('click', function (e) {
+      if (e.target !== input && !box.contains(e.target)) hide();
+    });
+  }
+
+  wireSimpleAutosuggest($('stateInput'), function () {
+    return STATE_CITY.states.filter(function (s) { return selectedStates.indexOf(s) === -1; });
+  }, function (picked) {
+    selectedStates.push(picked);
+    renderStateChips();
+    $('stateInput').value = '';
+  });
+
+  wireSimpleAutosuggest($('cityInput'), function () {
+    var pool = {};
+    selectedStates.forEach(function (s) {
+      (STATE_CITY.citiesByState[s] || []).forEach(function (c) { pool[c] = true; });
+    });
+    return Object.keys(pool);
+  }, function (picked) {
+    var parts = $('cityInput').value.split(',');
+    parts[parts.length - 1] = ' ' + picked;
+    $('cityInput').value = parts.join(',').replace(/^ /, '') + ', ';
+  });
+
+  function chosenStates() { return selectedStates; }
+  function chosenCity() { return $('cityInput').value.replace(/,\s*$/, '').trim(); }
 
   function renderStatus(sub) {
     var box = $('statusBody');
@@ -154,8 +396,10 @@
       }).join('');
     }).catch(function () { el.innerHTML = '<div class="alert error">Could not load your exclusive leads.</div>'; });
   }
+
   $('exclusiveLeadsList').addEventListener('click', function (e) {
-    var b = e.target.closest('[data-push]'); if (!b) return;
+    var b = e.target.closest('[data-push]');
+    if (!b) return;
     if (!confirm('Release this lead to the shared pool now? Any banker will then be able to claim it.')) return;
     VMW.busy(b, 'Releasing…', function () {
       return VMW.post({ action: 'pushBizToolLead', leadId: b.getAttribute('data-push'), product: b.getAttribute('data-product'), holderCode: HOLDER.code, status: 'PushToPool' })
@@ -166,51 +410,12 @@
   function boot() {
     VMW.post({ action: 'getMySubscription', holderCode: HOLDER.code }).then(function (r) { renderStatus(r.subscription); }).catch(function () { $('statusBody').textContent = 'Could not load your subscription.'; });
     loadExclusiveLeads();
-    loadCreatives();
-  }
-
-  function loadCreatives() {
-    var el = $('creativesGrid');
-    VMW.post({ action: 'getBizToolCreatives' }).then(function (r) {
-      var items = r.creatives || [];
-      if (!items.length) { el.innerHTML = '<div class="empty" style="grid-column:1/-1;">No creatives added yet — check back soon.</div>'; return; }
-      var myLink = VMW.refLink(HOLDER.code);
-      el.innerHTML = items.map(function (c, i) {
-        return '<div class="creative-card">' +
-          '<img src="' + esc(c.imageUrl) + '" alt="Creative ' + (i + 1) + '" loading="lazy">' +
-          '<div class="cc-body">' + (c.caption ? '<div class="cc-caption">' + esc(c.caption) + '</div>' : '') +
-          '<div class="cc-actions">' +
-          '<a class="btn btn-outline" href="' + esc(c.imageUrl) + '" download target="_blank" rel="noopener">Download</a>' +
-          '<button class="btn btn-primary" data-share="' + i + '">Share</button>' +
-          '</div></div></div>';
-      }).join('');
-      el.querySelectorAll('[data-share]').forEach(function (btn, i) {
-        btn.addEventListener('click', function () {
-          var c = items[i];
-          // One-tap share where the browser supports sending an image + text together;
-          // otherwise copy the link and let them attach the downloaded image themselves.
-          if (navigator.share && navigator.canShare) {
-            fetch(c.imageUrl).then(function (res) { return res.blob(); }).then(function (blob) {
-              var file = new File([blob], 'vastmywealth-creative.jpg', { type: blob.type || 'image/jpeg' });
-              var shareData = { files: [file], text: (c.caption ? c.caption + '\n' : '') + myLink };
-              if (navigator.canShare(shareData)) return navigator.share(shareData);
-              throw new Error('files not shareable');
-            }).catch(function () { copyLinkFallback(myLink); });
-          } else {
-            copyLinkFallback(myLink);
-          }
-        });
-      });
-    }).catch(function () { el.innerHTML = '<div class="empty" style="grid-column:1/-1;">Could not load creatives.</div>'; });
-  }
-  function copyLinkFallback(link) {
-    VMW.copy(link).then(function () { VMW.toast('Link copied — download the image above, then paste this as your caption', 'success'); })
-      .catch(function () { VMW.toast(link); });
   }
 
   $('payBtn').addEventListener('click', function () {
-    var box = $('subMsg'); VMW.hideMsg(box);
-    var states = chosenStates(), city = $('cityInput').value.trim();
+    var box = $('subMsg');
+    VMW.hideMsg(box);
+    var states = chosenStates(), city = chosenCity();
     if (!PLAN) { VMW.showMsg(box, 'Please choose a plan.', 'error'); return; }
     if (!states.length) { VMW.showMsg(box, 'Please select at least one state.', 'error'); return; }
 
@@ -243,5 +448,18 @@
   }
 })();
 </script>
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6abe26e4d6b87e34414e927e/1k3rcfrt8';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->
 </body>
 </html>
