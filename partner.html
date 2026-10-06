@@ -339,6 +339,7 @@
 
   /* ---------- Dashboard Initialization ---------- */
   var CODE = '';
+    var REF_URL = '';
   function loadBizToolSummary() {
     var box = $('bizSubStatus');
     if (!box) return;
@@ -359,8 +360,9 @@
     var pname = VMW.store.get(NAME_KEY);
     $('welcomeMsg').textContent = 'Welcome, ' + (pname || 'Partner');
     $('codeMsg').textContent = 'Partner code: ' + CODE;
-    var link = VMW.refLink(CODE);
-    $('refLink').textContent = link;
+        var link = VMW.refLink(CODE);
+    REF_URL = link;
+    $('refLink').textContent = VMW.shortLabel(link);
     $('waShareBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + link);
     $('openBizToolBtn').href = 'biztool.html?holderType=Partner&holderCode=' + encodeURIComponent(CODE) + '&holderName=' + encodeURIComponent(pname || '');
     
@@ -579,13 +581,7 @@
     showAuth('loginView');
   });
 
-  $('copyBtn').addEventListener('click', function () {
-    var link = $('refLink').textContent;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(link).then(function () { alert('Link copied to clipboard!'); });
-    }
-  });
-
+    $('copyBtn').addEventListener('click', function () { VMW.copyWithFeedback(this, REF_URL); });
   /* ---------- Session Boot Check ---------- */
   if (VMW.store.get(CODE_KEY)) {
     showDashboard();
