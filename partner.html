@@ -456,32 +456,76 @@
   });
 
   $('abSubmitBtn').addEventListener('click', function () {
-    var loanType = $('abLoanType').value;
-    var bank = $('abBank').value.trim();
-    var name = $('abName').value.trim();
-    var email = $('abEmail').value.trim();
-    var mobile = $('abMobile').value.replace(/\D/g, '');
-    var box = $('abResult');
-    box.className = 'alert hidden';
-    if (!loanType || !bank) {
+  var loanType = $('abLoanType').value;
+  var bank = $('abBank').value.trim();
+  var name = $('abName').value.trim();
+  var email = $('abEmail').value.trim();
+  var mobile = $('abMobile').value.replace(/\D/g, '');
+  var box = $('abResult');
+  box.className = 'alert hidden';
+  if (!loanType || !bank) {
+    box.className = 'alert error';
+    box.textContent = 'Please choose both the loan type and the bank / NBFC.';
+    return;
+  }
+  if (!name || !email || mobile.length !== 10) {
+    box.className = 'alert error';
+    box.textContent = 'Please fill in the banker\'s full name, email, and 10-digit mobile number.';
+    return;
+  }
+  var btn = this, orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+  VMW.post({
+    action: 'partnerAddBanker',
+    partnerCode: CODE,
+    partnerName: VMW.store.get(NAME_KEY) || '',
+    loanType: loanType,
+    bankName: bank,
+    name: name,
+    officialEmail: email,
+    mobileNumber: mobile
+  }).then(function (d) {
+    btn.disabled = false;
+    btn.textContent = orig;
+    if (d.status === 'success' || d.success) {
+      box.className = 'alert success';
+      box.textContent = d.message || 'Banker added successfully.';
+      $('abLoanType').value = '';
+      $('abBank').innerHTML = '<option value="">Choose loan type first</option>';
+      $('abBank').disabled = true;
+      $('abName').value = '';
+      $('abEmail').value = '';
+      $('abMobile').value = '';
+      loadMyBankers();
+      setTimeout(function () { closeSheet('addBankerSheet'); }, 1400);
+    } else {
       box.className = 'alert error';
-      box.textContent = 'Please choose both the loan type and the bank / NBFC.';
-      return;
+      box.textContent = d.message || d.error || 'Could not add this banker.';
     }
-      $('sendBankerBtn').addEventListener('click', function () {
-    var box = $('sendBankerMsg'); VMW.hideMsg(box);
-    var m = VMW.mobile10($('newAppMobile').value), bankerId = $('sendBankerSelect').value;
-    if (m.length !== 10) { VMW.showMsg(box, 'Enter the customer\'s 10-digit mobile number above.', 'error'); return; }
-    if (!bankerId) { VMW.showMsg(box, 'Choose a banker.', 'error'); return; }
-    VMW.busy(this, 'Sending…', function () {
-      return VMW.post({ action: 'partnerSendApplicationToBanker', partnerCode: CODE, bankerId: bankerId, customerMobile: m }, { timeout: 90000 })
-        .then(function (d) {
-          VMW.showMsg(box, d.message || (d.status === 'success' ? 'Sent.' : 'Could not send.'), d.status === 'success' ? 'success' : 'error');
-          if (d.status === 'success') loadLeads();
-        });
-    }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
+  }).catch(function () {
+    btn.disabled = false;
+    btn.textContent = orig;
+    box.className = 'alert error';
+    box.textContent = 'Connection error.';
   });
-    if (!name || !email || mobile.length !== 10) {
+});
+
+/* Send application to banker (top level, NOT inside the handler above) */
+$('sendBankerBtn').addEventListener('click', function () {
+  var box = $('sendBankerMsg'); VMW.hideMsg(box);
+  var m = VMW.mobile10($('newAppMobile').value), bankerId = $('sendBankerSelect').value;
+  if (m.length !== 10) { VMW.showMsg(box, 'Enter the customer\'s 10-digit mobile number above.', 'error'); return; }
+  if (!bankerId) { VMW.showMsg(box, 'Choose a banker.', 'error'); return; }
+  VMW.busy(this, 'Sending…', function () {
+    return VMW.post({ action: 'partnerSendApplicationToBanker', partnerCode: CODE, bankerId: bankerId, customerMobile: m }, { timeout: 90000 })
+      .then(function (d) {
+        VMW.showMsg(box, d.message || (d.status === 'success' ? 'Sent.' : 'Could not send.'), d.status === 'success' ? 'success' : 'error');
+        if (d.status === 'success') loadLeads();
+      });
+  }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
+});
+  if (!name || !email || mobile.length !== 10) {
       box.className = 'alert error';
       box.textContent = 'Please fill in the banker\'s full name, email, and 10-digit mobile number.';
       return;
@@ -492,7 +536,8 @@
     VMW.post({
       action: 'partnerAddBanker',
       partnerCode: CODE,
-      partnerName: VMW.store.get(NAME_KEY) ||
+      partnerName: VMW.store.get(NAME_KEY) || '',
+loanType: loanType,
       loanType: loanType,
       bankName: bank,
       name: name,
