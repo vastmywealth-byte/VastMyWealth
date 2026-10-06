@@ -123,10 +123,20 @@
         <input type="tel" id="newAppMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
       <button id="newAppBtn" class="btn btn-primary btn-block">＋ Start / continue application</button>
     </div>
-    <div class="card">
-      <div class="row-top"><div class="card-title">My bankers</div><button class="btn btn-gold btn-sm" id="addBankerBtn">+ Add a banker</button></div>
-      <p class="card-sub">Add a banker you know so you can send them your leads directly. New ones need a quick approval from our team before you can start sharing.</p>
-      <div id="myBankersArea" class="mt12"></div>
+        <div class="card">
+      <div class="card-title">Start or continue an application</div>
+      <p class="card-sub">Type your customer's mobile number. If they already applied you'll see their status and can upload their documents; otherwise a new application opens, credited to you.</p>
+      <div class="field"><label for="newAppMobile">Customer mobile number</label>
+        <input type="tel" id="newAppMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
+      <button id="newAppBtn" class="btn btn-primary btn-block">＋ Start / continue application</button>
+
+      <div class="group-label" style="margin-top:18px;">Send this application to a banker</div>
+      <div class="field">
+        <select id="sendBankerSelect" class="field-select"><option value="">Loading bankers…</option></select>
+      </div>
+      <button id="sendBankerBtn" class="btn btn-gold btn-block">📨 Send to banker</button>
+      <button class="link-btn mt8" id="addBankerBtn" type="button">+ Add a banker</button>
+      <div id="sendBankerMsg" class="alert hidden"></div>
     </div>
     <div class="card">
       <div class="row-top"><div class="card-title">Your applications</div><button class="btn btn-ghost btn-sm" id="leadsRefresh">↻ Refresh</button></div>
@@ -417,25 +427,24 @@
   $('closeAddBankerSheet').addEventListener('click', function () { closeSheet('addBankerSheet'); });
   $('closeSendToBankerSheet').addEventListener('click', function () { closeSheet('sendToBankerSheet'); });
 
-  function loadMyBankers() {
-    var el = $('myBankersArea'); el.innerHTML = '<div style="color:var(--muted);">Loading…</div>';
+    function loadMyBankers() {
+    var sel = $('sendBankerSelect');
+    if (sel) sel.innerHTML = '<option value="">Loading bankers…</option>';
     return VMW.post({ action: 'partnerListMyBankers', partnerCode: CODE }).then(function (r) {
       MY_BANKERS = (r.status === 'success' ? r.bankers : []) || [];
       MY_BANKERS_BY_ID = {}; MY_BANKERS.forEach(function (b) { MY_BANKERS_BY_ID[b.bankerId] = b; });
       renderMyBankers();
-    }).catch(function () { el.innerHTML = '<div style="color:#FFC5C1;">Could not load your bankers.</div>'; });
+    }).catch(function () { if (sel) sel.innerHTML = '<option value="">Could not load bankers</option>'; });
   }
 
   function renderMyBankers() {
-    var el = $('myBankersArea');
-    if (!MY_BANKERS.length) { el.innerHTML = '<div style="color:var(--ink-400);">No bankers added yet.</div>'; return; }
-    el.innerHTML = MY_BANKERS.map(function (b) {
-      return '<div class="lead-card"><div class="lead-card-top"><b>' + esc(b.name) + '</b>' +
-        '<span class="status-pill">' + (b.approved ? 'Approved' : 'Awaiting approval') + '</span></div>' +
-        '<div class="lead-card-meta">' + esc(b.bankName || '—') + ' · ' + esc(b.mobile || '') + '</div></div>';
+    var sel = $('sendBankerSelect'); if (!sel) return;
+    if (!MY_BANKERS.length) { sel.innerHTML = '<option value="">No bankers yet — add one below</option>'; return; }
+    sel.innerHTML = '<option value="">Select banker</option>' + MY_BANKERS.map(function (b) {
+      return '<option value="' + esc(b.bankerId) + '"' + (b.approved ? '' : ' disabled') + '>' + esc(b.name) +
+        (b.bankName ? ' — ' + esc(b.bankName) : '') + (b.approved ? '' : ' (awaiting approval)') + '</option>';
     }).join('');
   }
-
   $('addBankerBtn').addEventListener('click', function () { 
     $('abResult').classList.add('hidden'); 
     openSheet('addBankerSheet'); 
@@ -459,6 +468,19 @@
       box.textContent = 'Please choose both the loan type and the bank / NBFC.';
       return;
     }
+      $('sendBankerBtn').addEventListener('click', function () {
+    var box = $('sendBankerMsg'); VMW.hideMsg(box);
+    var m = VMW.mobile10($('newAppMobile').value), bankerId = $('sendBankerSelect').value;
+    if (m.length !== 10) { VMW.showMsg(box, 'Enter the customer\'s 10-digit mobile number above.', 'error'); return; }
+    if (!bankerId) { VMW.showMsg(box, 'Choose a banker.', 'error'); return; }
+    VMW.busy(this, 'Sending…', function () {
+      return VMW.post({ action: 'partnerSendApplicationToBanker', partnerCode: CODE, bankerId: bankerId, customerMobile: m }, { timeout: 90000 })
+        .then(function (d) {
+          VMW.showMsg(box, d.message || (d.status === 'success' ? 'Sent.' : 'Could not send.'), d.status === 'success' ? 'success' : 'error');
+          if (d.status === 'success') loadLeads();
+        });
+    }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
+  });
     if (!name || !email || mobile.length !== 10) {
       box.className = 'alert error';
       box.textContent = 'Please fill in the banker\'s full name, email, and 10-digit mobile number.';
@@ -470,7 +492,7 @@
     VMW.post({
       action: 'partnerAddBanker',
       partnerCode: CODE,
-      partnerName: localStorage.getItem('vmw_partner_name') || '',
+      partnerName: VMW.store.get(NAME_KEY) ||
       loanType: loanType,
       bankName: bank,
       name: name,
