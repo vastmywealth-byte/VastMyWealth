@@ -13,7 +13,6 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<body>
 
 <!-- ===================== CO-BRANDED PARTNER BANNER ===================== -->
 <style>
@@ -58,7 +57,6 @@
 </div>
   <!-- ====================================================================== -->
 
-<header class="app-header">
 <header class="app-header">
   
   <div class="in">
@@ -310,42 +308,53 @@
   var $ = VMW.$, esc = VMW.esc, C = VMW_CONFIG;
   var params = new URLSearchParams(location.search);
 
-  // Read from URL, fallback to localStorage (for PWA installs or re-visits)
-  var REF = (params.get('ref') || localStorage.getItem('vmw_partner_ref') || '').trim();
+    // Referrer code: a ref in THIS link always wins over one saved from an earlier visit.
+  var REF_LINK = (params.get('ref') || '').trim();
+  var SAVED_REF = (localStorage.getItem('vmw_partner_ref') || '').trim();
+  if (REF_LINK && REF_LINK !== SAVED_REF) {   // different referrer -> forget the old contact details
+    localStorage.removeItem('vmw_partner_pname');
+    localStorage.removeItem('vmw_partner_pmob');
+  }
+  if (REF_LINK) localStorage.setItem('vmw_partner_ref', REF_LINK);
+  var REF = REF_LINK || SAVED_REF;
+
+  // Contact details come from the server (getRefContact). pname / pmob in old long links
+  // are only a fallback until the lookup answers.
   var PNAME = (params.get('pname') || localStorage.getItem('vmw_partner_pname') || '').trim();
   var PMOB = (params.get('pmob') || localStorage.getItem('vmw_partner_pmob') || '').trim();
-  var REF_LINK = (params.get('ref') || '').trim();   // partner code in THIS link only (not the saved one)
 
-  // Persist into localStorage whenever provided in URL
-  if (params.get('ref')) localStorage.setItem('vmw_partner_ref', params.get('ref').trim());
-  if (params.get('pname')) localStorage.setItem('vmw_partner_pname', params.get('pname').trim());
-  if (params.get('pmob')) localStorage.setItem('vmw_partner_pmob', params.get('pmob').trim());
-
-  // Render Partner Banner if details exist
-  if (PNAME || PMOB) {
-  var pHeader = $('vmwPartnerHeader');
-  if (pHeader) {
+  function renderPartnerBanner() {
+    var pHeader = $('vmwPartnerHeader');
+    if (!pHeader || !(PNAME || PMOB)) return;
     var nm = PNAME || 'Your advisor';
     $('vmwPartnerName').textContent = nm;
     $('vmwPartnerInitials').textContent = nm.split(/\s+/).filter(Boolean).slice(0, 2)
       .map(function (w) { return w.charAt(0).toUpperCase(); }).join('') || '👤';
-    if (REF) $('vmwPartnerCode').textContent = 'ID ' + REF; else $('vmwPartnerCode').style.display = 'none';
+    var codeEl = $('vmwPartnerCode');
+    if (REF) { codeEl.textContent = 'ID ' + REF; codeEl.style.display = ''; } else { codeEl.style.display = 'none'; }
 
     var mob = String(PMOB || '').replace(/\D/g, '').slice(-10);
-    if (mob.length === 10) {
-      var shown = '+91 ' + mob.slice(0, 5) + ' ' + mob.slice(5);
-      $('vmwPartnerMobile').textContent = shown;
+    var hasMob = mob.length === 10;
+    ['vmwPartnerMobile', 'vmwPartnerCall', 'vmwPartnerWa'].forEach(function (id) { $(id).style.display = hasMob ? '' : 'none'; });
+    if (hasMob) {
+      $('vmwPartnerMobile').textContent = '+91 ' + mob.slice(0, 5) + ' ' + mob.slice(5);
       $('vmwPartnerMobile').href = 'tel:+91' + mob;
       $('vmwPartnerCall').href = 'tel:+91' + mob;
-      $('vmwPartnerWa').href = VMW.waLink(PMOB, 'Hi ' + PNAME + ', I am on your VastMyWealth application page and need some help.');
-    } else {
-      $('vmwPartnerMobile').style.display = 'none';
-      $('vmwPartnerCall').style.display = 'none';
-      $('vmwPartnerWa').style.display = 'none';
+      $('vmwPartnerWa').href = VMW.waLink('91' + mob, 'Hi ' + nm + ', I am on your VastMyWealth application page and need some help.');
     }
     pHeader.style.display = 'block';
   }
-}
+  renderPartnerBanner();
+
+  if (REF) {
+    VMW.get('getRefContact', { ref: REF }, { tries: 1 }).then(function (r) {
+      if (!r || !r.success || !r.name) return;
+      PNAME = r.name; PMOB = r.mobile || PMOB;
+      localStorage.setItem('vmw_partner_pname', PNAME);
+      localStorage.setItem('vmw_partner_pmob', PMOB);
+      renderPartnerBanner();
+    }).catch(function () { /* keep whatever is already shown */ });
+  }
   var VIEWS = ['checkingState', 'trackCard', 'formWrap', 'loadingState', 'resultsWrap', 'docWrap', 'doneWrap', 'blockedWrap', 'adWrap', 'adResultsWrap'];
   var S = { loanType: 'PL', employmentType: null, companyType: null, personCount: 2, residenceType: null,
             leadId: null, profile: {}, forceNew: false, docStore: {}, warnedMissing: false, trackedMobile: '', lastDup: null };
