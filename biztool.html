@@ -203,8 +203,7 @@
 
   async function triggerShare(index, platform) {
     var b = BANNERS[index];
-    var baseLink = VMW.refLink(HOLDER.code);
-    var referralLink = baseLink + (baseLink.indexOf('?') > -1 ? '&' : '?') + 'pname=' + encodeURIComponent(HOLDER.name) + '&pmob=' + encodeURIComponent(HOLDER.mobile);
+            var referralLink = VMW.refLink(HOLDER.code);
     var imgSrc = b.filename ? (CREATIVES_BASE_URL + b.filename) : '';
     var fullMessage = b.caption + '\n\nApply here: ' + referralLink;
 
