@@ -261,19 +261,37 @@
     return base + (q.length ? '?' + q.join('&') : '');
   };
   VMW.startLink = function (mobile, ref) { return VMW.leadLink({ mobile: mobile, ref: ref }); };
-  VMW.refLink = function (ref) { return C.APPLY_URL + '?ref=' + encodeURIComponent(ref); };
+    // ONE referral link used everywhere (Copy button, WhatsApp share, banner share).
+  // Optionally set SHARE_URL in config.js later to switch every page to a shorter address.
+  VMW.refLink = function (ref) { return (C.SHARE_URL || C.APPLY_URL) + '?ref=' + encodeURIComponent(ref); };
+  // For showing a link on screen without the https:// (copying still uses the full link)
+  VMW.shortLabel = function (url) { return String(url || '').replace(/^https?:\/\//i, ''); };
   VMW.waLink = function (number, text) { return 'https://wa.me/' + VMW.digits(number) + (text ? '?text=' + encodeURIComponent(text) : ''); };
   VMW.copy = function (text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
-    return new Promise(function (res, rej) {
-      try {
-        var t = document.createElement('textarea'); t.value = text; t.style.position = 'fixed'; t.style.opacity = '0';
-        document.body.appendChild(t); t.select(); var ok = document.execCommand('copy'); document.body.removeChild(t);
-        ok ? res() : rej(new Error('copy failed'));
-      } catch (e) { rej(e); }
-    });
+    function legacy() {
+      return new Promise(function (res, rej) {
+        try {
+          var t = document.createElement('textarea'); t.value = text; t.style.position = 'fixed'; t.style.opacity = '0';
+          document.body.appendChild(t); t.select(); var ok = document.execCommand('copy'); document.body.removeChild(t);
+          ok ? res() : rej(new Error('copy failed'));
+        } catch (e) { rej(e); }
+      });
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).catch(legacy);
+    return legacy();
   };
-  VMW.store = {
+  // Copies and shows "✓ Copied!" on the button for 2 seconds
+  VMW.copyWithFeedback = function (btn, text) {
+    var label = btn.getAttribute('data-label') || btn.textContent;
+    btn.setAttribute('data-label', label);
+    return VMW.copy(text).then(function () {
+      btn.textContent = '✓ Copied!';
+      VMW.toast('Link copied', 'success');
+      clearTimeout(btn._t);
+      btn._t = setTimeout(function () { btn.textContent = label; }, 2000);
+    }).catch(function () { window.prompt('Copy this link:', text); });
+  };
+   VMW.store = {
     get: function (k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
     set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
     del: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
