@@ -125,6 +125,7 @@
       <div class="card">
         <div class="card-title">Share your application link</div>
         <p class="card-sub">Anyone who applies through your link is credited to you.</p>
+                <div class="linkbox"><span id="refLink"></span></div>
         <div class="btn-stack">
           <button class="btn btn-outline btn-block" id="shareLinkBtn">🔗 Copy my application link</button>
           <a class="btn btn-ghost btn-block" id="shareWaBtn" href="#" target="_blank" rel="noopener">💬 Share on WhatsApp</a>
@@ -448,6 +449,7 @@
     var gated = !SESSION.hasActiveCode;
     $('logGate').classList.toggle('hidden', !gated); $('newAppArea').classList.toggle('hidden', gated);
     $('shareWaBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + VMW.refLink(SESSION.refCode));
+        $('refLink').textContent = VMW.shortLabel(VMW.refLink(SESSION.refCode));
         $('openBizToolBtn').href = 'biztool.html?holderType=Banker&holderCode=' + encodeURIComponent(SESSION.refCode) +
       '&holderName=' + encodeURIComponent(SESSION.bankerName || '') + '&bankName=' + encodeURIComponent(SESSION.currentBankName || '');
        LOADED = {};
@@ -474,10 +476,9 @@
     if (m.length !== 10) { VMW.toast('Enter a valid 10-digit mobile number', 'error'); return; }
     window.open(VMW.startLink(m, SESSION.refCode), '_blank');
   });
-  $('shareLinkBtn').addEventListener('click', function () {
+    $('shareLinkBtn').addEventListener('click', function () {
     if (!SESSION || !SESSION.refCode) return;
-    VMW.copy(VMW.refLink(SESSION.refCode)).then(function () { VMW.toast('Link copied — share it with your customer', 'success'); })
-      .catch(function () { VMW.toast(VMW.refLink(SESSION.refCode)); });
+    VMW.copyWithFeedback(this, VMW.refLink(SESSION.refCode));
   });
   function loadBizToolStatus() {
     if (LOADED.bizStatus) return;
