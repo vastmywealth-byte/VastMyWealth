@@ -116,14 +116,7 @@
       <a class="btn btn-ghost btn-block mt12" id="waShareBtn" href="#" target="_blank" rel="noopener">💬 Share on WhatsApp</a>
       <p class="small muted mt8">Anyone who applies through this link is credited to you.</p>
     </div>
-    <div class="card">
-      <div class="card-title">Start or continue an application</div>
-      <p class="card-sub">Type your customer's mobile number. If they already applied you'll see their status and can upload their documents; otherwise a new application opens, credited to you.</p>
-      <div class="field"><label for="newAppMobile">Customer mobile number</label>
-        <input type="tel" id="newAppMobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
-      <button id="newAppBtn" class="btn btn-primary btn-block">＋ Start / continue application</button>
-    </div>
-        <div class="card">
+      <div class="card">
       <div class="card-title">Start or continue an application</div>
       <p class="card-sub">Type your customer's mobile number. If they already applied you'll see their status and can upload their documents; otherwise a new application opens, credited to you.</p>
       <div class="field"><label for="newAppMobile">Customer mobile number</label>
@@ -455,7 +448,7 @@
     }
   });
 
-  $('abSubmitBtn').addEventListener('click', function () {
+$('abSubmitBtn').addEventListener('click', function () {
   var loanType = $('abLoanType').value;
   var bank = $('abBank').value.trim();
   var name = $('abName').value.trim();
@@ -511,7 +504,6 @@
   });
 });
 
-/* Send application to banker (top level, NOT inside the handler above) */
 $('sendBankerBtn').addEventListener('click', function () {
   var box = $('sendBankerMsg'); VMW.hideMsg(box);
   var m = VMW.mobile10($('newAppMobile').value), bankerId = $('sendBankerSelect').value;
@@ -525,49 +517,6 @@ $('sendBankerBtn').addEventListener('click', function () {
       });
   }).catch(function (err) { VMW.showMsg(box, VMW.errMsg(err), 'error'); });
 });
-  if (!name || !email || mobile.length !== 10) {
-      box.className = 'alert error';
-      box.textContent = 'Please fill in the banker\'s full name, email, and 10-digit mobile number.';
-      return;
-    }
-    var btn = this, orig = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Adding…';
-    VMW.post({
-      action: 'partnerAddBanker',
-      partnerCode: CODE,
-      partnerName: VMW.store.get(NAME_KEY) || '',
-loanType: loanType,
-      loanType: loanType,
-      bankName: bank,
-      name: name,
-      officialEmail: email,
-      mobileNumber: mobile
-    }).then(function (d) {
-      btn.disabled = false;
-      btn.textContent = orig;
-      if (d.status === 'success' || d.success) {
-        box.className = 'alert success';
-        box.textContent = d.message || 'Banker added successfully.';
-        $('abLoanType').value = '';
-        $('abBank').innerHTML = '<option value="">Choose loan type first</option>';
-        $('abBank').disabled = true;
-        $('abName').value = '';
-        $('abEmail').value = '';
-        $('abMobile').value = '';
-        loadMyBankers();
-        setTimeout(function () { closeSheet('addBankerSheet'); }, 1400);
-      } else {
-        box.className = 'alert error';
-        box.textContent = d.message || d.error || 'Could not add this banker.';
-      }
-    }).catch(function () {
-      btn.disabled = false;
-      btn.textContent = orig;
-      box.className = 'alert error';
-      box.textContent = 'Connection error.';
-    });
-  });
 
   var SEND_LEAD = null;
   function openSendToBanker(leadId, product, name) {
