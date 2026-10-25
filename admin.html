@@ -158,6 +158,7 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
           <option value="Submitted">Documents submitted</option>
         </select>
         <input type="text" id="stateFilter" placeholder="State">
+        <label><input type="checkbox" id="attentionFilter"> Needs attention only</label>
         <label><input type="checkbox" id="showHiddenCheckbox"> Show hidden</label>
       </div>
       <div id="leadsContainer"><div class="empty">Loading leads…</div></div>
@@ -203,6 +204,9 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
     <div><h3 id="sheetName"></h3><div class="sub" id="sheetSub"></div></div>
     <button class="close-x" id="closeLeadSheet">✕</button>
   </div>
+  <div id="exclusivityBanner" class="hidden" style="background:var(--warn-bg);border:1px solid rgba(240,185,75,.4);border-radius:9px;padding:9px 11px;margin:8px 0;font-size:12.5px;color:var(--warn);"></div>
+  <div class="section-label">Full lead history</div>
+  <div id="sheetHistoryRows"><div class="empty">Loading…</div></div>
   <div class="section-label">Lender pipeline (admin-assigned)</div>
   <div id="pipelineRows"></div>
   <div class="section-label">Banker claim history (from the leads pool)</div>
@@ -348,6 +352,36 @@ function toggleDetail(rowEl) {
   if (!d) return; d.classList.toggle('open'); if (c) c.classList.toggle('open');
 }
 
+/* Click the customer name card -> fetch (once per page load) and render the
+   full Lead Lifecycle history for that lead, right inside the expanded card. */
+var LEAD_HISTORY_CACHE = {};
+function leadEventTagClass(ev) {
+  if (/disbursed/i.test(ev)) return 'ok'; if (/rejected/i.test(ev)) return 'bad';
+  if (/claimed|routed|assigned/i.test(ev)) return 'info'; return '';
+}
+function loadLeadHistoryInline(rowEl, leadId) {
+  var box = $('hist_' + leadId);
+  if (!box) return;
+  var detail = rowEl.nextElementSibling;
+  if (!detail || !detail.classList.contains('open')) return; // just closed — nothing to load
+  if (LEAD_HISTORY_CACHE[leadId]) { renderLeadHistoryBox(box, LEAD_HISTORY_CACHE[leadId]); return; }
+  box.innerHTML = '<div class="empty">Loading…</div>';
+  apiPost({ action: "adminGetLeadHistory", password: ADMIN_PASSWORD, leadId: leadId }).then(function (r) {
+    var events = (r.success ? r.events : []) || [];
+    LEAD_HISTORY_CACHE[leadId] = events;
+    renderLeadHistoryBox(box, events);
+  }).catch(function () { box.innerHTML = '<div class="error-box">Could not load history.</div>'; });
+}
+function renderLeadHistoryBox(box, events) {
+  if (!events.length) { box.innerHTML = '<div class="empty">No lifecycle events logged yet.</div>'; return; }
+  box.innerHTML = events.map(function (e) {
+    return '<div class="mini-row"><div class="mini-row-top"><span class="lbl">' + esc(e.event) + '</span><span class="tag ' + leadEventTagClass(e.event) + '">' + fmtDate(e.timestamp) + '</span></div>' +
+      '<div class="sub" style="margin-top:4px;">' + esc(e.actorType || '') + (e.actorName ? (' · ' + esc(e.actorName)) : '') + (e.actorCode ? (' (' + esc(e.actorCode) + ')') : '') +
+      (e.commissionPercent !== null && e.commissionPercent !== '' ? (' · VMW ' + esc(e.commissionPercent) + '%') : '') + '</div>' +
+      (e.details ? ('<div class="sub" style="margin-top:2px;">' + esc(e.details) + '</div>') : '') + '</div>';
+  }).join('');
+}
+
 /* ================= AUTO-LOGIN & 9594592020 SUPER ADMIN ================= */
 document.addEventListener("DOMContentLoaded", function () {
   var urlParams = new URLSearchParams(window.location.search);
@@ -475,7 +509,10 @@ function loadPendingPartnerBankers() {
             '<div class="sub">' + esc(p.bankName || '—') + ' · ' + esc(p.mobile || '') + ' · <b>' + esc(p.email || 'No email') + '</b></div>' +
             '<div class="sub">Referred by Partner: ' + esc(p.referredBy) + '</div>' +
           '</div>' +
-          '<button class="btn btn-ok btn-sm" data-approve-pb="' + esc(p.bankerId) + '">Approve Banker</button>' +
+          '<div style="display:flex;gap:6px;">' +
+            '<button class="btn btn-ok btn-sm" data-approve-pb="' + esc(p.bankerId) + '">Approve</button>' +
+            '<button class="btn btn-bad btn-sm" data-reject-pb="' + esc(p.bankerId) + '" data-reject-pb-name="' + esc(p.name || p.bankerId) + '">Reject</button>' +
+          '</div>' +
         '</div>' +
         '<div class="domain-check-box">' +
           '<div style="font-size:11.5px;font-weight:700;color:var(--gold-light);margin-bottom:4px;">VERIFY BANK OFFICIAL EMAIL DOMAIN</div>' +
@@ -505,13 +542,30 @@ function onBankDomainChanged(pIdx, expectedDomain, email) {
 }
 
 $('pendingPartnerBankersContainer').addEventListener('click', function (e) {
-  var b = e.target.closest('[data-approve-pb]'); if (!b) return;
-  withBusy(b, 'Approving…', function () {
-    return apiPost({ action: "adminApprovePartnerBanker", password: ADMIN_PASSWORD, bankerId: b.getAttribute('data-approve-pb') }).then(function (r) {
-      showToast(r.status === 'success' ? 'Approved successfully' : (r.message || 'Failed'), r.status !== 'success');
-      if (r.status === 'success') { loadPendingPartnerBankers(); loadBankers(); }
-    });
-  }).catch(function (err) { showToast(err.message, true); });
+  var approveBtn = e.target.closest('[data-approve-pb]');
+  if (approveBtn) {
+    withBusy(approveBtn, 'Approving…', function () {
+      return apiPost({ action: "adminApprovePartnerBanker", password: ADMIN_PASSWORD, bankerId: approveBtn.getAttribute('data-approve-pb') }).then(function (r) {
+        showToast(r.status === 'success' ? 'Approved successfully' : (r.message || 'Failed'), r.status !== 'success');
+        if (r.status === 'success') { loadPendingPartnerBankers(); loadBankers(); }
+      });
+    }).catch(function (err) { showToast(err.message, true); });
+    return;
+  }
+  var rejectBtn = e.target.closest('[data-reject-pb]');
+  if (rejectBtn) {
+    var name = rejectBtn.getAttribute('data-reject-pb-name') || 'this banker';
+    var reason = prompt('Reason for rejecting ' + name + ' (the referring partner will see this):');
+    if (reason === null) return;
+    reason = reason.trim();
+    if (!reason) { showToast('A reason is required', true); return; }
+    withBusy(rejectBtn, 'Rejecting…', function () {
+      return apiPost({ action: "adminRejectPartnerBanker", password: ADMIN_PASSWORD, bankerId: rejectBtn.getAttribute('data-reject-pb'), reason: reason }).then(function (r) {
+        showToast(r.status === 'success' ? 'Rejected — partner notified' : (r.message || 'Failed'), r.status !== 'success');
+        if (r.status === 'success') { loadPendingPartnerBankers(); loadBankers(); }
+      });
+    }).catch(function (err) { showToast(err.message, true); });
+  }
 });
 
 function refreshAll() {
@@ -570,13 +624,14 @@ function renderLeads() {
     if (stageF && l.stage !== stageF) return false;
     if (docF && l.documentStatus !== docF) return false;
     if (stateF && (l.state || '').toLowerCase().indexOf(stateF) === -1) return false;
+    if ($('attentionFilter').checked && !l.needsAttention) return false;
     return true;
   });
   leads.sort(function (a, b) { return idSortKey(b.leadId) - idSortKey(a.leadId); });
-  var counts = { total: ALL_LEADS.length, pending: 0, disbursed: 0, rejected: 0 };
-  ALL_LEADS.forEach(function (l) { if (l.documentStatus === 'Pending') counts.pending++; if (l.stage === 'Disbursed') counts.disbursed++; if (l.stage === 'Rejected') counts.rejected++; });
-  $('leadsStats').innerHTML = ['total', 'pending', 'disbursed', 'rejected'].map(function (k) {
-    var lbl = { total: 'Total leads', pending: 'Docs pending', disbursed: 'Disbursed', rejected: 'Rejected' }[k];
+  var counts = { total: ALL_LEADS.length, pending: 0, disbursed: 0, rejected: 0, attention: 0 };
+  ALL_LEADS.forEach(function (l) { if (l.documentStatus === 'Pending') counts.pending++; if (l.stage === 'Disbursed') counts.disbursed++; if (l.stage === 'Rejected') counts.rejected++; if (l.needsAttention) counts.attention++; });
+  $('leadsStats').innerHTML = ['total', 'pending', 'attention', 'disbursed', 'rejected'].map(function (k) {
+    var lbl = { total: 'Total leads', pending: 'Docs pending', attention: 'Needs attention', disbursed: 'Disbursed', rejected: 'Rejected' }[k];
     return '<div class="stat-box"><b>' + counts[k] + '</b><span>' + lbl + '</span></div>';
   }).join('');
   if (!leads.length) { container.innerHTML = '<div class="empty">No leads match your filters.</div>'; return; }
@@ -588,8 +643,8 @@ function renderLeads() {
     var activeClaim = (l.claims || []).find(function (c) { return c.claimStatus === 'Active'; });
     return '' +
       '<div class="card">' +
-        '<div class="card-row" onclick="toggleDetail(this)">' +
-          '<div><div class="name">' + displayName + '</div><div class="sub">' + esc(l.product || '—') + ' · ' + inr(l.loanAmount) + (loc ? (' · ' + esc(loc)) : '') + '</div></div>' +
+        '<div class="card-row" onclick="toggleDetail(this); loadLeadHistoryInline(this, \'' + esc(l.leadId) + '\');">' +
+          '<div><div class="name">' + displayName + (l.needsAttention ? ' <span class="tag bad">Needs attention</span>' : '') + '</div><div class="sub">' + esc(l.product || '—') + ' · ' + inr(l.loanAmount) + (loc ? (' · ' + esc(loc)) : '') + '</div></div>' +
           '<span class="caret">▼</span>' +
         '</div>' +
         '<div class="card-detail">' +
@@ -598,8 +653,10 @@ function renderLeads() {
             (l.documentStatus === 'Pending' ? '<span class="tag warn">Docs pending</span>' : (l.documentStatus === 'Submitted' ? '<span class="tag ok">Docs received</span>' : '')) +
             (l.hidden ? '<span class="tag">Hidden</span>' : '') +
             (l.processingBank ? '<span class="tag info">' + esc(l.processingBank) + '</span>' : '') +
-            (activeClaim ? '<span class="tag info">With ' + esc(activeClaim.bankerName) + '</span>' : '') +
+            (activeClaim ? '<span class="tag info">With ' + esc(activeClaim.bankerName) + (activeClaim.dsaName ? (' · DSA ' + esc(activeClaim.dsaName)) : '') + '</span>' : '') +
             (l.category ? '<span class="tag">Cat ' + esc(l.category) + '</span>' : '') +
+            '<span class="tag' + (l.commissionPercent === 100 ? ' ok' : '') + '">VMW share ' + esc(l.commissionPercent) + '%</span>' +
+            (l.isExclusive ? ('<span class="tag warn">Exclusive to ' + esc(l.sourcedByName || l.sourcedBy) + ' — ' + l.exclusiveDaysLeft + ' day' + (l.exclusiveDaysLeft === 1 ? '' : 's') + ' left</span>') : '') +
           '</div>' +
           '<div class="meta-line">' + esc(l.mobile || '') + (l.email ? (' · ' + esc(l.email)) : '') + '</div>' +
           (l.companyName ? '<div class="meta-line">' + esc(l.companyName) + '</div>' : '') +
@@ -608,7 +665,9 @@ function renderLeads() {
             (l.mobile ? '<a class="icon-btn" href="https://wa.me/91' + esc(String(l.mobile).replace(/\D/g,"")) + '" target="_blank" rel="noopener" title="WhatsApp">✓</a>' : '') +
             (l.documentsFolderUrl ? '<a class="icon-btn" href="' + esc(l.documentsFolderUrl) + '" target="_blank" rel="noopener" title="Documents">📁</a>' : '') +
           '</div>' +
-          '<button class="btn btn-line btn-block" onclick="event.stopPropagation(); openLeadSheet(' + idx + ')">Manage pipeline, claims &amp; DSA</button>' +
+          '<div class="section-label">Full lead history</div>' +
+          '<div class="lead-history-box" id="hist_' + esc(l.leadId) + '"><div class="empty">Loading…</div></div>' +
+          '<button class="btn btn-line btn-block" style="margin-top:8px;" onclick="event.stopPropagation(); openLeadSheet(' + idx + ')">Manage pipeline, claims &amp; DSA</button>' +
         '</div>' +
       '</div>';
   }).join('');
@@ -618,12 +677,29 @@ function openLeadSheet(idx) {
   CURRENT_LEAD = ALL_LEADS[idx];
   if (!CURRENT_LEAD) return;
   $('sheetName').textContent = CURRENT_LEAD.name || '—';
-  $('sheetSub').textContent = (CURRENT_LEAD.companyName ? CURRENT_LEAD.companyName + ' · ' : '') + CURRENT_LEAD.product + ' · ' + inr(CURRENT_LEAD.loanAmount) + ' · ' + CURRENT_LEAD.mobile;
+  $('sheetSub').textContent = (CURRENT_LEAD.companyName ? CURRENT_LEAD.companyName + ' · ' : '') + CURRENT_LEAD.product + ' · ' + inr(CURRENT_LEAD.loanAmount) + ' · ' + CURRENT_LEAD.mobile + ' · VMW share ' + CURRENT_LEAD.commissionPercent + '%';
   renderPipelineRows(); renderClaimHistory(); renderLenderSelectList(); renderDsaSelectList();
   $('hideLeadBtn').textContent = CURRENT_LEAD.hidden ? 'Unhide (show again)' : 'Hide from list';
   var isVlEl = (CURRENT_LEAD.product === 'VL' || CURRENT_LEAD.product === 'EL');
   $('processingBankSection').classList.toggle('hidden', !isVlEl);
   if (isVlEl) $('processingBankInput').value = CURRENT_LEAD.processingBank || '';
+
+  var excl = $('exclusivityBanner');
+  if (CURRENT_LEAD.isExclusive) {
+    excl.textContent = '🔒 Exclusive to ' + (CURRENT_LEAD.sourcedByName || CURRENT_LEAD.sourcedBy) + ' for ' + CURRENT_LEAD.exclusiveDaysLeft + ' more day(s). It can\'t be assigned to lenders or a processing DSA — by anyone, including admin — until the window ends or the subscriber releases it.';
+    excl.classList.remove('hidden');
+    $('addLendersBtn').disabled = true; $('assignDsaBtn').disabled = true;
+  } else {
+    excl.classList.add('hidden');
+    $('addLendersBtn').disabled = false; $('assignDsaBtn').disabled = false;
+  }
+
+  $('sheetHistoryRows').innerHTML = '<div class="empty">Loading…</div>';
+  apiPost({ action: "adminGetLeadHistory", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId }).then(function (r) {
+    LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId] = (r.success ? r.events : []) || [];
+    renderLeadHistoryBox($('sheetHistoryRows'), LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId]);
+  }).catch(function () { $('sheetHistoryRows').innerHTML = '<div class="error-box">Could not load history.</div>'; });
+
   openSheet('leadSheet', 'leadBackdrop');
 }
 
@@ -647,7 +723,7 @@ function renderClaimHistory() {
   el.innerHTML = claims.map(function (c) {
     var cls = c.claimStatus === 'Disbursed' ? 'ok' : c.claimStatus === 'Rejected' ? 'bad' : 'info';
     return '<div class="mini-row"><div class="mini-row-top"><span class="lbl">' + esc(c.bankerName || c.bankerCode) + '</span><span class="tag ' + cls + '">' + esc(c.claimStatus) + '</span></div>' +
-      '<div class="sub" style="margin-top:4px;">DSA code: ' + esc(c.dsaCodeUsed || '—') + ' · Claimed ' + fmtDate(c.claimedAt) +
+      '<div class="sub" style="margin-top:4px;">DSA code: ' + esc(c.dsaCodeUsed || '—') + (c.dsaName ? (' (' + esc(c.dsaName) + ')') : '') + ' · Claimed ' + fmtDate(c.claimedAt) +
       (c.claimStatus === 'Disbursed' ? (' · ' + inr(c.disbursedAmount)) : '') +
       (c.claimStatus === 'Rejected' && c.rejectionReason ? (' · ' + esc(c.rejectionReason)) : '') + '</div></div>';
   }).join('');
@@ -956,6 +1032,7 @@ $("productFilter").addEventListener("change", renderLeads);
 $("stageFilter").addEventListener("change", renderLeads);
 $("docFilter").addEventListener("change", renderLeads);
 $("stateFilter").addEventListener("input", renderLeads);
+$("attentionFilter").addEventListener("change", renderLeads);
 $("showHiddenCheckbox").addEventListener("change", reloadLeadsOnly);
 </script>
 </body>
