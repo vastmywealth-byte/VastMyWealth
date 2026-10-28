@@ -14,7 +14,7 @@
 </head>
 <body>
 
-<!-- ===================== CO-BRANDED PARTNER BANNER ===================== -->
+<!-- ===================== CO-BRANDED PARTNER BANNER ==================== -->
 <style>
   :root { --pc-bg:#0A1530; --pc-gold:#D4A64A; --pc-text:#FFFFFF; --pc-muted:#9FB0CC; }
   .vmw-pc-wrap { background:var(--pc-bg); padding:8px 12px; border-bottom:1px solid rgba(212,166,74,.30); position:relative; z-index:99; }
@@ -122,40 +122,6 @@
     <button class="btn btn-ghost btn-block" id="adBack">← Change details</button>
   </div>
 </section>
-
-<!-- QUICK CONTACT (mobile + email, before documents) -->
-<section id="contactWrap" class="hidden">
-  <div class="hero" style="padding-bottom:12px;">
-    <h1>Almost there</h1>
-    <p>Enter your mobile number and email — we'll use these to save your progress, track your application and send you updates.</p>
-  </div>
-  <div class="card">
-    <div class="field"><label for="c_mobile">Mobile number<span class="req">*</span></label><input type="tel" id="c_mobile" maxlength="10" inputmode="numeric" autocomplete="tel" placeholder="10-digit mobile number"></div>
-    <div class="field"><label for="c_email">Email ID<span class="req">*</span></label><input type="email" id="c_email" autocomplete="email"></div>
-    <div class="row2">
-      <div class="field"><label for="c_state">State<span class="req">*</span></label><input type="text" id="c_state" autocomplete="off" placeholder="Start typing your state"></div>
-      <div class="field"><label for="c_pincode">Pincode<span class="req">*</span></label><input type="tel" id="c_pincode" maxlength="6" inputmode="numeric" autocomplete="postal-code"></div>
-    </div>
-    <div class="field">
-      <div class="check-row">
-        <input type="checkbox" id="c_consent">
-        <label for="c_consent">I authorise Vast Wealth Advisors Pvt Ltd to share my details with partner banks, NBFCs, and their representatives/agencies for processing this loan application.<span class="req" style="color:var(--bad)"> *</span></label>
-      </div>
-    </div>
-    <div id="contactDupNotice" class="alert warn hidden">
-      <b>You already have an application with us.</b>
-      <div id="contactDupText" class="mt8"></div>
-      <div class="btn-row mt12">
-        <button type="button" class="btn btn-primary btn-sm" id="contactDupContinue">Continue my application</button>
-        <button type="button" class="btn btn-ghost btn-sm" id="contactDupNew">Start a new one anyway</button>
-      </div>
-    </div>
-    <div id="contactError" class="alert hidden"></div>
-    <button class="btn btn-primary btn-block" id="contactSubmitBtn">Continue to upload documents</button>
-    <p class="small muted center mt12">🔒 Your details are kept confidential.</p>
-  </div>
-</section>
-
   <!-- NEW APPLICATION -->
   <div id="formWrap" class="hidden">
     <div class="hero">
@@ -260,7 +226,7 @@
       </div>
     </div>
 
-    <div class="card" id="consentCard">
+    <div class="card">
       <div class="field">
         <div class="check-row">
           <input type="checkbox" id="f_consent">
@@ -388,7 +354,7 @@
       renderPartnerBanner();
     }).catch(function () { /* keep whatever is already shown */ });
   }
-  var VIEWS = ['checkingState', 'trackCard', 'formWrap', 'loadingState', 'resultsWrap', 'docWrap', 'doneWrap', 'blockedWrap', 'adWrap', 'adResultsWrap', 'contactWrap'];
+  var VIEWS = ['checkingState', 'trackCard', 'formWrap', 'loadingState', 'resultsWrap', 'docWrap', 'doneWrap', 'blockedWrap', 'adWrap', 'adResultsWrap'];
   var S = { loanType: 'PL', employmentType: null, companyType: null, personCount: 2, residenceType: null,
             leadId: null, profile: {}, forceNew: false, docStore: {}, warnedMissing: false, trackedMobile: '', lastDup: null };
 
@@ -402,8 +368,8 @@
   function waTeam(text) { return VMW.waLink(C.WHATSAPP_NUMBER, text); }
 
   /* ---------- form behaviour ---------- */
-  VMW.wireAmount($('f_income')); VMW.wireAmount($('f_emi')); VMW.wireAmount($('f_loanAmount')); VMW.wireAmount($('f_marketValue'));
-  VMW.wireDigits($('f_mobile'), 10); VMW.wireDigits($('trackMobile'), 10); VMW.wireDigits($('f_pincode'), 6); VMW.wireDigits($('f_propertyPincode'), 6);
+  VMW.wireAmount(('fincome'));VMW.wireAmount(('f_emi')); VMW.wireAmount(('floanAmount'));VMW.wireAmount(('f_marketValue'));
+  VMW.wireDigits(('fmobile'),10);VMW.wireDigits(('trackMobile'), 10); VMW.wireDigits(('fpincode'),6);VMW.wireDigits(('f_propertyPincode'), 6);
   VMW.autosuggest($('f_state'), function () { return VMW.lists.states; });
   VMW.loadLists('states');
 
@@ -516,25 +482,6 @@
     $('dupNotice').classList.add('hidden');
     var profile = validateAndBuild();
     if (!profile) return;
-
-    if (S.leadId && S.needsDetails) {
-      // Details step after the quick contact + documents flow: patch the
-      // existing lead. No re-matching is shown back to the customer here.
-      show(['loadingState']);
-      $('loadingText').textContent = 'Saving your details…';
-      VMW.post({ action: 'completeLeadProfile', leadId: S.leadId, product: S.loanType, profile: profile }, { timeout: 90000 })
-        .then(function (data) {
-          if (!data || !data.success) { backToForm((data && (data.message || data.error)) || 'We could not save your details. Please try again.'); return; }
-          S.needsDetails = false;
-          S.profile = profile; S.employmentType = profile.employmentType; S.companyType = profile.companyType || null;
-          S.personCount = parseInt(profile.personCount, 10) || 2;
-          try { sessionStorage.removeItem('vmw_quick'); } catch (e) {}
-          show(['doneWrap']);
-        })
-        .catch(function (err) { backToForm(VMW.errMsg(err) + ' Your details are still filled in — just tap the button again.'); });
-      return;
-    }
-
     show(['loadingState']);
     $('loadingText').textContent = 'Matching you with lenders… this usually takes a few seconds.';
     VMW.post({ action: 'submitProfileOnly', product: S.loanType, profile: profile, forceNew: !!S.forceNew }, { timeout: 90000 })
@@ -548,7 +495,7 @@
         S.leadId = data.leadId; S.profile = profile; S.trackedMobile = profile.mobile;
         S.employmentType = profile.employmentType; S.companyType = profile.companyType || null;
         S.personCount = parseInt(profile.personCount, 10) || 2;
-        renderFresh(data, profile);
+        if (S.quick) { try { sessionStorage.removeItem('vmw_quick'); } catch (e) {} goToDocuments(); } else { renderFresh(data, profile); }
       })
       .catch(function (err) { backToForm(VMW.errMsg(err) + ' Your details are still filled in — just tap the button again.'); });
   });
@@ -584,7 +531,7 @@
   function waDocHref() {
     var p = S.profile || {};
     var isSE = S.employmentType === 'Self-Employed';
-    var who = (isSE && p.companyName) ? p.companyName : (p.name || p.mobile || '');
+    var who = (isSE && p.companyName) ? p.companyName : (p.name || '');
     var parts = ['Documents for: ' + who, 'Loan Type: ' + VMW.productLabel(S.loanType)];
     if (p.loanAmount) parts.push('Amount: ' + VMW.inr(p.loanAmount));
     if (S.leadId) parts.push('Ref: ' + S.leadId);
@@ -699,14 +646,9 @@
     VMW.get('resumeApplication', { leadId: leadId, product: product || '' }, { tries: 3 }).then(function (res) {
       if (res && res.success && res.found) {
         S.leadId = res.leadId; S.loanType = product || 'PL'; S.trackedMobile = VMW.mobile10(res.mobile);
-        S.profile = { name: res.name, mobile: res.mobile, email: res.email, state: res.state || '', pincode: res.pincode || '', loanAmount: res.loanAmount || '', companyName: res.companyName || '' };
+        S.profile = { name: res.name, mobile: res.mobile, email: res.email, loanAmount: res.loanAmount || '', companyName: res.companyName || '' };
         S.employmentType = res.employmentType || null; S.companyType = res.companyType || null; S.personCount = parseInt(res.personCount, 10) || 2;
-        // A lead created via the quick contact step (name not yet given) still needs the full details step after documents.
-        S.needsDetails = !res.name;
-        if (String(res.documentStatus || '').toLowerCase() === 'submitted') {
-          if (S.needsDetails) { enterDetailsStep(); } else { runTrack(S.trackedMobile, false); }
-          return;
-        }
+        if (String(res.documentStatus || '').toLowerCase() === 'submitted') { runTrack(S.trackedMobile, false); return; }
         goToDocuments();
       } else if (res && res.allocated) {
         $('blockedText').textContent = res.error || 'This application is already being processed by our team.';
@@ -799,7 +741,7 @@
         var prof = {}; for (var k in (S.profile || {})) prof[k] = S.profile[k];
         prof.stmtPassword = pw;
         return VMW.post({ action: 'finalizeDocumentUpload', leadId: S.leadId, product: S.loanType, profile: prof }, { timeout: 90000 }).then(function (r) {
-          if (r && r.success) { if (S.needsDetails) { enterDetailsStep(); } else { show(['doneWrap']); } return; }
+          if (r && r.success) { show(['doneWrap']); return; }
           VMW.showMsg(msg, 'Your files were uploaded but we could not finish the submission. Please tap “Submit documents” again.', 'error');
         });
       });
@@ -816,7 +758,7 @@ if (REF_LINK) {
 }
 
 // Each step gets its own history entry, so the phone's back button moves between steps.
-var QUICK_STEPS = { ad: ['adWrap'], adres: ['adResultsWrap'], contact: ['contactWrap'], form: ['formWrap'] };
+var QUICK_STEPS = { ad: ['adWrap'], adres: ['adResultsWrap'], form: ['formWrap'] };
 function goStep(step, push) {
   show(QUICK_STEPS[step]);
   try { history[push ? 'pushState' : 'replaceState']({ vmwStep: step }, ''); } catch (e) {}
@@ -867,90 +809,11 @@ $('adProceed').addEventListener('click', function () {
     location.href = 'vl-el-application.html?product=' + S.quickLoan + (REF ? '&ref=' + encodeURIComponent(REF) : '');
     return;
   }
-  S.loanType = S.quickLoan; // carried through the contact + documents + details steps that follow
-  VMW.hideMsg($('contactError'));
-  $('contactDupNotice').classList.add('hidden');
-  goStep('contact', true);
-});
-
-/* ---------- quick contact step (mobile + email, before documents) ---------- */
-VMW.wireDigits($('c_mobile'), 10); VMW.wireDigits($('c_pincode'), 6);
-VMW.autosuggest($('c_state'), function () { return VMW.lists.states; });
-S.contactForceNew = false; S.contactDup = null; S.needsDetails = false;
-function backToContact(msg, type) {
-  goStep('contact', false);
-  if (msg) VMW.showMsg($('contactError'), msg, type || 'error');
-}
-function showContactDuplicate(data, profile) {
-  S.contactDup = { leadId: data.existingLeadId, product: data.existingProduct, mobile: profile.mobile };
-  $('contactDupText').textContent = 'A ' + VMW.productLabel(data.existingProduct) + ' application already exists for ' + profile.mobile + '. You can continue it (and upload documents), or start a separate new application.';
-  goStep('contact', false);
-  $('contactDupNotice').classList.remove('hidden');
-  $('contactDupNotice').scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-$('contactSubmitBtn').addEventListener('click', function () {
-  VMW.hideMsg($('contactError'));
-  $('contactDupNotice').classList.add('hidden');
-  var mobile = VMW.mobile10(val('c_mobile'));
-  var email = val('c_email');
-  var state = VMW.canonicalState(val('c_state'));
-  var pincode = VMW.digits(val('c_pincode'));
-  if (!/^[6-9]\d{9}$/.test(mobile)) { VMW.showMsg($('contactError'), 'Enter a valid 10-digit mobile number.', 'error'); return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { VMW.showMsg($('contactError'), 'Enter a valid email address.', 'error'); return; }
-  if (!state) { VMW.showMsg($('contactError'), 'Please pick your state from the list.', 'error'); return; }
-  if (!/^[1-9]\d{5}$/.test(pincode)) { VMW.showMsg($('contactError'), 'Enter a valid 6-digit pincode.', 'error'); return; }
-  if (!$('c_consent').checked) { VMW.showMsg($('contactError'), 'Please tick the consent box to continue.', 'error'); return; }
-  var profile = {
-    name: '', mobile: mobile, email: email, state: state, pincode: pincode, loanAmount: S.quickAmount, pan: S.pan || '',
-    consentGiven: true, partnerCode: (S.loanType === 'HL' || S.loanType === 'LAP') ? '' : REF
-  };
-  show(['loadingState']);
-  $('loadingText').textContent = 'Setting up your application…';
-  VMW.post({ action: 'submitProfileOnly', product: S.loanType, profile: profile, forceNew: !!S.contactForceNew }, { timeout: 90000 })
-    .then(function (data) {
-      if (!data || !data.success) {
-        if (data && data.error === 'duplicate_customer') { showContactDuplicate(data, profile); return; }
-        backToContact((data && (data.message || data.error)) || 'We could not save your details. Please try again.');
-        return;
-      }
-      S.contactForceNew = false;
-      S.leadId = data.leadId; S.trackedMobile = mobile;
-      S.profile = { name: '', mobile: mobile, email: email, state: state, pincode: pincode, loanAmount: S.quickAmount };
-      S.needsDetails = true; // full 8-field details still pending, collected after documents
-      goToDocuments();
-    })
-    .catch(function (err) { backToContact(VMW.errMsg(err) + ' Your details are still filled in — just tap the button again.'); });
-});
-$('contactDupContinue').addEventListener('click', function () {
-  var d = S.contactDup; if (!d) return;
-  if (d.leadId) location.href = VMW.leadLink({ leadId: d.leadId, product: d.product, ref: REF });
-  else runTrack(d.mobile);
-});
-$('contactDupNew').addEventListener('click', function () {
-  S.contactForceNew = true;
-  $('contactDupNotice').classList.add('hidden');
-  $('contactSubmitBtn').click();
-});
-
-// Shown after documents are uploaded, when the lead was created via the
-// quick contact step above and still needs the rest of the profile.
-function enterDetailsStep() {
-  $('loanToggle').classList.add('hidden');
-  $('consentCard').classList.add('hidden');
-  $('f_consent').checked = true;
-  $('f_mobile').value = (S.profile || {}).mobile || ''; $('f_mobile').readOnly = true;
-  $('f_email').value = (S.profile || {}).email || ''; $('f_email').readOnly = true;
-  $('f_state').value = (S.profile || {}).state || ''; $('f_state').readOnly = true;
-  $('f_pincode').value = (S.profile || {}).pincode || ''; $('f_pincode').readOnly = true;
-  $('f_loanAmount').value = (S.profile || {}).loanAmount || '';
-  $('f_loanAmount').dispatchEvent(new Event('input'));
-  $('f_loanAmount').readOnly = true;
-  setLoanType(S.loanType);
-  $('submitBtn').textContent = 'Submit my details';
-  VMW.hideMsg($('formError'));
-  $('dupNotice').classList.add('hidden');
   goStep('form', true);
-}
+  setLoanType(S.quickLoan);
+  var amt = $('f_loanAmount'); amt.value = S.quickAmount;
+  amt.dispatchEvent(new Event('input'));
+});
   /* ---------- start ---------- */
   (function boot() {
     var leadId = params.get('leadId'), product = params.get('product'), mobile = VMW.mobile10(params.get('mobile'));
@@ -978,3 +841,5 @@ s0.parentNode.insertBefore(s1,s0);
 <!--End of Tawk.to Script-->
 </body>
 </html>
+
+
