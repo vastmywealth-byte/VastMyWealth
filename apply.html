@@ -368,11 +368,19 @@
   function waTeam(text) { return VMW.waLink(C.WHATSAPP_NUMBER, text); }
 
   /* ---------- form behaviour ---------- */
-  VMW.wireAmount(('fincome'));VMW.wireAmount(('f_emi')); VMW.wireAmount(('floanAmount'));VMW.wireAmount(('f_marketValue'));
-  VMW.wireDigits(('fmobile'),10);VMW.wireDigits(('trackMobile'), 10); VMW.wireDigits(('fpincode'),6);VMW.wireDigits(('f_propertyPincode'), 6);
-  VMW.autosuggest($('f_state'), function () { return VMW.lists.states; });
-  VMW.loadLists('states');
+  /* ---------- form behaviour ---------- */
+VMW.wireAmount($('f_income'));
+VMW.wireAmount($('f_emi'));
+VMW.wireAmount($('f_loanAmount'));
+VMW.wireAmount($('f_marketValue'));
 
+VMW.wireDigits($('f_mobile'), 10);
+VMW.wireDigits($('trackMobile'), 10);
+VMW.wireDigits($('f_pincode'), 6);
+VMW.wireDigits($('f_propertyPincode'), 6);
+
+VMW.autosuggest($('f_state'), function () { return VMW.lists.states; });
+VMW.loadLists('states');
   if (REF_LINK) {
     // partner / banker links only offer the loan types they handle
     document.querySelectorAll('#loanToggle button[data-val="HL"], #loanToggle button[data-val="LAP"]').forEach(function (b) { b.style.display = 'none'; });
