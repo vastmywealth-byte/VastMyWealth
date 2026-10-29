@@ -14,7 +14,7 @@
 </head>
 <body>
 
-<!-- ===================== CO-BRANDED PARTNER BANNER ==================== -->
+<!-- ===================== CO-BRANDED PARTNER BANNER ===================== -->
 <style>
   :root { --pc-bg:#0A1530; --pc-gold:#D4A64A; --pc-text:#FFFFFF; --pc-muted:#9FB0CC; }
   .vmw-pc-wrap { background:var(--pc-bg); padding:8px 12px; border-bottom:1px solid rgba(212,166,74,.30); position:relative; z-index:99; }
@@ -106,7 +106,7 @@
     <div class="field"><label for="a_amount">Loan amount required (₹)<span class="req">*</span></label>
       <input type="text" id="a_amount" inputmode="numeric"></div>
     <div id="adError" class="alert hidden"></div>
-    <button class="btn btn-primary btn-block" id="adGoBtn">Proceed</button>
+    <button class="btn btn-primary btn-block" id="adGoBtn">See top lenders</button>
     <p class="small muted center mt12">🔒 Your details are kept confidential.</p>
   </div>
 </section>
@@ -118,7 +118,7 @@
   </div>
   <div id="adLenderCards"></div>
   <div class="btn-stack">
-    <button class="btn btn-primary btn-block" id="adProceed">Share details</button>
+    <button class="btn btn-primary btn-block" id="adProceed">Proceed</button>
     <button class="btn btn-ghost btn-block" id="adBack">← Change details</button>
   </div>
 </section>
@@ -236,7 +236,7 @@
     </div>
 
     <div id="formError" class="alert hidden"></div>
-    <button class="btn btn-primary btn-block" id="submitBtn">Apply</button>
+    <button class="btn btn-primary btn-block" id="submitBtn">Find my matching lenders</button>
     <p class="small muted center mt12">🔒 We match you with lenders first — documents come next.</p>
   </div>
 
@@ -282,7 +282,7 @@
     <div class="card center">
       <div style="font-size:44px;">✅</div>
       <h2 class="mt8">Documents received</h2>
-      <p class="muted mt8">Thank you! Our team will review your documents and get in touch with you shortly. You can come back any time and use “Already applied?” to check your status.</p>
+      <p class="muted mt8" id="doneWrapMsg">Thank you! Our team will review your documents and get in touch with you shortly. You can come back any time and use “Already applied?” to check your status.</p>
       <a class="btn btn-primary btn-block mt16" href="index.html">Back to home</a>
     </div>
   </section>
@@ -345,6 +345,29 @@
   }
   renderPartnerBanner();
 
+  // One house/RM number gets the full loan-type menu (incl. Home Loan & Loan Against
+  // Property) on their personal link; every other partner/banker link keeps HL/LAP hidden.
+  var FULL_MENU_MOBILE = '9594592020';
+  function isFullMenuMobile(mob) { return String(mob || '').replace(/\D/g, '').slice(-10) === FULL_MENU_MOBILE; }
+  function applyLoanTypeMenu() {
+    var full = REF_LINK && isFullMenuMobile(PMOB);
+    document.querySelectorAll('#loanToggle button[data-val="HL"], #loanToggle button[data-val="LAP"]').forEach(function (b) { b.style.display = full ? '' : 'none'; });
+    var sel = $('a_loanType');
+    if (sel) {
+      if (full) {
+        [['HL', 'Home Loan'], ['LAP', 'Loan Against Property']].forEach(function (p) {
+          if (!sel.querySelector('option[value="' + p[0] + '"]')) {
+            var o = document.createElement('option'); o.value = p[0]; o.textContent = p[1];
+            var before = sel.querySelector('option[value="VL"]');
+            if (before) sel.insertBefore(o, before); else sel.appendChild(o);
+          }
+        });
+      } else {
+        ['HL', 'LAP'].forEach(function (v) { var o = sel.querySelector('option[value="' + v + '"]'); if (o) o.remove(); });
+      }
+    }
+  }
+
   if (REF) {
     VMW.get('getRefContact', { ref: REF }, { tries: 1 }).then(function (r) {
       if (!r || !r.success || !r.name) return;
@@ -352,6 +375,7 @@
       localStorage.setItem('vmw_partner_pname', PNAME);
       localStorage.setItem('vmw_partner_pmob', PMOB);
       renderPartnerBanner();
+      applyLoanTypeMenu();
     }).catch(function () { /* keep whatever is already shown */ });
   }
   var VIEWS = ['checkingState', 'trackCard', 'formWrap', 'loadingState', 'resultsWrap', 'docWrap', 'doneWrap', 'blockedWrap', 'adWrap', 'adResultsWrap'];
@@ -368,23 +392,14 @@
   function waTeam(text) { return VMW.waLink(C.WHATSAPP_NUMBER, text); }
 
   /* ---------- form behaviour ---------- */
-  /* ---------- form behaviour ---------- */
-VMW.wireAmount($('f_income'));
-VMW.wireAmount($('f_emi'));
-VMW.wireAmount($('f_loanAmount'));
-VMW.wireAmount($('f_marketValue'));
+  VMW.wireAmount($('f_income')); VMW.wireAmount($('f_emi')); VMW.wireAmount($('f_loanAmount')); VMW.wireAmount($('f_marketValue'));
+  VMW.wireDigits($('f_mobile'), 10); VMW.wireDigits($('trackMobile'), 10); VMW.wireDigits($('f_pincode'), 6); VMW.wireDigits($('f_propertyPincode'), 6);
+  VMW.autosuggest($('f_state'), function () { return VMW.lists.states; });
+  VMW.loadLists('states');
 
-VMW.wireDigits($('f_mobile'), 10);
-VMW.wireDigits($('trackMobile'), 10);
-VMW.wireDigits($('f_pincode'), 6);
-VMW.wireDigits($('f_propertyPincode'), 6);
-
-VMW.autosuggest($('f_state'), function () { return VMW.lists.states; });
-VMW.loadLists('states');
-  if (REF_LINK) {
-    // partner / banker links only offer the loan types they handle
-    document.querySelectorAll('#loanToggle button[data-val="HL"], #loanToggle button[data-val="LAP"]').forEach(function (b) { b.style.display = 'none'; });
-  }
+  // partner / banker links only offer the loan types they handle — except the one
+  // house number above, which gets the full menu (see applyLoanTypeMenu)
+  applyLoanTypeMenu();
 
   function setActiveLoanButton() {
     document.querySelectorAll('#loanToggle button').forEach(function (b) { b.classList.toggle('active', b.dataset.val === S.loanType); });
@@ -736,20 +751,45 @@ VMW.loadLists('states');
     VMW.hideMsg(msg);
     $('docProgress').classList.remove('hidden');
     VMW.busy(btn, 'Uploading…', function () {
-      return VMW.uploadAll(jobs, { leadId: S.leadId, product: S.loanType, mobile: (S.profile || {}).mobile || '' }, 'uploadSingleDocument', function (i, n, label) {
+      var uploadPromise = VMW.uploadAll(jobs, { leadId: S.leadId, product: S.loanType, mobile: (S.profile || {}).mobile || '' }, 'uploadSingleDocument', function (i, n, label) {
         btn.innerHTML = '<span class="spinner sm"></span> Uploading ' + i + ' of ' + n + '…';
         $('docProgressBar').style.width = Math.round(((i - 1) / n) * 100) + '%';
-      }).then(function (failed) {
-        if (failed.length) {
-          // NOTHING is marked "submitted" unless every file really arrived
-          VMW.showMsg(msg, failed.length + ' file(s) could not be uploaded: ' + failed.map(function (f) { return f.label; }).join(', ') + '. Your other files are saved — tap “Submit documents” again to retry only the failed ones.', 'error');
-          return null;
-        }
+      });
+      // A stuck upload (one file's request hangs and never resolves or
+      // rejects) must not freeze the submit button forever. If we don't
+      // hear back within this window, we stop waiting and move on — the
+      // application proceeds with whatever got through, and whatever
+      // didn't is flagged for the team to collect manually.
+      var allLabels = jobs.map(function (j) { return j.label; });
+      var settled = false;
+      var raced = new Promise(function (resolve) {
+        var timer = setTimeout(function () {
+          if (settled) return; settled = true;
+          resolve({ failedLabels: allLabels, timedOut: true });
+        }, 75000);
+        uploadPromise.then(function (failed) {
+          if (settled) return; settled = true; clearTimeout(timer);
+          resolve({ failedLabels: (failed || []).map(function (f) { return f.label; }), timedOut: false });
+        }).catch(function () {
+          if (settled) return; settled = true; clearTimeout(timer);
+          resolve({ failedLabels: allLabels, timedOut: false }); // can't confirm anything — be conservative, still proceed
+        });
+      });
+      return raced.then(function (outcome) {
         $('docProgressBar').style.width = '100%';
+        var missingLabels = outcome.failedLabels;
         var prof = {}; for (var k in (S.profile || {})) prof[k] = S.profile[k];
         prof.stmtPassword = pw;
-        return VMW.post({ action: 'finalizeDocumentUpload', leadId: S.leadId, product: S.loanType, profile: prof }, { timeout: 90000 }).then(function (r) {
-          if (r && r.success) { show(['doneWrap']); return; }
+        return VMW.post({ action: 'finalizeDocumentUpload', leadId: S.leadId, product: S.loanType, profile: prof, missingDocs: missingLabels }, { timeout: 90000 }).then(function (r) {
+          if (r && r.success) {
+            $('doneWrapMsg').textContent = missingLabels.length
+              ? ('Thank you! We\'ve received your documents. ' + (missingLabels.length === 1 ? 'One file' : missingLabels.length + ' files') +
+                 ' (' + missingLabels.slice(0, 4).join(', ') + (missingLabels.length > 4 ? '…' : '') + ') could not be uploaded automatically — ' +
+                 'our team will reach out and collect ' + (missingLabels.length === 1 ? 'it' : 'them') + ' from you separately, or you can WhatsApp it to us any time. ' +
+                 'You can come back any time and use “Already applied?” to check your status.')
+              : 'Thank you! Our team will review your documents and get in touch with you shortly. You can come back any time and use “Already applied?” to check your status.';
+            show(['doneWrap']); return;
+          }
           VMW.showMsg(msg, 'Your files were uploaded but we could not finish the submission. Please tap “Submit documents” again.', 'error');
         });
       });
@@ -759,11 +799,7 @@ VMW.loadLists('states');
 S.quick = false; S.pan = ''; S.quickLoan = ''; S.quickAmount = '';
 VMW.wireAmount($('a_amount'));
 $('a_pan').addEventListener('input', function () { this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
-if (REF_LINK) {
-  ['HL', 'LAP'].forEach(function (v) {
-    var o = $('a_loanType').querySelector('option[value="' + v + '"]'); if (o) o.remove();
-  });
-}
+// HL/LAP visibility in both the toggle and this select is handled by applyLoanTypeMenu() above.
 
 // Each step gets its own history entry, so the phone's back button moves between steps.
 var QUICK_STEPS = { ad: ['adWrap'], adres: ['adResultsWrap'], form: ['formWrap'] };
@@ -849,5 +885,3 @@ s0.parentNode.insertBefore(s1,s0);
 <!--End of Tawk.to Script-->
 </body>
 </html>
-
-
