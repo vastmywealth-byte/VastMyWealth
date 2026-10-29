@@ -205,6 +205,11 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
     <button class="close-x" id="closeLeadSheet">✕</button>
   </div>
   <div id="exclusivityBanner" class="hidden" style="background:var(--warn-bg);border:1px solid rgba(240,185,75,.4);border-radius:9px;padding:9px 11px;margin:8px 0;font-size:12.5px;color:var(--warn);"></div>
+  <div class="section-label">Upload documents received on WhatsApp (9594592020)</div>
+  <p class="sub" style="margin:0 0 8px;">Select the file(s) exactly as received — they're saved straight into this customer's Drive folder, with no per-document labelling.</p>
+  <input type="file" id="waDocFiles" multiple accept="image/*,.pdf" style="color:var(--text);font-size:14px;margin-bottom:8px;">
+  <button class="btn btn-line btn-block" id="waDocUploadBtn">Upload to customer folder</button>
+  <div id="waDocProgress" class="sub hidden" style="margin-top:6px;"></div>
   <div class="section-label">Full lead history</div>
   <div id="sheetHistoryRows"><div class="empty">Loading…</div></div>
   <div class="section-label">Lender pipeline (admin-assigned)</div>
@@ -357,6 +362,7 @@ function toggleDetail(rowEl) {
 var LEAD_HISTORY_CACHE = {};
 function leadEventTagClass(ev) {
   if (/disbursed/i.test(ev)) return 'ok'; if (/rejected/i.test(ev)) return 'bad';
+  if (/incomplete/i.test(ev)) return 'warn';
   if (/claimed|routed|assigned/i.test(ev)) return 'info'; return '';
 }
 function loadLeadHistoryInline(rowEl, leadId) {
@@ -781,6 +787,51 @@ $('assignDsaBtn').addEventListener('click', function () {
         } else showToast(r.error || "Assignment failed", true);
       });
   }).catch(function (err) { showToast("Connection error: " + err.message, true); });
+});
+
+function fileToBase64(file) {
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function () { resolve(String(reader.result).split(',')[1]); };
+    reader.onerror = function () { reject(new Error('Could not read ' + file.name)); };
+    reader.readAsDataURL(file);
+  });
+}
+$('waDocUploadBtn').addEventListener('click', function () {
+  if (!CURRENT_LEAD) return;
+  var files = Array.prototype.slice.call($('waDocFiles').files || []);
+  var prog = $('waDocProgress');
+  if (!files.length) { showToast("Choose at least one file first", true); return; }
+  prog.classList.remove('hidden');
+  withBusy(this, 'Uploading…', function () {
+    var ok = 0, failed = [];
+    return files.reduce(function (chain, file, i) {
+      return chain.then(function () {
+        prog.textContent = 'Uploading ' + (i + 1) + ' of ' + files.length + ' — ' + file.name;
+        return fileToBase64(file)
+          .then(function (base64) {
+            return apiPost({ action: "adminUploadDocument", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product,
+              file: { name: file.name, mimeType: file.type, base64: base64 } });
+          })
+          .then(function (r) { if (r && r.success) ok++; else failed.push(file.name); })
+          .catch(function () { failed.push(file.name); });
+      });
+    }, Promise.resolve()).then(function () {
+      if (!ok) { prog.textContent = ''; showToast("Upload failed for all file(s)", true); return; }
+      return apiPost({ action: "adminFinalizeDocuments", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product, fileCount: ok }).then(function () {
+        prog.textContent = '';
+        $('waDocFiles').value = '';
+        showToast(failed.length ? (ok + ' uploaded, ' + failed.length + ' failed: ' + failed.join(', ')) : ('All ' + ok + ' file(s) uploaded to the customer folder'), !!failed.length);
+        CURRENT_LEAD.documentStatus = 'Submitted';
+        delete LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId];
+        apiPost({ action: "adminGetLeadHistory", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId }).then(function (r) {
+          LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId] = (r.success ? r.events : []) || [];
+          renderLeadHistoryBox($('sheetHistoryRows'), LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId]);
+        });
+        reloadLeadsOnly();
+      });
+    });
+  }).catch(function (err) { prog.textContent = ''; showToast("Connection error: " + err.message, true); });
 });
 
 $('hideLeadBtn').addEventListener('click', function () {
