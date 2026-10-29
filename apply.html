@@ -264,6 +264,12 @@
       <h1>Upload your documents</h1>
       <p>Upload your documents for same-day processing. Photos or PDFs, up to 10 MB each.</p>
     </div>
+    <div class="card" id="loanBotBanner" style="position:relative;">
+      <button type="button" id="loanBotDismiss" aria-label="Dismiss" style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:18px;line-height:1;cursor:pointer;color:var(--muted,#888);">&times;</button>
+      <div style="font-weight:600;padding-right:20px;">Create your Loan Bot for Free</div>
+      <p class="small muted mt4" style="margin-top:4px;">Never run out of finance — loan updates at your fingertips.</p>
+      <button class="btn btn-outline btn-block mt12" id="loanBotConnectBtn" type="button">🔔 Connect on Telegram</button>
+    </div>
     <div class="card">
       <div id="docContainer"></div>
       <div id="docMsg" class="alert hidden"></div>
@@ -858,6 +864,61 @@ $('adProceed').addEventListener('click', function () {
   var amt = $('f_loanAmount'); amt.value = S.quickAmount;
   amt.dispatchEvent(new Event('input'));
 });
+  /* ---------- Customer Loan Bot (Telegram) ---------- */
+  // Same bot username you put in CUSTOMER_BOT_USERNAME in CustomerNotify.gs.
+  var CUSTOMER_BOT_USERNAME = 'PASTE_CUSTOMER_BOT_USERNAME_HERE';
+
+  function openLoanBot() {
+    if (!S.leadId) { return; }
+    var ua = navigator.userAgent || '';
+    var isAndroid = /Android/i.test(ua);
+    var isIOS = /iPhone|iPad|iPod/i.test(ua);
+    var startParam = encodeURIComponent(S.leadId);
+    var tgWeb = 'https://t.me/' + CUSTOMER_BOT_USERNAME + '?start=' + startParam;
+
+    if (!isAndroid && !isIOS) {
+      // Desktop / unknown device — Telegram Web or Desktop handles this link directly.
+      window.open(tgWeb, '_blank');
+      return;
+    }
+
+    var tgScheme = 'tg://resolve?domain=' + CUSTOMER_BOT_USERNAME + '&start=' + startParam;
+    var storeUrl = isAndroid
+      ? 'https://play.google.com/store/apps/details?id=org.telegram.messenger'
+      : 'https://apps.apple.com/app/telegram-messenger/id686449807';
+
+    var appOpened = false;
+    function markOpened() { appOpened = true; }
+    document.addEventListener('visibilitychange', markOpened, { once: true });
+    window.addEventListener('pagehide', markOpened, { once: true });
+
+    window.location.href = tgScheme;
+
+    setTimeout(function () {
+      document.removeEventListener('visibilitychange', markOpened);
+      window.removeEventListener('pagehide', markOpened);
+      if (!appOpened) {
+        // Telegram doesn't seem to be installed — send them to install it;
+        // they can tap "Connect on Telegram" again once it's installed.
+        window.location.href = storeUrl;
+      }
+    }, 1600);
+  }
+
+  (function wireLoanBotBanner() {
+    var banner = $('loanBotBanner'), dismissBtn = $('loanBotDismiss'), connectBtn = $('loanBotConnectBtn');
+    if (connectBtn) connectBtn.addEventListener('click', openLoanBot);
+    if (dismissBtn && banner) {
+      dismissBtn.addEventListener('click', function () {
+        banner.style.display = 'none';
+        try { localStorage.setItem('vmw_loanbot_dismissed', '1'); } catch (e) { /* ignore */ }
+      });
+    }
+    try {
+      if (banner && localStorage.getItem('vmw_loanbot_dismissed') === '1') banner.style.display = 'none';
+    } catch (e) { /* ignore */ }
+  })();
+
   /* ---------- start ---------- */
   (function boot() {
     var leadId = params.get('leadId'), product = params.get('product'), mobile = VMW.mobile10(params.get('mobile'));
