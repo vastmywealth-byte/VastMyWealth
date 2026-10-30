@@ -27,7 +27,7 @@ const CORE = [
   './lap.png',
   './hl.png',
   './pl.png',
-   './terms.pdf',
+   './terms.html',
   './bl.png'
 ];
 
