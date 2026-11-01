@@ -277,7 +277,7 @@
       const messages = data.messages || (data.reply ? [{ text: data.reply, persona: data.persona }] : []);
       for (let i = 0; i < messages.length; i++) {
         const m = messages[i];
-        if (i > 0) { showTyping(true); await sleep(800); }
+        if (i > 0) { showTyping(true); await sleep(m.delayMs || 800); }
         showTyping(false);
         if (m.divider) appendDivider(m.divider);
         setPersona(m.persona);
@@ -288,14 +288,9 @@
 
       if (!wasDocs && session.phase === 'docs') {
         appendDocChips();
-        if (data.loanBotLink) {
-          appendCta(
-            "🔔 Get reminders on Telegram",
-            "Connect so we can notify you the moment a document is received, or if anything is still pending — no need to keep checking back here.",
-            "Connect on Telegram",
-            data.loanBotLink
-          );
-        }
+        // Telegram connect CTA is intentionally NOT shown here — it only
+        // appears after the customer finishes uploading (see finalizeDocs).
+        if (data.loanBotLink) session.loanBotLink = data.loanBotLink;
       }
     } catch (e) {
       showTyping(false);
@@ -352,14 +347,28 @@
     if (!session.leadId) return;
     showTyping(true);
     try {
-      await fetch(APPS_SCRIPT_URL, {
+      const response = await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         redirect: "follow",
         body: JSON.stringify({ action: "aiChatFinalizeDocs", leadId: session.leadId, product: session.product })
       });
+      const data = await response.json().catch(function () { return {}; });
       showTyping(false);
       appendMessage("Thank you! Our team will review your documents and get in touch with you shortly.", "bot");
+      const botLink = data.loanBotLink || session.loanBotLink;
+      if (botLink) {
+        // Only now — after the customer has actually finished uploading —
+        // do we offer the Telegram connect card, with a short pause so it
+        // doesn't land in the same breath as the thank-you message.
+        await sleep(1200);
+        appendCta(
+          "🔔 Get reminders on Telegram",
+          "Connect so we can notify you the moment a document is received, or if anything is still pending — no need to keep checking back here.",
+          "Connect on Telegram",
+          botLink
+        );
+      }
     } catch (e) {
       showTyping(false);
       appendMessage("Couldn't confirm that just now, but no need to re-upload — our team can see what's already in.", "bot");
