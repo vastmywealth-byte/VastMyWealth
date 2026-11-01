@@ -52,7 +52,6 @@
   .msg.bot { background: var(--bot-msg); color: white; align-self: flex-start; border-bottom-left-radius: 4px; }
   .msg.user { background: var(--user-msg); color: var(--primary); align-self: flex-end; border-bottom-right-radius: 4px; }
   .msg a { color: #9FD3FF; }
-  .msg.user a { color: var(--accent); }
   .divider {
     align-self: center; font-size: 11px; color: #9099A8; text-transform: uppercase;
     letter-spacing: .04em; margin: 4px 0; text-align: center;
@@ -64,7 +63,7 @@
     font-family: 'Inter', sans-serif;
   }
   .chip:active { background: var(--user-msg); }
-  .chip.loan { padding: 10px 16px; font-size: 13.5px; font-weight: 500; border-radius: 20px; }
+  .chip.opt { padding: 10px 16px; font-size: 13.5px; font-weight: 500; border-radius: 20px; }
   .input-area {
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: white; border-top: 1px solid #eee;
     display: flex; gap: 10px; align-items: center;
@@ -115,50 +114,90 @@
 </div>
 <script>
   const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
-  let chatHistory = [];
+  const DOC_TYPES = ["PAN Card", "Aadhaar", "Salary Slip", "Bank Statement", "GST Return", "Udyam Certificate", "Selfie", "Other"];
+  const WELCOME_TEXT = "Welcome to VastMyWealth! 👋\n\nPlease let us know the type of loan you are looking for, and we'll connect you to the right advisor.";
+  const LOAN_OPTIONS = [
+    { label: "Business Loan", value: "BL" }, { label: "Personal Loan", value: "PL" },
+    { label: "Loan Against Property", value: "LAP" }, { label: "Home Loan", value: "HL" }
+  ];
+
   let session = (function () {
     try { return JSON.parse(sessionStorage.getItem('vmw_aichat_session') || '{}'); } catch (e) { return {}; }
   })();
   let pendingDocType = null;
-  let loanChipRow = null;
-  const DOC_TYPES = ["PAN Card", "Aadhaar", "Salary Slip", "Bank Statement", "GST Return", "Udyam Certificate", "Selfie", "Other"];
-  const LOAN_OPTIONS = ["Business Loan", "Personal Loan", "Loan Against Property", "Home Loan"];
-  const WELCOME_TEXT = "Welcome to VastMyWealth! 👋\n\nPlease let us know the type of loan you are looking for, and we'll connect you to the right advisor.";
+  let optionRow = null;
+  let lastOptions = [];
+  let busy = false;
+  let currentPersona = "";
 
   function saveSession() {
     try { sessionStorage.setItem('vmw_aichat_session', JSON.stringify(session || {})); } catch (e) { /* ignore */ }
   }
-  // skipHistory = true for local-only messages (e.g. the welcome text) so
-  // they are never sent to Gemini; its history must start with a user turn.
-  function appendMessage(text, sender, skipHistory) {
-    const box = document.getElementById("chatBox");
+  function clearSession() {
+    session = {};
+    try { sessionStorage.removeItem('vmw_aichat_session'); } catch (e) { /* ignore */ }
+  }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function scrollDown() { const b = document.getElementById("chatBox"); b.scrollTop = b.scrollHeight; }
+
+  function setPersona(p) {
+    if (!p) return;
+    currentPersona = p;
+    document.getElementById("headerName").innerText = p + " · VastMyWealth";
+  }
+  function showTyping(on) {
+    const t = document.getElementById("typingIndicator");
+    t.innerText = currentPersona ? currentPersona + " is typing..." : "Typing...";
+    t.style.display = on ? "block" : "none";
+  }
+
+  function appendMessage(text, sender) {
     const msgDiv = document.createElement("div");
     msgDiv.className = "msg " + sender;
     msgDiv.innerText = text;
-    box.appendChild(msgDiv);
-    box.scrollTop = box.scrollHeight;
-    if (!skipHistory && (sender === 'user' || sender === 'bot')) chatHistory.push({ role: sender, text: text });
+    document.getElementById("chatBox").appendChild(msgDiv);
+    scrollDown();
   }
   function appendDivider(text) {
-    const box = document.getElementById("chatBox");
     const div = document.createElement("div");
     div.className = "divider";
     div.innerText = text;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
+    document.getElementById("chatBox").appendChild(div);
+    scrollDown();
   }
   function appendLink(label, url) {
-    const box = document.getElementById("chatBox");
     const msgDiv = document.createElement("div");
     msgDiv.className = "msg bot";
     const a = document.createElement("a");
     a.href = url; a.target = "_blank"; a.rel = "noopener"; a.innerText = label;
     msgDiv.appendChild(a);
-    box.appendChild(msgDiv);
-    box.scrollTop = box.scrollHeight;
+    document.getElementById("chatBox").appendChild(msgDiv);
+    scrollDown();
   }
+
+  // ---------- Answer buttons (loan types, Yes/No, Salaried/Self-Employed, ...) ----------
+  function clearOptions() {
+    if (optionRow) { optionRow.remove(); optionRow = null; }
+  }
+  function renderOptions(options) {
+    clearOptions();
+    lastOptions = options || [];
+    if (!lastOptions.length) return;
+    const row = document.createElement("div");
+    row.className = "chip-row";
+    lastOptions.forEach(function (o) {
+      const chip = document.createElement("button");
+      chip.type = "button"; chip.className = "chip opt"; chip.innerText = o.label;
+      chip.onclick = function () { sendPayload(o.label, o.value); };
+      row.appendChild(chip);
+    });
+    document.getElementById("chatBox").appendChild(row);
+    optionRow = row;
+    scrollDown();
+  }
+
+  // ---------- Document chips ----------
   function appendDocChips() {
-    const box = document.getElementById("chatBox");
     const row = document.createElement("div");
     row.className = "chip-row";
     DOC_TYPES.forEach(function (label) {
@@ -174,31 +213,14 @@
     finish.type = "button"; finish.className = "chip"; finish.innerText = "✅ Finished uploading";
     finish.onclick = finalizeDocs;
     row.appendChild(finish);
-    box.appendChild(row);
-    box.scrollTop = box.scrollHeight;
+    document.getElementById("chatBox").appendChild(row);
+    scrollDown();
   }
 
-  // ---------- Welcome + loan type buttons ----------
+  // ---------- Welcome ----------
   function showWelcome() {
-    appendMessage(WELCOME_TEXT, "bot", true);
-    appendLoanChips();
-  }
-  function appendLoanChips() {
-    const box = document.getElementById("chatBox");
-    const row = document.createElement("div");
-    row.className = "chip-row";
-    LOAN_OPTIONS.forEach(function (label) {
-      const chip = document.createElement("button");
-      chip.type = "button"; chip.className = "chip loan"; chip.innerText = label;
-      chip.onclick = function () { sendText("I'm looking for a " + label + "."); };
-      row.appendChild(chip);
-    });
-    box.appendChild(row);
-    box.scrollTop = box.scrollHeight;
-    loanChipRow = row;
-  }
-  function removeLoanChips() {
-    if (loanChipRow) { loanChipRow.remove(); loanChipRow = null; }
+    appendMessage(WELCOME_TEXT, "bot");
+    renderOptions(LOAN_OPTIONS);
   }
 
   // ---------- Sending ----------
@@ -207,64 +229,67 @@
     const text = input.value.trim();
     if (!text) return;
     input.value = "";
-    sendText(text);
+    sendPayload(text, "");
   }
 
-  async function sendText(text) {
-    removeLoanChips();
-    const isFirstMessage = chatHistory.length === 0;
-    const historyToSend = chatHistory.slice();   // taken BEFORE adding this message (backend adds it itself)
-    appendMessage(text, "user");
-    document.getElementById("typingIndicator").style.display = "block";
-    const priorPhase = session.phase;
+  // The server drives the conversation: it validates the answer, replies
+  // with one or more messages and (optionally) answer buttons.
+  async function sendPayload(message, choice, opts) {
+    if (busy) return;
+    busy = true;
+    opts = opts || {};
+    const backupOptions = lastOptions;
+    clearOptions();
+    if (message && !opts.resume) appendMessage(message, "user");
+    showTyping(true);
+    const wasDocs = session.phase === 'docs';
     try {
       const response = await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         redirect: "follow",
-        body: JSON.stringify({ action: "aiChatMessage", message: text, history: historyToSend, session: session })
+        body: JSON.stringify({ action: "aiChatMessage", message: message || "", choice: choice || "", resume: !!opts.resume, session: session })
       });
       const data = await response.json();
-      document.getElementById("typingIndicator").style.display = "none";
       if (data.session) { session = data.session; saveSession(); }
 
-      if (isFirstMessage && session.phase !== 'specialist' && session.phase !== 'docs') {
-        document.getElementById("headerName").innerText = "Neha · VastMyWealth";
+      const messages = data.messages || (data.reply ? [{ text: data.reply, persona: data.persona }] : []);
+      for (let i = 0; i < messages.length; i++) {
+        const m = messages[i];
+        if (i > 0) { showTyping(true); await sleep(800); }
+        showTyping(false);
+        if (m.divider) appendDivider(m.divider);
+        setPersona(m.persona);
+        appendMessage(m.text, "bot");
       }
-      if (priorPhase !== 'specialist' && session.phase === 'specialist') {
-        const name = (session.product === 'LAP' || session.product === 'HL') ? 'Kavita' : 'Vikram';
-        appendDivider("You're now connected with " + name + ", our " + ((session.product === 'LAP' || session.product === 'HL') ? 'property loan' : 'business/personal loan') + " specialist");
-        document.getElementById("headerName").innerText = name + " · VastMyWealth";
-      }
-      appendMessage(data.reply, "bot");
-      if (priorPhase !== 'docs' && session.phase === 'docs') {
+      showTyping(false);
+      renderOptions(data.options || []);
+
+      if (!wasDocs && session.phase === 'docs') {
         appendDocChips();
         if (data.loanBotLink) appendLink("🔔 Connect for reminders on Telegram", data.loanBotLink);
       }
     } catch (e) {
-      document.getElementById("typingIndicator").style.display = "none";
-      appendMessage("Sorry, I am having trouble connecting to the server. Please try again.", "bot", true);
-      if (isFirstMessage) {
-        // nothing reached the AI — undo and let the customer pick again
-        chatHistory = [];
-        appendLoanChips();
-      }
+      showTyping(false);
+      appendMessage("Sorry, I'm having trouble connecting right now. Please try again.", "bot");
+      renderOptions(backupOptions);
     }
+    busy = false;
   }
 
   // ---------- Documents ----------
   function onFilePicked() {
     const file = document.getElementById("fileInput").files[0];
     if (!file) return;
-    if (!session.leadId) {
-      appendMessage("Let's finish a few more details first, then I'll have you upload documents.", "bot", true);
+    if (!session.leadId || session.phase !== 'docs') {
+      appendMessage("Let's finish a few more details first, then I'll have you upload documents.", "bot");
       document.getElementById("fileInput").value = "";
       return;
     }
     const docLabel = pendingDocType || "Document";
     pendingDocType = null;
-    appendMessage(`Uploading ${docLabel}: ${file.name}...`, "user", true);
-    document.getElementById("typingIndicator").style.display = "block";
+    appendMessage(`Uploading ${docLabel}: ${file.name}...`, "user");
+    showTyping(true);
     const reader = new FileReader();
     reader.onload = async function () {
       const base64 = reader.result.split(',')[1];
@@ -280,15 +305,15 @@
           })
         });
         const data = await response.json();
-        document.getElementById("typingIndicator").style.display = "none";
+        showTyping(false);
         if (data.success) {
-          appendMessage(docLabel + " uploaded. Tap another document, or 'Finished uploading' once you're done.", "bot", true);
+          appendMessage(docLabel + " uploaded. Tap another document, or 'Finished uploading' once you're done.", "bot");
         } else {
-          appendMessage("That upload didn't go through — please try that document again.", "bot", true);
+          appendMessage("That upload didn't go through — please try that document again.", "bot");
         }
       } catch (e) {
-        document.getElementById("typingIndicator").style.display = "none";
-        appendMessage("Upload failed due to a network error — please try again.", "bot", true);
+        showTyping(false);
+        appendMessage("Upload failed due to a network error — please try again.", "bot");
       }
     };
     reader.readAsDataURL(file);
@@ -297,7 +322,7 @@
 
   async function finalizeDocs() {
     if (!session.leadId) return;
-    document.getElementById("typingIndicator").style.display = "block";
+    showTyping(true);
     try {
       await fetch(APPS_SCRIPT_URL, {
         method: "POST",
@@ -305,21 +330,28 @@
         redirect: "follow",
         body: JSON.stringify({ action: "aiChatFinalizeDocs", leadId: session.leadId, product: session.product })
       });
-      document.getElementById("typingIndicator").style.display = "none";
-      appendMessage("Thank you! Our team will review your documents and get in touch with you shortly.", "bot", true);
+      showTyping(false);
+      appendMessage("Thank you! Our team will review your documents and get in touch with you shortly.", "bot");
     } catch (e) {
-      document.getElementById("typingIndicator").style.display = "none";
-      appendMessage("Couldn't confirm that just now, but no need to re-upload — our team can see what's already in.", "bot", true);
+      showTyping(false);
+      appendMessage("Couldn't confirm that just now, but no need to re-upload — our team can see what's already in.", "bot");
     }
   }
 
   // ---------- Page load ----------
-  if (session.leadId && session.phase) {
-    appendDivider("Welcome back — continuing your application");
-    if (session.phase === 'docs') appendDocChips();
-  } else {
-    showWelcome();
-  }
+  (function init() {
+    if (session.leadId && session.phase === 'docs') {
+      setPersona((session.product === 'LAP' || session.product === 'HL') ? 'Kavita' : 'Vikram');
+      appendDivider("Welcome back — continuing your application");
+      appendDocChips();
+    } else if (session.step && session.phase && session.phase !== 'closed') {
+      appendDivider("Welcome back — continuing your application");
+      sendPayload("", "", { resume: true });
+    } else {
+      clearSession();
+      showWelcome();
+    }
+  })();
 </script>
 </body>
 </html>
