@@ -26,7 +26,7 @@
   .chat-container {
     display: flex; flex-direction: column;
     width: 100%; max-width: 600px; margin: 0 auto;
-    height: 100vh; height: 100dvh; /* 100dvh wins on browsers that support it — keeps the input bar above mobile browser chrome */
+    height: 100vh; height: 100dvh;
     background: var(--chat-bg);
     box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     position: relative;
@@ -44,7 +44,6 @@
   .header img { width: 32px; height: 32px; border-radius: 4px; }
   .header h2 { margin: 0; font-family: 'Poppins', sans-serif; font-size: 16px; }
   .header p { margin: 0; font-size: 12px; opacity: 0.8; }
-
   .chat-box {
     flex: 1; overflow-y: auto; padding: 20px;
     display: flex; flex-direction: column; gap: 16px;
@@ -54,23 +53,20 @@
   .msg.user { background: var(--user-msg); color: var(--primary); align-self: flex-end; border-bottom-right-radius: 4px; }
   .msg a { color: #9FD3FF; }
   .msg.user a { color: var(--accent); }
-
   .divider {
     align-self: center; font-size: 11px; color: #9099A8; text-transform: uppercase;
     letter-spacing: .04em; margin: 4px 0; text-align: center;
   }
-
   .chip-row { display: flex; flex-wrap: wrap; gap: 8px; align-self: flex-start; max-width: 95%; }
   .chip {
     border: 1px solid var(--primary); color: var(--primary); background: white;
     border-radius: 16px; padding: 6px 12px; font-size: 12.5px; cursor: pointer;
   }
   .chip:active { background: var(--user-msg); }
-
   .input-area {
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: white; border-top: 1px solid #eee;
     display: flex; gap: 10px; align-items: center;
-    flex-shrink: 0; /* never let a long chat squeeze the input bar off-screen */
+    flex-shrink: 0;
   }
   .file-upload {
     cursor: pointer; padding: 10px; color: var(--primary);
@@ -78,15 +74,13 @@
   }
   .file-upload input { display: none; }
   .file-upload svg { width: 20px; height: 20px; }
-
   input[type="text"] {
     flex: 1; min-width: 0; padding: 12px 16px; border: 1px solid #ddd;
     border-radius: 24px; font-family: 'Inter', sans-serif;
-    font-size: 16px; /* must stay >=16px — anything smaller makes iOS Safari auto-zoom the whole page on focus */
+    font-size: 16px;
     outline: none;
   }
   input[type="text"]:focus { border-color: var(--primary); }
-
   .send-btn {
     background: var(--primary); color: white; border: none;
     padding: 12px 18px; border-radius: 24px; font-weight: 600;
@@ -94,7 +88,6 @@
   }
   .typing { font-size: 12px; color: #888; padding: 0 20px; margin-top: -8px; display: none; flex-shrink: 0; }
   .disclosure { font-size: 10.5px; color: #9099A8; text-align: center; padding: 4px 16px; flex-shrink: 0; }
-
   .start-gate {
     position: absolute; inset: 0; background: var(--bg);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -110,7 +103,6 @@
 </style>
 </head>
 <body>
-
 <div class="chat-container">
   <div class="header">
     <img src="../1000550390.png" alt="VastMyWealth" onerror="this.style.display='none'">
@@ -119,17 +111,14 @@
       <p>Secure 24x7 Loan Support · Marketplace — lenders decide final approval</p>
     </div>
   </div>
-
   <div class="chat-box" id="chatBox"></div>
   <div class="typing" id="typingIndicator">Specialist is typing...</div>
-
   <div class="start-gate" id="startGate">
     <h3>Apply for a loan, right here</h3>
     <p>Chat with Neha, our loan assistant, to check your options and apply — takes a couple of minutes.</p>
     <button class="start-btn" id="startChatBtn" onclick="startChat()">💬 Start Chat</button>
   </div>
   <div class="disclosure">VastMyWealth is a loan marketplace, not a lender. Final approval, amount and rate are decided by the lending partner.</div>
-
   <div class="input-area">
     <label class="file-upload" id="fileUploadLabel">
       <input type="file" id="fileInput" onchange="onFilePicked()">
@@ -139,38 +128,27 @@
     <button class="send-btn" onclick="sendMessage()">Send</button>
   </div>
 </div>
-
 <script>
-  // Point this at the SAME deployed Web App URL used by the rest of the
-  // portal (the one ending in /exec) — this chat lives in the same Apps
-  // Script project as apply.html's backend, it just has its own action
-  // names (aiChatMessage / aiChatUploadDoc / aiChatFinalizeDocs).
   const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
-
   let chatHistory = [];
-  // Persisted across a reload so a customer who navigates away mid-chat
-  // doesn't lose their leadId / collected profile.
   let session = (function () {
     try { return JSON.parse(sessionStorage.getItem('vmw_aichat_session') || '{}'); } catch (e) { return {}; }
   })();
   let pendingDocType = null;
-
   const DOC_TYPES = ["PAN Card", "Aadhaar", "Salary Slip", "Bank Statement", "GST Return", "Udyam Certificate", "Selfie", "Other"];
-
+  
   function saveSession() {
     try { sessionStorage.setItem('vmw_aichat_session', JSON.stringify(session || {})); } catch (e) { /* ignore */ }
   }
-
   function appendMessage(text, sender) {
     const box = document.getElementById("chatBox");
     const msgDiv = document.createElement("div");
     msgDiv.className = "msg " + sender;
-    msgDiv.innerText = text; // innerText, not innerHTML — never render raw model output as HTML
+    msgDiv.innerText = text;
     box.appendChild(msgDiv);
     box.scrollTop = box.scrollHeight;
     if (sender === 'user' || sender === 'bot') chatHistory.push({ role: sender, text: text });
   }
-
   function appendDivider(text) {
     const box = document.getElementById("chatBox");
     const div = document.createElement("div");
@@ -179,7 +157,6 @@
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
   }
-
   function appendLink(label, url) {
     const box = document.getElementById("chatBox");
     const msgDiv = document.createElement("div");
@@ -190,7 +167,6 @@
     box.appendChild(msgDiv);
     box.scrollTop = box.scrollHeight;
   }
-
   function appendDocChips() {
     const box = document.getElementById("chatBox");
     const row = document.createElement("div");
@@ -212,23 +188,19 @@
     box.scrollTop = box.scrollHeight;
   }
 
-  // The welcome line is never hardcoded into the page — it's only sent
-  // once the customer actually taps "Start Chat", and it's Neha's REAL
-  // first reply from Gemini (so it always matches the live system prompt)
-  // rather than a static string that could drift out of sync over time.
   async function startChat() {
     document.getElementById("startGate").style.display = "none";
     document.getElementById("typingIndicator").style.display = "block";
     try {
       const response = await fetch(APPS_SCRIPT_URL, {
         method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        redirect: "follow",
         body: JSON.stringify({ action: "aiChatMessage", message: "Hi, I'd like to apply for a loan.", history: [], session: {} })
       });
       const data = await response.json();
       document.getElementById("typingIndicator").style.display = "none";
       if (data.session) { session = data.session; saveSession(); }
-      // Not rendered as a user bubble (the customer didn't type it), but kept
-      // in history so Gemini has context for the next turn.
       chatHistory.push({ role: "user", text: "Hi, I'd like to apply for a loan." });
       appendMessage(data.reply, "bot");
     } catch (e) {
@@ -242,31 +214,26 @@
     const input = document.getElementById("userInput");
     const text = input.value.trim();
     if (!text) return;
-
     appendMessage(text, "user");
     input.value = "";
     document.getElementById("typingIndicator").style.display = "block";
-
     const priorPhase = session.phase;
-
     try {
       const response = await fetch(APPS_SCRIPT_URL, {
         method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        redirect: "follow",
         body: JSON.stringify({ action: "aiChatMessage", message: text, history: chatHistory, session: session })
       });
       const data = await response.json();
       document.getElementById("typingIndicator").style.display = "none";
-
       if (data.session) { session = data.session; saveSession(); }
-
       if (priorPhase !== 'specialist' && session.phase === 'specialist') {
         const name = (session.product === 'LAP' || session.product === 'HL') ? 'Kavita' : 'Vikram';
         appendDivider("You're now connected with " + name + ", our " + ((session.product === 'LAP' || session.product === 'HL') ? 'property loan' : 'business/personal loan') + " specialist");
         document.getElementById("headerName").innerText = name + " · VastMyWealth";
       }
-
       appendMessage(data.reply, "bot");
-
       if (priorPhase !== 'docs' && session.phase === 'docs') {
         appendDocChips();
         if (data.loanBotLink) appendLink("🔔 Connect for reminders on Telegram", data.loanBotLink);
@@ -286,16 +253,16 @@
     }
     const docLabel = pendingDocType || "Document";
     pendingDocType = null;
-
     appendMessage(`Uploading ${docLabel}: ${file.name}...`, "user");
     document.getElementById("typingIndicator").style.display = "block";
-
     const reader = new FileReader();
     reader.onload = async function () {
       const base64 = reader.result.split(',')[1];
       try {
         const response = await fetch(APPS_SCRIPT_URL, {
           method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          redirect: "follow",
           body: JSON.stringify({
             action: "aiChatUploadDoc", leadId: session.leadId, product: session.product,
             mobile: (session.profile || {}).mobile || "", fileKey: docLabel,
@@ -324,6 +291,8 @@
     try {
       await fetch(APPS_SCRIPT_URL, {
         method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        redirect: "follow",
         body: JSON.stringify({ action: "aiChatFinalizeDocs", leadId: session.leadId, product: session.product })
       });
       document.getElementById("typingIndicator").style.display = "none";
@@ -334,8 +303,6 @@
     }
   }
 
-  // Resume mid-conversation on reload, same idea as apply.html's own resume-by-leadId
-  // — a returning customer skips the start gate entirely, straight back into their chat.
   if (session.leadId && session.phase) {
     document.getElementById("startGate").style.display = "none";
     appendDivider("Welcome back — continuing your application");
