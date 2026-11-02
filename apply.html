@@ -351,12 +351,13 @@
   }
   renderPartnerBanner();
 
-  // One house/RM number gets the full loan-type menu (incl. Home Loan & Loan Against
-  // Property) on their personal link; every other partner/banker link keeps HL/LAP hidden.
-  var FULL_MENU_MOBILE = '9594592020';
-  function isFullMenuMobile(mob) { return String(mob || '').replace(/\D/g, '').slice(-10) === FULL_MENU_MOBILE; }
+  // Home Loan & Loan Against Property are offered to DIRECT customers (no referrer)
+  // and on the house partner code's link (FULL_MENU_REF, set in config.js). Every
+  // other partner/banker code keeps HL/LAP hidden. Decided from the code alone —
+  // no backend lookup, so it is correct the moment the page opens.
+  var FULL_MENU_REF = String((window.VMW_CONFIG || {}).FULL_MENU_REF || 'P220576').trim().toUpperCase();
   function applyLoanTypeMenu() {
-    var full = REF_LINK && isFullMenuMobile(PMOB);
+    var full = !REF || String(REF).trim().toUpperCase() === FULL_MENU_REF;
     document.querySelectorAll('#loanToggle button[data-val="HL"], #loanToggle button[data-val="LAP"]').forEach(function (b) { b.style.display = full ? '' : 'none'; });
     var sel = $('a_loanType');
     if (sel) {
@@ -381,7 +382,6 @@
       localStorage.setItem('vmw_partner_pname', PNAME);
       localStorage.setItem('vmw_partner_pmob', PMOB);
       renderPartnerBanner();
-      applyLoanTypeMenu();
     }).catch(function () { /* keep whatever is already shown */ });
   }
   var VIEWS = ['checkingState', 'trackCard', 'formWrap', 'loadingState', 'resultsWrap', 'docWrap', 'doneWrap', 'blockedWrap', 'adWrap', 'adResultsWrap'];
@@ -866,7 +866,7 @@ $('adProceed').addEventListener('click', function () {
 });
   /* ---------- Customer Loan Bot (Telegram) ---------- */
   // Same bot username you put in CUSTOMER_BOT_USERNAME in CustomerNotify.gs.
-  var CUSTOMER_BOT_USERNAME = 'vmw_customer_bot';
+  var CUSTOMER_BOT_USERNAME = 'PASTE_CUSTOMER_BOT_USERNAME_HERE';
 
   function openLoanBot() {
     if (!S.leadId) { return; }
@@ -931,7 +931,7 @@ else { showForm(); }
   })();
 })();
 </script>
-   <!-- VastMyWealth 24x7 Loan Support Floating Widget -->
+ <!-- VastMyWealth 24x7 Loan Support Floating Widget -->
 <div id="vmw-chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 999999;">
   <a href="https://app.vastmywealth.com/chat/" target="_blank" rel="noopener" style="
     display: flex; align-items: center; gap: 10px;
@@ -946,17 +946,3 @@ else { showForm(); }
 </div>
 </body>
 </html>
-<div style="font-size: 11px; text-align: center; padding: 20px; color: #555; line-height: 1.5; border-top: 1px solid #eee; margin-top: 40px;">
-  <b>Vast Wealth Advisors Pvt Ltd</b> | 4/794 A, Kochi, Kerala - 682002<br>
-  Email: vp@mail.vastmywealth.com | Ph: 9594592020<br><br>
-  
-  <b>Disclosures:</b> We are a lead generation platform connecting users with RBI-registered lenders. <br>
-  <b>Repayment:</b> 12–60 months. <b>Max APR:</b> 32%. <br>
-  <i>Example:</i> ₹1,00,000 loan for 12 months at 15% interest = ₹1,15,000 total repayment. Rates depend on the final lender.<br><br>
-  
-  <a href="/privacy-policy.html" style="color: #0056b3; text-decoration: none;">Privacy Policy</a> &nbsp;|&nbsp; 
-  <a href="/terms.html" style="color: #0056b3; text-decoration: none;">Terms & Conditions</a> &nbsp;|&nbsp; 
-  <a href="/refund-policy.html" style="color: #0056b3; text-decoration: none;">Refund Policy</a> &nbsp;|&nbsp; 
-  <a href="mailto:vp@mail.vastmywealth.com" style="color: #0056b3; text-decoration: none;">Contact Us</a>
-</div>
-
