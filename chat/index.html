@@ -230,12 +230,39 @@
       };
       row.appendChild(chip);
     });
-    const finish = document.createElement("button");
-    finish.type = "button"; finish.className = "chip"; finish.innerText = "✅ Finished uploading";
-    finish.onclick = finalizeDocs;
-    row.appendChild(finish);
+    document.getElementById("chatBox").appendChild(row);
+    renderDocActions();
+  }
+
+  // "I'll do it later" is always there. "Finished uploading" only appears once
+  // at least one file has really gone through — pressing it with nothing
+  // uploaded used to mark the lead as "documents submitted" and stop reminders.
+  function renderDocActions() {
+    const old = document.getElementById("docActions");
+    if (old) old.remove();
+    const row = document.createElement("div");
+    row.id = "docActions";
+    row.className = "chip-row";
+    if ((session.docsUploaded || 0) > 0) {
+      const finish = document.createElement("button");
+      finish.type = "button"; finish.className = "chip opt"; finish.innerText = "✅ Finished uploading";
+      finish.onclick = finalizeDocs;
+      row.appendChild(finish);
+    }
+    const later = document.createElement("button");
+    later.type = "button"; later.className = "chip opt"; later.innerText = "⏰ I'll do it later";
+    later.onclick = docsLater;
+    row.appendChild(later);
     document.getElementById("chatBox").appendChild(row);
     scrollDown();
+  }
+  function removeDocActions() {
+    const old = document.getElementById("docActions");
+    if (old) old.remove();
+  }
+  function customerFirstName() {
+    const n = String(((session.profile || {}).name) || ((session.answers || {}).name) || "").trim().split(/\s+/)[0] || "";
+    return n ? n.charAt(0).toUpperCase() + n.slice(1).toLowerCase() : "";
   }
 
   // ---------- Welcome ----------
@@ -330,7 +357,10 @@
         const data = await response.json();
         showTyping(false);
         if (data.success) {
-          appendMessage(docLabel + " uploaded. Tap another document, or 'Finished uploading' once you're done.", "bot");
+          session.docsUploaded = (session.docsUploaded || 0) + 1;
+          saveSession();
+          appendMessage(docLabel + " received ✅ Tap another document, or 'Finished uploading' once you're done.", "bot");
+          renderDocActions();
         } else {
           appendMessage("That upload didn't go through — please try that document again.", "bot");
         }
@@ -343,8 +373,45 @@
     document.getElementById("fileInput").value = "";
   }
 
+  let docsBusy = false;
+
+  // "I'll do it later": nothing is submitted, the lead stays Pending (so
+  // reminders keep going), and this is the moment to offer Telegram.
+  async function docsLater() {
+    if (!session.leadId || docsBusy) return;
+    docsBusy = true;
+    showTyping(true);
+    const who = customerFirstName();
+    try {
+      const response = await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        redirect: "follow",
+        body: JSON.stringify({ action: "aiChatFinalizeDocs", later: true, leadId: session.leadId, product: session.product, name: who })
+      });
+      const data = await response.json().catch(function () { return {}; });
+      showTyping(false);
+      removeDocActions();
+      appendMessage("No problem" + (who ? ", " + who : "") + "! Your application is saved. Upload your documents whenever you're ready — use the link we emailed you, or come back to this chat. We'll send you a gentle reminder so it doesn't slip.", "bot");
+      if (data.loanBotLink) {
+        await sleep(1200);
+        appendCta(
+          "🔔 Get reminders on Telegram",
+          "Connect so we can remind you about pending documents and let you know the moment anything is received.",
+          "Connect on Telegram",
+          data.loanBotLink
+        );
+      }
+    } catch (e) {
+      showTyping(false);
+      appendMessage("I couldn't note that just now, but don't worry — your application is saved and you can upload any time.", "bot");
+    }
+    docsBusy = false;
+  }
+
   async function finalizeDocs() {
-    if (!session.leadId) return;
+    if (!session.leadId || docsBusy) return;
+    docsBusy = true;
     showTyping(true);
     try {
       const response = await fetch(APPS_SCRIPT_URL, {
@@ -355,7 +422,18 @@
       });
       const data = await response.json().catch(function () { return {}; });
       showTyping(false);
-      appendMessage("Thank you! Our team will review your documents and get in touch with you shortly.", "bot");
+      if (data.noDocs) {
+        // Server found no files — don't mark anything as submitted.
+        session.docsUploaded = 0;
+        saveSession();
+        appendMessage("I can't see any uploaded documents yet. Please upload at least one, or tap \"I'll do it later\".", "bot");
+        renderDocActions();
+        docsBusy = false;
+        return;
+      }
+      removeDocActions();
+      const who = customerFirstName();
+      appendMessage("Thank you" + (who ? ", " + who : "") + "! Our team will review your documents and get in touch with you shortly.", "bot");
       const botLink = data.loanBotLink || session.loanBotLink;
       if (botLink) {
         // Only now — after the customer has actually finished uploading —
@@ -373,6 +451,7 @@
       showTyping(false);
       appendMessage("Couldn't confirm that just now, but no need to re-upload — our team can see what's already in.", "bot");
     }
+    docsBusy = false;
   }
 
   // ---------- Page load ----------
