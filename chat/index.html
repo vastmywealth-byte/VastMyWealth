@@ -133,19 +133,17 @@
   const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
   const DOC_TYPES = ["PAN Card", "Aadhaar", "Salary Slip", "Bank Statement", "GST Return", "Udyam Certificate", "Selfie", "Other"];
   const WELCOME_TEXT = "Welcome to VastMyWealth! 👋\n\nPlease let us know the type of loan you are looking for, and we'll connect you to the right advisor.";
-  // Shown instantly. Home Loan / Loan Against Property are only offered on the
-  // house number's partner link — the server decides that (refreshMenu below)
-  // and enforces it again whatever the customer types.
-  const LOAN_OPTIONS = [
-    { label: "Business Loan", value: "BL" }, { label: "Personal Loan", value: "PL" },
-    { label: "Vehicle Loan", value: "VL" }, { label: "Education Loan", value: "EL" }
-  ];
+  // Home Loan / Loan Against Property: offered to direct customers (no referrer)
+  // and on the house partner code's link only — same rule as apply.html. Keep
+  // this code in step with FULL_MENU_REF in config.js and AIChat.gs (the server
+  // enforces it again whatever the customer types).
+  const FULL_MENU_REF = "P220576";
   const REDIRECT_FORMS = { VL: "Vehicle Loan", EL: "Education Loan" };
 
   // Partner / banker referral code — same rules as apply.html: a ?ref= in THIS
   // link always wins, otherwise the one saved from an earlier visit (the chat
   // and apply.html share app.vastmywealth.com, so they share localStorage).
-  const REF_INFO = (function () {
+  const REF = (function () {
     try {
       const fromLink = (new URLSearchParams(location.search).get('ref') || '').trim();
       const saved = (localStorage.getItem('vmw_partner_ref') || '').trim();
@@ -155,13 +153,17 @@
           localStorage.removeItem('vmw_partner_pmob');
         }
         localStorage.setItem('vmw_partner_ref', fromLink);
-        return { ref: fromLink, fromLink: true };
+        return fromLink;
       }
-      return { ref: saved, fromLink: false };
-    } catch (e) { return { ref: '', fromLink: false }; }
+      return saved;
+    } catch (e) { return ''; }
   })();
-  const REF = REF_INFO.ref;                 // credited to the partner/banker
-  const REF_FROM_LINK = REF_INFO.fromLink;  // only a ref in THIS link can unlock the full loan menu
+  const FULL_MENU = !REF || REF.toUpperCase() === FULL_MENU_REF.toUpperCase();
+
+  // Shown instantly, no server call needed.
+  const LOAN_OPTIONS = [{ label: "Business Loan", value: "BL" }, { label: "Personal Loan", value: "PL" }]
+    .concat(FULL_MENU ? [{ label: "Loan Against Property", value: "LAP" }, { label: "Home Loan", value: "HL" }] : [])
+    .concat([{ label: "Vehicle Loan", value: "VL" }, { label: "Education Loan", value: "EL" }]);
 
   let session = (function () {
     try { return JSON.parse(sessionStorage.getItem('vmw_aichat_session') || '{}'); } catch (e) { return {}; }
@@ -294,26 +296,6 @@
   function showWelcome() {
     appendMessage(WELCOME_TEXT, "bot");
     renderOptions(LOAN_OPTIONS);
-    if (REF && REF_FROM_LINK) refreshMenu();
-  }
-
-  // Ask the server which loan buttons this link may show (it adds Home Loan and
-  // Loan Against Property for the house number's link only). Quietly keeps the
-  // default buttons if anything goes wrong.
-  async function refreshMenu() {
-    try {
-      const response = await fetch(APPS_SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        redirect: "follow",
-        body: JSON.stringify({ action: "aiChatMessage", choice: "MENU", ref: REF, refFromLink: REF_FROM_LINK })
-      });
-      const data = await response.json();
-      // Only if the customer is still on the welcome screen.
-      if (!session.step && !busy && data.options && data.options.length && data.options.length !== lastOptions.length) {
-        renderOptions(data.options);
-      }
-    } catch (e) { /* keep the default buttons */ }
   }
 
   // ---------- Sending ----------
@@ -341,7 +323,7 @@
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         redirect: "follow",
-        body: JSON.stringify({ action: "aiChatMessage", message: message || "", choice: choice || "", resume: !!opts.resume, ref: REF, refFromLink: REF_FROM_LINK, session: session })
+        body: JSON.stringify({ action: "aiChatMessage", message: message || "", choice: choice || "", resume: !!opts.resume, ref: REF, session: session })
       });
       const data = await response.json();
       if (data.session) { session = data.session; saveSession(); }
