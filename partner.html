@@ -13,6 +13,12 @@
 <link rel="stylesheet" href="style.css">
 <style>
   .view{display:none}.view.active{display:block}
+  /* Promotional pictures: joinpartner.png (sign-in / register screens) and
+     biztoolsell.png (Biz Tool card). Both sit next to this file. If a picture
+     is missing the page quietly falls back (join picture hidden; Biz Tool text kept). */
+  .promo-card { padding:0; overflow:hidden; margin-bottom:14px; }
+  .promo-img { width:100%; height:auto; display:block; }
+  .promo-card.tap { cursor:pointer; }
   .biztool-hero { padding:0; overflow:hidden; }
   .biztool-hero-img { width:100%; aspect-ratio:3/1; object-fit:cover; display:block; background:linear-gradient(135deg,#1a2440,#0B1A38); }
   .biztool-hero-body { padding:18px 20px; }
@@ -50,6 +56,10 @@
   </div></header>
   <main class="wrap narrow">
     <div id="loginView" class="view active">
+      <div class="card promo-card tap" id="joinPromoLogin">
+        <img src="joinpartner.png" alt="Join VastMyWealth as a partner — earn on every loan you refer. Tap to register." class="promo-img"
+             onerror="document.getElementById('joinPromoLogin').style.display='none'">
+      </div>
       <div class="hero"><h1>DSA / Partner login</h1><p>Log in to submit and track applications.</p></div>
       <div class="card">
         <form id="loginForm" novalidate>
@@ -76,6 +86,10 @@
       </div>
     </div>
     <div id="registerView" class="view">
+      <div class="card promo-card" id="joinPromoRegister">
+        <img src="joinpartner.png" alt="Join VastMyWealth as a partner — earn on every loan you refer." class="promo-img"
+             onerror="document.getElementById('joinPromoRegister').style.display='none'">
+      </div>
       <div class="hero"><h1>Register as a partner</h1><p>Create your partner account to get your personal application link.</p></div>
       <div class="card">
         <form id="regForm" novalidate>
@@ -138,9 +152,13 @@
     </div>
     <!-- BUSINESS TOOL -->
     <div id="tabBizTool" class="tab-pane">
-      <div class="card biztool-hero">
-        <img src="biz-tool-banner.jpg" alt="" class="biztool-hero-img" onerror="this.style.display='none'">
-        <div class="biztool-hero-body">
+      <!-- Biz Tool promotion: a picture (biztoolsell.png). The earlier text version
+           below stays as a fallback and is only shown if the picture can't load. -->
+      <div class="card biztool-hero" id="bizPromoCard">
+        <img src="biztoolsell.png" alt="Grow your business with Biz Tool — exclusive leads for 7 days, earn up to 85% commission, free Sales Bot, 6 leads a month or 22 a quarter, ready-made creatives."
+             class="promo-img" id="bizPromoImg"
+             onerror="this.style.display='none';document.getElementById('bizPromoText').style.display='block'">
+        <div class="biztool-hero-body" id="bizPromoText" style="display:none">
           <div class="biztool-hero-title">Grow your business with Biz Tool</div>
           <p class="biztool-hero-sub">Subscribe and get leads exclusively yours for 7 days, earn up to <b>85% commission</b>, and get your own <b>free personal Sales Bot</b>.</p>
           <ul class="biztool-feature-list">
@@ -253,6 +271,7 @@
   }
 
   $('gotoRegister').onclick = function () { showAuth('registerView'); };
+  $('joinPromoLogin').addEventListener('click', function () { showAuth('registerView'); });   // tap the picture -> register
   $('gotoLogin').onclick = function () { showAuth('loginView'); };
   $('gotoForgot').onclick = function () { showAuth('forgotView'); };
   $('fpBack').onclick = function () { showAuth('loginView'); };
@@ -605,7 +624,7 @@ $('sendBankerBtn').addEventListener('click', function () {
     showAuth('loginView');
   }
 })();
-</script
+</script>
   <!--Start of Tawk.to Script-->
 <script type="text/javascript">
 var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
