@@ -497,7 +497,7 @@
       udyam: SE ? val('f_udyam') : '', bankAccountType: SE ? val('f_bankAccountType') : '',
       propertyAddress: secured ? val('f_propertyAddress') : '', propertyPincode: secured ? VMW.digits(val('f_propertyPincode')) : '',
       marketValue: secured ? num('f_marketValue') : '',
-      consentGiven: true, partnerCode: (S.loanType === 'HL' || S.loanType === 'LAP') ? '' : REF, pan: S.pan || ''
+      consentGiven: true, partnerCode: REF, pan: S.pan || ''
     };
   }
 
