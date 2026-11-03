@@ -131,7 +131,6 @@
 </div>
 <script>
   const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
-  const DOC_TYPES = ["PAN Card", "Aadhaar", "Salary Slip", "Bank Statement", "GST Return", "Udyam Certificate", "Selfie", "Other"];
   const WELCOME_TEXT = "Welcome to VastMyWealth! 👋\n\nPlease let us know the type of loan you are looking for, and we'll connect you to the right advisor.";
   // Home Loan / Loan Against Property: offered to direct customers (no referrer)
   // and on the house partner code's link only — same rule as apply.html. Keep
@@ -174,8 +173,28 @@
   let busy = false;
   let currentPersona = "";
 
+  // A small record of the submitted application lives in localStorage, so a
+  // customer who closes the tab and comes back tomorrow is still recognised.
+  // (sessionStorage alone is wiped when the tab closes.)
+  const LEAD_KEY = 'vmw_aichat_lead';
+  function readLeadRecord() {
+    try { return JSON.parse(localStorage.getItem(LEAD_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function writeLeadRecord() {
+    if (!session || !session.leadId) return;
+    try {
+      const prev = readLeadRecord() || {};
+      localStorage.setItem(LEAD_KEY, JSON.stringify({
+        leadId: session.leadId, product: session.product,
+        name: customerFirstName(), docTypes: session.docTypes || null,
+        docsDone: !!session.docsDone || (prev.leadId === session.leadId && !!prev.docsDone),
+        ts: prev.leadId === session.leadId && prev.ts ? prev.ts : Date.now()
+      }));
+    } catch (e) { /* ignore */ }
+  }
   function saveSession() {
     try { sessionStorage.setItem('vmw_aichat_session', JSON.stringify(session || {})); } catch (e) { /* ignore */ }
+    writeLeadRecord();
   }
   function clearSession() {
     session = {};
@@ -245,10 +264,24 @@
   }
 
   // ---------- Document chips ----------
+  // Cards depend on the applicant: business people see GST / current-account
+  // statement, salaried people see salary slips / residence proof. The server
+  // sends the list (session.docTypes); this is only the fallback.
+  function docTypesForSession() {
+    if (session.docTypes && session.docTypes.length) return session.docTypes;
+    const a = session.answers || {};
+    const business = session.product === 'BL' || a.employmentType === 'Self-Employed';
+    const list = business
+      ? ["PAN Card", "Aadhaar", "Selfie", "GST Certificate", "Bank Statement"]
+      : ["PAN Card", "Aadhaar", "Selfie", "Salary Slips", "Bank Statement", "Residence Proof"];
+    if (session.product === 'LAP' || session.product === 'HL') list.push("Property Papers");
+    list.push("Other");
+    return list;
+  }
   function appendDocChips() {
     const row = document.createElement("div");
     row.className = "chip-row";
-    DOC_TYPES.forEach(function (label) {
+    docTypesForSession().forEach(function (label) {
       const chip = document.createElement("button");
       chip.type = "button"; chip.className = "chip"; chip.innerText = label;
       chip.onclick = function () {
@@ -435,7 +468,7 @@
         await sleep(1200);
         appendCta(
           "🔔 Get reminders on Telegram",
-          "Connect so we can remind you about pending documents and let you know the moment anything is received.",
+          "Connect so we can confirm each document we receive and remind you if anything is still pending.",
           "Connect on Telegram",
           data.loanBotLink
         );
@@ -470,6 +503,8 @@
         return;
       }
       removeDocActions();
+      session.docsDone = true;
+      saveSession();
       const who = customerFirstName();
       appendMessage("Thank you" + (who ? ", " + who : "") + "! Our team will review your documents and get in touch with you shortly.", "bot");
       const botLink = data.loanBotLink || session.loanBotLink;
@@ -480,7 +515,7 @@
         await sleep(1200);
         appendCta(
           "🔔 Get reminders on Telegram",
-          "Connect so we can notify you the moment a document is received, or if anything is still pending — no need to keep checking back here.",
+          "Connect so we can confirm each document we receive and remind you if anything is still pending — no need to keep checking back here.",
           "Connect on Telegram",
           botLink
         );
@@ -493,11 +528,58 @@
   }
 
   // ---------- Page load ----------
+  // Customer is back after leaving without finishing: tell them plainly what
+  // is missing and give a one-tap magic link to the upload page.
+  async function guidedReturn() {
+    const who = customerFirstName();
+    const hi = who ? who + ", " : "";
+    setPersona((session.product === 'LAP' || session.product === 'HL') ? 'Kavita' : 'Vikram');
+    appendDivider("Welcome back");
+
+    let count = -1, link = "";
+    try {
+      showTyping(true);
+      const response = await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        redirect: "follow",
+        body: JSON.stringify({ action: "aiChatFinalizeDocs", status: true, leadId: session.leadId, product: session.product })
+      });
+      const data = await response.json().catch(function () { return {}; });
+      if (data && data.success) { count = (typeof data.docsCount === "number") ? data.docsCount : -1; link = data.magicLink || ""; }
+    } catch (e) { /* fall through to the generic nudge */ }
+    showTyping(false);
+    if (!link) {
+      link = "../apply.html?leadId=" + encodeURIComponent(session.leadId) + "&product=" + encodeURIComponent(session.product || "");
+      if (REF) link += "&ref=" + encodeURIComponent(REF);
+    }
+
+    if (count === 0 || count === -1) {
+      appendMessage("Good to see you again, " + hi.replace(/, $/, "") + "! 👋 You haven't uploaded your documents yet, and without them the lenders can't start reviewing your application.\n\nPlease upload them now — you can do it right here with the cards below, or open your application with the button.", "bot");
+    } else {
+      appendMessage("Good to see you again, " + hi.replace(/, $/, "") + "! 👋 We have some of your documents, but your application isn't marked complete yet.\n\nIf anything is still left, upload it now — here with the cards below, or open your application with the button.", "bot");
+    }
+    appendCta(
+      "📎 Upload your documents",
+      "This secure link opens your application straight at the upload step — no need to fill anything again.",
+      "Open my application",
+      link
+    );
+    appendDocChips();
+  }
+
   (function init() {
+    // Came back in a new tab/day: restore from the saved application record.
+    if (!session.leadId) {
+      const rec = readLeadRecord();
+      if (rec && rec.leadId && !rec.docsDone && (Date.now() - (rec.ts || 0)) < 30 * 24 * 3600 * 1000) {
+        session = { leadId: rec.leadId, product: rec.product, phase: 'docs', step: 'done',
+                    docTypes: rec.docTypes || null, answers: { name: rec.name || "" }, profile: { name: rec.name || "" } };
+        saveSession();
+      }
+    }
     if (session.leadId && session.phase === 'docs') {
-      setPersona((session.product === 'LAP' || session.product === 'HL') ? 'Kavita' : 'Vikram');
-      appendDivider("Welcome back — continuing your application");
-      appendDocChips();
+      guidedReturn();
     } else if (session.step && session.phase && session.phase !== 'closed') {
       appendDivider("Welcome back — continuing your application");
       sendPayload("", "", { resume: true });
