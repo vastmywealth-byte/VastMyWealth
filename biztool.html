@@ -191,6 +191,8 @@
     { filename: 'lap.png', caption: 'Loan Against Property — unlock the value you already own.' },
     { filename: 'vl.png', caption: 'Vehicle Loan — drive home today, pay comfortably.' },
     { filename: 'el.png', caption: 'Education Loan — invest in your future, stress-free.' },
+    { filename: 'joinpartner.png', caption: 'Become a VastMyWealth partner — earn on every loan you refer.', link: 'https://app.vastmywealth.com/partner.html', linkLabel: 'Join here' },
+    { filename: 'biztoolsell.png', caption: 'Grow your business with Biz Tool — exclusive leads, up to 85% commission, free Sales Bot.', link: 'https://app.vastmywealth.com/partner.html', linkLabel: 'Subscribe here' },
     { filename: 'partner.png', caption: 'Apply with VastMyWealth — trusted by thousands.' },
     { filename: 'festival-offer.png', caption: 'Festive offer — special rates, limited time.' }
   ];
@@ -203,9 +205,9 @@
 
   async function triggerShare(index, platform) {
     var b = BANNERS[index];
-            var referralLink = VMW.refLink(HOLDER.code);
+    var referralLink = b.link || VMW.refLink(HOLDER.code);
     var imgSrc = b.filename ? (CREATIVES_BASE_URL + b.filename) : '';
-    var fullMessage = b.caption + '\n\nApply here: ' + referralLink;
+    var fullMessage = b.caption + '\n\n' + (b.linkLabel || 'Apply here') + ': ' + referralLink;
 
     function downloadAndCopy(customMsg) {
       if (!imgSrc) return;
