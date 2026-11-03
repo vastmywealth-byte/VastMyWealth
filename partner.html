@@ -212,7 +212,7 @@
   var $ = VMW.$, esc = VMW.esc, C = VMW_CONFIG;
   var CODE_KEY = 'vmw_partner_code', NAME_KEY = 'vmw_partner_name', MOBILE_KEY = 'vmw_partner_mobile';
   
-  // Capture ?ref= from URL on load and cache it so partner attribution is never lost
+  // Capture ?ref= from URL on load and cache it
   (function () {
     try {
       var urlParams = new URLSearchParams(window.location.search);
@@ -334,7 +334,6 @@
     var reader = new FileReader();
     reader.onerror = function () { VMW.showMsg(box, 'Could not read the cheque file. Please choose it again.', 'error'); };
     reader.onload = function () {
-      // Retrieve stored partner reference code if registered via someone else's link
       var storedRef = sessionStorage.getItem('vmw_partner_ref') || "";
       VMW.busy($('submitBtn'), 'Registering…', function () {
         return VMW.post({ 
@@ -347,7 +346,7 @@
           ifsc: ifsc, 
           pin: pin, 
           consentGiven: true,
-          partnerCode: storedRef, // Passes referrer code if applicable
+          partnerCode: storedRef, // <--- Passes referrer code here
           cancelledCheque: { name: file.name, mimeType: file.type, base64: String(reader.result).split(',')[1] } 
         }, { timeout: 90000 }).then(function (d) {
           if (d.success) {
@@ -390,7 +389,7 @@
     $('waShareBtn').href = VMW.waLink('', 'Apply for your loan with VastMyWealth here: ' + link);
     $('openBizToolBtn').href = 'biztool.html?holderType=Partner&holderCode=' + encodeURIComponent(CODE) + '&holderName=' + encodeURIComponent(pname || '');
     
-    loadBankCodes(); // Fetch all loan types & mapped banks upfront
+    loadBankCodes();
     loadBizToolSummary();
     var loginMobile = VMW.store.get(MOBILE_KEY);
     $('adminLink').classList.toggle('hidden', loginMobile !== VMW_CONFIG.ADMIN_ACCESS_MOBILE);
@@ -570,7 +569,7 @@ $('sendBankerBtn').addEventListener('click', function () {
         action: 'partnerPushLeadToPool', 
         partnerCode: CODE, 
         leadId: poolBtn.getAttribute('data-pool'), 
-        product: poolBtn.getAttribute('data-product') 
+        product: poolBtn.getAttribute('data-pool') 
       }).then(function (d) { 
         VMW.toast(d.status === 'success' ? 'Back in the pool' : (d.message || 'Failed'), d.status !== 'success'); 
         loadLeads(); 
@@ -604,7 +603,7 @@ $('sendBankerBtn').addEventListener('click', function () {
     VMW.store.remove(MOBILE_KEY);
     showAuth('loginView');
   });
-    $('copyBtn').addEventListener('click', function () { VMW.copyWithFeedback(this, REF_URL); });
+  $('copyBtn').addEventListener('click', function () { VMW.copyWithFeedback(this, REF_URL); });
   /* ---------- Session Boot Check ---------- */
   if (VMW.store.get(CODE_KEY)) {
     showDashboard();
