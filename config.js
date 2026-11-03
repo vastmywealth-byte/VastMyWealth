@@ -18,7 +18,7 @@
 
   window.VMW_CONFIG = {
     // Apps Script Web App (/exec) — the ONE backend for every page
-    BACKEND_URL: "https://vmw-portal-api.vastmywealth.workers.dev/",
+    BACKEND_URL: "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec",
 
     SITE_URL: base,
     APPLY_URL: base + "apply.html",
@@ -33,6 +33,12 @@
     // whoever owns that phone, not a security control — admin.html's own
     // password is the real gate, and this number is never shown or linked
     // anywhere else in the app.
-    ADMIN_ACCESS_MOBILE: "9594592020"
+    ADMIN_ACCESS_MOBILE: "9594592020",
+
+    // Home Loan & Loan Against Property are shown to direct customers (no
+    // referrer) and to links carrying THIS partner code. Any other partner or
+    // banker code sees Business, Personal, Vehicle and Education only.
+    // (The chat widget and AIChat.gs carry the same code — keep all three in step.)
+    FULL_MENU_REF: "P220576"
   };
 })();
