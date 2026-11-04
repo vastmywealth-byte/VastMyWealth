@@ -243,3 +243,8 @@ button{font-family:inherit;cursor:pointer}
 .pager{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px}
 .pager .pg-info{font-size:13px;color:var(--muted);text-align:center;flex:1}
 .pager .btn[disabled]{opacity:.35}
+.rc-head{cursor:pointer;align-items:center}
+.rc-caret{display:inline-block;margin-left:8px;font-size:11px;color:var(--muted);transition:transform .15s}
+.row-card.open .rc-caret{transform:rotate(180deg)}
+.rc-body{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.row-card.open .rc-body{display:block}
