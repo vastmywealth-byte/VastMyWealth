@@ -655,11 +655,14 @@
         ? '<a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="' + esc(link) + '">📤 Upload documents</a>'
         : '<a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="' + esc(link) + '">View status</a>';
     }
-    return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(r.name || '—') + '</div>' +
-      '<div class="row-meta">' + esc(r.kindLabel) + (meta.length ? ' · ' + meta.join(' · ') : '') + '</div></div>' +
-      '<div class="row-badges">' + VMW.badge(r.status) + (pending && !notElig ? VMW.docBadge('Pending') : '') + '</div></div>' +
-      (tags ? '<div class="row-tags">' + tags + '</div>' : '') +
-      '<div class="row-actions">' + main + contactButtons(r.mobile, r.name, r.loanType ? { product: r.loanType, employmentType: r.employmentType, companyType: r.companyType, companyName: r.companyName, loanAmount: r.amount } : null) + '</div></div>';
+    return '<div class="row-card"><div class="row-top rc-head"><div><div class="row-title">' + esc(r.name || '—') + '</div>' +
+  '<div class="row-meta">' + (meta.length ? meta.join(' · ') : esc(r.kindLabel)) + '</div></div>' +
+  '<div class="row-badges">' + VMW.badge(r.status) + '<span class="rc-caret">▼</span></div></div>' +
+  '<div class="rc-body">' +
+    '<div class="row-meta">' + esc(r.kindLabel) + (pending && !notElig ? ' · Documents pending' : '') + '</div>' +
+    (tags ? '<div class="row-tags">' + tags + '</div>' : '') +
+    '<div class="row-actions">' + main + contactButtons(r.mobile, r.name, r.loanType ? { product: r.loanType, employmentType: r.employmentType, companyType: r.companyType, companyName: r.companyName, loanAmount: r.amount } : null) + '</div>' +
+  '</div></div>';
   }
   function loadTrack() {
     LOADED.track = true; LOADED.trackAt = Date.now();
@@ -692,11 +695,12 @@
   var LEADS = { all: [], page: 1, per: 5 };
   function isNewLead(l) { return l.timestamp && (Date.now() - l.timestamp) < 24 * 3600 * 1000; }
   function leadCardHtml(l) {
-    return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(l.customerName) + (isNewLead(l) ? ' <span class="badge info">NEW</span>' : '') + '</div>' +
-      '<div class="row-meta">' + esc(VMW.productLabel(l.loanType)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + '</div></div>' +
-      '<button class="btn btn-primary btn-sm claim-btn" data-lead="' + esc(l.leadId) + '">Claim</button></div>' +
-      '<div class="row-tags">' + (locTags(l) || '<span class="tag">Location not provided</span>') + '</div></div>';
-  }
+  return '<div class="row-card"><div class="row-top rc-head"><div><div class="row-title">' + esc(l.customerName) + (isNewLead(l) ? ' <span class="badge info">NEW</span>' : '') + '</div>' +
+    '<div class="row-meta">' + esc(VMW.productLabel(l.loanType)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + '</div></div>' +
+    '<span class="rc-caret">▼</span></div>' +
+    '<div class="rc-body"><div class="row-tags">' + (locTags(l) || '<span class="tag">Location not provided</span>') + '</div>' +
+    '<div class="row-actions"><button class="btn btn-primary btn-sm claim-btn" data-lead="' + esc(l.leadId) + '">Claim</button></div></div></div>';
+}
   // 5 leads per page, newest first — page 1 always holds the newest leads
   function renderLeadsPage() {
     var list = $('bizLeadsList'), pager = $('leadsPager');
@@ -771,10 +775,12 @@
             '<button class="btn btn-outline btn-sm" data-detail="' + esc(c.leadId) + '" data-lt="' + esc(c.loanType) + '">📄 Details &amp; documents</button>' + contactButtons(c.customerMobile, c.customerName, { product: c.loanType, employmentType: c.employmentType, companyType: c.companyType, companyName: c.companyName, loanAmount: c.loanAmount });
         } else if (c.claimStatus === 'Disbursed') actions = '<div class="row-meta">Disbursed amount: ' + esc(VMW.inr(c.disbursedAmount)) + '</div>';
         else if (c.claimStatus === 'Rejected') actions = '<div class="row-meta">Reason: ' + esc(c.rejectionReason || '—') + '</div>';
-        return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(c.customerName) + '</div>' +
-          '<div class="row-meta">' + esc(VMW.productLabel(c.loanType)) + ' · ' + esc(VMW.inr(c.loanAmount)) + (c.customerMobile ? ' · 📱 ' + esc(c.customerMobile) : '') + '</div></div>' +
-          VMW.badge(c.claimStatus) + '</div>' + (locTags(c) ? '<div class="row-tags">' + locTags(c) + '</div>' : '') +
-          '<div class="row-actions">' + actions + '</div></div>';
+        return '<div class="row-card"><div class="row-top rc-head"><div><div class="row-title">' + esc(c.customerName) + '</div>' +
+  '<div class="row-meta">' + esc(VMW.productLabel(c.loanType)) + ' · ' + esc(VMW.inr(c.loanAmount)) + '</div></div>' +
+  '<div class="row-badges">' + VMW.badge(c.claimStatus) + '<span class="rc-caret">▼</span></div></div>' +
+  '<div class="rc-body">' + (c.customerMobile ? '<div class="row-meta">📱 ' + esc(c.customerMobile) + '</div>' : '') +
+  (locTags(c) ? '<div class="row-tags">' + locTags(c) + '</div>' : '') +
+  '<div class="row-actions">' + actions + '</div></div></div>';
       }).join('');
     }).catch(function (err) { el.innerHTML = '<div class="alert error">' + esc(VMW.errMsg(err)) + '</div>'; });
   }
@@ -835,6 +841,11 @@ s1.src='https://embed.tawk.to/6abe26e4d6b87e34414e927e/1k3rcfrt8';
 s1.charset='UTF-8';
 s1.setAttribute('crossorigin','*');
 s0.parentNode.insertBefore(s1,s0);
+  document.addEventListener('click', function (e) {
+  var h = e.target.closest('.rc-head');
+  if (!h || e.target.closest('a,button')) return;
+  h.parentNode.classList.toggle('open');
+});
 })();
 </script>
 <!--End of Tawk.to Script-->
