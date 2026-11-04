@@ -230,13 +230,14 @@
   }
   // A proper card + button for the Telegram connect step, not a bare
   // inline link sitting inside a chat bubble.
-  function appendCta(title, sub, label, url) {
+  function appendCta(title, sub, label, url, sameTab) {
     const card = document.createElement("div");
     card.className = "cta-card";
     const t = document.createElement("div"); t.className = "cta-title"; t.innerText = title;
     const s = document.createElement("div"); s.className = "cta-sub"; s.innerText = sub;
     const a = document.createElement("a");
-    a.className = "cta-btn"; a.href = url; a.target = "_blank"; a.rel = "noopener"; a.innerText = label;
+    a.className = a.className = "cta-btn"; a.href = url; a.innerText = label;
+if (!sameTab) { a.target = "_blank"; a.rel = "noopener"; }
     card.appendChild(t); card.appendChild(s); card.appendChild(a);
     document.getElementById("chatBox").appendChild(card);
     scrollDown();
