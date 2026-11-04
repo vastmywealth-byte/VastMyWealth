@@ -426,10 +426,15 @@
       contact = '<a class="btn btn-ghost btn-sm" href="tel:' + m + '">📞 Call</a>' +
         '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(VMW.docChecklistWaLink(m, { name: l.customerName, companyName: l.companyName, product: l.product, employmentType: l.employmentType, companyType: l.companyType, loanAmount: l.loanAmount })) + '">💬 Ask for documents</a>';
     }
-    return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(name) + '</div>' +
-      '<div class="row-meta">' + esc(VMW.productLabel(l.product)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + (m ? ' · 📱 ' + esc(m) : '') + '</div></div>' +
-      '<div class="row-badges">' + VMW.badge(l.status) + (pending && !notElig ? VMW.docBadge('Pending') : '') + '</div></div>' +
-      (tags ? '<div class="row-tags">' + tags + '</div>' : '') + '<div class="row-actions">' + main + contact + routing + '</div></div>';
+    return '<div class="row-card"><div class="row-top rc-head"><div><div class="row-title">' + esc(name) + '</div>' +
+  '<div class="row-meta">' + esc(VMW.productLabel(l.product)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + '</div></div>' +
+  '<div class="row-badges">' + VMW.badge(l.status) + '<span class="rc-caret">▼</span></div></div>' +
+  '<div class="rc-body">' +
+    '<div class="row-badges" style="margin-bottom:8px;">' + (pending && !notElig ? VMW.docBadge('Pending') : '') + '</div>' +
+    (m ? '<div class="row-meta">📱 ' + esc(m) + '</div>' : '') +
+    (tags ? '<div class="row-tags">' + tags + '</div>' : '') +
+    '<div class="row-actions">' + main + contact + routing + '</div>' +
+  '</div></div>';
   }
   var MY_BANKERS = [], MY_BANKERS_BY_ID = {};
   function openSheet(id) { $('sheetBackdrop').style.display = 'block'; $(id).style.display = 'block'; }
@@ -610,6 +615,11 @@ $('sendBankerBtn').addEventListener('click', function () {
   } else {
     showAuth('loginView');
   }
+  document.addEventListener('click', function (e) {
+  var h = e.target.closest('.rc-head');
+  if (!h || e.target.closest('a,button')) return;
+  h.parentNode.classList.toggle('open');
+});
 })();
 </script>
 <!--Start of Tawk.to Script-->
