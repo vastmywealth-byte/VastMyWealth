@@ -830,10 +830,16 @@
     }).catch(function (err) { body.innerHTML = '<div class="alert error">' + esc(VMW.errMsg(err)) + '</div>'; });
   }
   document.addEventListener('click', function (e) {
-  var h = e.target.closest('.rc-head');
-  if (!h || e.target.closest('a,button')) return;
-  h.parentNode.classList.toggle('open');
-});
+    var head = e.target.closest('.rc-head, .row-top');
+    if (!head) return;
+    // Do not toggle if the user clicked an interactive button or link inside the header
+    if (e.target.closest('a, button, input, select')) return;
+    
+    var rowCard = head.closest('.row-card');
+    if (rowCard) {
+      rowCard.classList.toggle('open');
+    }
+  });
 })();
 </script>
   <!--Start of Tawk.to Script-->
