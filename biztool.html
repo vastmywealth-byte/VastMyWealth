@@ -155,26 +155,26 @@
   };
 
   /* ---------- Mobile Back Button & Navigation Handling ---------- */
-  var targetBackUrl = HOLDER.type === 'Partner' ? 'partner.html' : 'banker.html';
+  var targetBackUrl = (HOLDER.type === 'Partner' ? 'partner.html' : 'banker.html#tabBizTool');
   $('backLink').href = targetBackUrl;
-  
-  $('backLink').addEventListener('click', function(e) {
+
+  // The dashboard opens this page in the same window, so the phone's Back
+  // button simply returns to it. The on-screen "← Back" does the same.
+  var cameFromDashboard = !!document.referrer && document.referrer.indexOf(location.origin) === 0 && history.length > 1;
+  $('backLink').addEventListener('click', function (e) {
     e.preventDefault();
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      window.location.replace(targetBackUrl);
-    }
+    if (cameFromDashboard) history.back(); else location.replace(targetBackUrl);
   });
 
-  // Intercept hardware / gesture back buttons on mobile webviews cleanly
-  window.addEventListener('popstate', function () {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      window.location.replace(targetBackUrl);
-    }
-  });
+  // Safety net: if this page has no history behind it (opened in a new tab or
+  // straight from a saved link), Back used to close the app. Add one entry so
+  // the first Back goes to the dashboard instead.
+  if (history.length <= 1) {
+    try {
+      history.pushState({ vmwBizTool: 1 }, '');
+      window.addEventListener('popstate', function () { location.replace(targetBackUrl); });
+    } catch (e) { /* ignore */ }
+  }
 
   $('increaseLeadsBtn').addEventListener('click', function () {
     $('subscribeCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
