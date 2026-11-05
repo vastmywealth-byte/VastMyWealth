@@ -400,7 +400,7 @@
   }
   var VIEWS = ['checkingState', 'trackCard', 'formWrap', 'loadingState', 'resultsWrap', 'docWrap', 'doneWrap', 'blockedWrap', 'adWrap', 'adResultsWrap'];
   var S = { loanType: 'PL', employmentType: null, companyType: null, personCount: 2, residenceType: null,
-            leadId: null, profile: {}, forceNew: false, docStore: {}, warnedMissing: false, trackedMobile: '', lastDup: null };
+            leadId: null, profile: {}, forceNew: false, docStore: {}, warnedMissing: false, trackedMobile: '', lastDup: null, bounceCleared: null };
 
   function show(ids) {
     VIEWS.forEach(function (v) { $(v).classList.toggle('hidden', ids.indexOf(v) === -1); });
@@ -465,8 +465,45 @@
     var needs = ['Partnership', 'LLP', 'Pvt Ltd'].indexOf(this.value) !== -1;
     $('personCountField').classList.toggle('hidden', !needs);
     $('personCountLabel').innerHTML = (this.value === 'Pvt Ltd' ? 'Number of directors' : 'Number of partners') + '<span class="req">*</span>';
+  updateBounceAdvice();
   });
+/* ---------- bounce follow-up: cleared? if not, suggest LAP ---------- */
+function canOfferLap() { return !REF || String(REF).trim().toUpperCase() === FULL_MENU_REF; }
 
+function updateBounceAdvice() {
+  var b = val('f_bounces'), has = !!b && b !== 'No';
+  $('bounceClearedField').classList.toggle('hidden', !has);
+  if (!has) {
+    S.bounceCleared = null;
+    document.querySelectorAll('#bounceClearedToggle .toggle-btn').forEach(function (x) { x.classList.remove('active'); });
+  }
+  var adv = $('bounceAdvice');
+  if (!(has && S.bounceCleared === 'No')) { adv.className = 'alert hidden'; adv.innerHTML = ''; return; }
+  var secured = S.loanType === 'LAP' || S.loanType === 'HL';
+  if (secured) {
+    adv.innerHTML = 'Thanks for being upfront. Lenders will want those dues settled, so please clear them as soon as you can. We will flag it for our advisor.';
+  } else if (canOfferLap()) {
+    adv.innerHTML = 'With bounced payments still pending, lenders tend to be cautious on unsecured loans. ' +
+      'If you own a property, a <b>Loan Against Property</b> is often easier for lenders to consider. Clearing the pending amount soon will also help your CIBIL.' +
+      '<div class="mt12"><button type="button" class="btn btn-primary btn-sm" id="switchToLapBtn">Switch to Loan Against Property</button></div>';
+  } else {
+    adv.innerHTML = 'With bounced payments still pending, lenders tend to be cautious on unsecured loans. Clearing the pending amount soon will help your CIBIL, and our advisor can guide you on options.';
+  }
+  adv.className = 'alert warn';
+}
+$('f_bounces').addEventListener('change', updateBounceAdvice);
+document.querySelectorAll('#bounceClearedToggle .toggle-btn').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    S.bounceCleared = btn.dataset.val;
+    document.querySelectorAll('#bounceClearedToggle .toggle-btn').forEach(function (x) { x.classList.toggle('active', x === btn); });
+    updateBounceAdvice();
+  });
+});
+$('bounceAdvice').addEventListener('click', function (e) {
+  if (!e.target.closest('#switchToLapBtn')) return;
+  setLoanType('LAP');
+  $('propertySection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
   /* ---------- validation ---------- */
   function validateAndBuild() {
     VMW.clearErrors($('formWrap'));
@@ -492,6 +529,7 @@
     if (!(parseFloat(num('f_loanAmount')) > 0)) bad('f_loanAmount', 'Enter the loan amount you need.');
     if (!val('f_cibil')) bad('f_cibil', 'Please select your approximate CIBIL score.');
     if (!val('f_bounces')) bad('f_bounces', 'Please select an option.');
+    if (val('f_bounces') && val('f_bounces') !== 'No' && !S.bounceCleared) bad('bounceClearedToggle', 'Please tell us whether the bounced payments have been cleared.');
     var secured = S.loanType === 'LAP' || S.loanType === 'HL';
     if (secured) {
       if (val('f_propertyAddress').length < 5) bad('f_propertyAddress', 'Please enter the property address.');
@@ -510,7 +548,7 @@
       vintageYears: SE ? val('f_vintage') : '', gstVintage: SE ? val('f_gstVintage') : '',
       udyam: SE ? val('f_udyam') : '', bankAccountType: SE ? val('f_bankAccountType') : '',
       propertyAddress: secured ? val('f_propertyAddress') : '', propertyPincode: secured ? VMW.digits(val('f_propertyPincode')) : '',
-      marketValue: secured ? num('f_marketValue') : '',
+      marketValue: secured ? num('f_marketValue') : '', bounceCleared: S.bounceCleared || '',
       consentGiven: true, partnerCode: REF, pan: S.pan || ''
     };
   }
