@@ -414,7 +414,7 @@
           '<div class="row-meta">' + esc(VMW.productLabel(l.product)) + (l.loanAmount ? (' · ' + esc(VMW.inr(l.loanAmount))) : '') + (l.state ? (' · ' + esc(l.state)) : '') + '</div></div>' +
           '<span class="badge ' + (l.daysLeft <= 2 ? 'warn' : 'info') + '">' + l.daysLeft + ' day' + (l.daysLeft === 1 ? '' : 's') + ' left</span></div>' +
           '<div class="row-actions">' +
-          '<a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="' + link + '">View / follow up</a>' +
+          '<a class="btn btn-outline btn-sm" href="' + link + '">View / follow up</a>' +
           '<button class="btn btn-ghost btn-sm" data-push="' + esc(l.leadId) + '" data-product="' + esc(l.product) + '">Release to pool early</button>' +
           '</div></div>';
       }).join('');
