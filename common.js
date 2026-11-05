@@ -70,6 +70,27 @@
     return fetchJson(C.BACKEND_URL, { method: 'POST', body: JSON.stringify(payload) }, o.tries || 1, o.timeout || 45000);
   };
 
+  /* ---------- background refresh fetcher ---------- */
+  VMW.getLive = async function(action, params, onDataReady) {
+    // 1. Initial Fetch (Instantly returns stale data from Cloudflare KV)
+    try {
+      var initialData = await VMW.get(action, params);
+      if (initialData) onDataReady(initialData);
+    } catch (err) {
+      console.error("Initial load failed", err);
+    }
+
+    // 2. Background Fetch (Waits 3s for Worker to update KV, then fetches fresh data)
+    setTimeout(async function() {
+      try {
+        var freshData = await VMW.get(action, params);
+        if (freshData) onDataReady(freshData);
+      } catch (err) {
+        console.error("Background refresh failed", err);
+      }
+    }, 3000);
+  };
+
   VMW.errMsg = function (e) {
     var m = e && e.message ? e.message : String(e || '');
     if (/failed to fetch|networkerror|load failed|network request/i.test(m)) return 'Could not reach the server. Please check your internet connection and try again.';
