@@ -42,6 +42,25 @@
     opacity: 0.55;
     cursor: not-allowed;
   }
+  /* Accordion for Leads */
+.row-card.expandable .row-details {
+  display: none;
+  margin-top: 12px;
+  border-top: 1px solid var(--border, #2a3b61);
+  padding-top: 12px;
+}
+.row-card.expandable.expanded .row-details {
+  display: block;
+}
+.row-card.expandable .exp-icon {
+  display: inline-block;
+  font-size: 10px;
+  transition: transform 0.2s ease;
+  color: #c7cfe6;
+}
+.row-card.expandable.expanded .exp-icon {
+  transform: rotate(180deg);
+}
 </style>
 </head>
 <body>
@@ -398,40 +417,50 @@
 
   /* ---------- Lead Rows & Bankers Management ---------- */
   function leadRow(l) {
-    var pending = String(l.documentStatus || '').toLowerCase() !== 'submitted';
-    var notElig = String(l.status).toLowerCase() === 'not eligible';
-    var name = (l.employmentType === 'Self-Employed' && l.companyName) ? l.companyName : (l.customerName || '—');
-    var tags = '';
-    if (l.origin === 'subscribed') tags += '<span class="tag info">Biz Tool</span>';
-    if (l.state) tags += '<span class="tag">📍 ' + esc(l.state) + '</span>';
-    if (l.pincode) tags += '<span class="tag">Pincode ' + esc(l.pincode) + '</span>';
-    if (l.processingBank) tags += '<span class="tag">🏦 ' + esc(l.processingBank) + '</span>';
-    if (l.routedToBanker) { 
-      var rb = MY_BANKERS_BY_ID[l.routedToBanker]; 
-      tags += '<span class="tag ok">Sent to ' + esc(rb ? rb.name : l.routedToBanker) + '</span>'; 
-    }
-    var m = VMW.mobile10(l.mobile), main = '', contact = '';
-    var routing = '';
-    if (l.leadId && !notElig && String(l.status).toLowerCase() !== 'disbursed') {
-      routing = l.routedToBanker
-        ? '<button class="btn btn-ghost btn-sm" data-pool="' + esc(l.leadId) + '" data-product="' + esc(l.product) + '">Put back in pool</button>'
-        : '<button class="btn btn-outline btn-sm" data-send="' + esc(l.leadId) + '" data-product="' + esc(l.product) + '" data-name="' + esc(name) + '">Send to my banker</button>';
-    }
-    if (l.leadId && !notElig) {
-      var href = esc(VMW.leadLink({ leadId: l.leadId, product: l.product, ref: CODE }));
-      main = pending ? '<a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="' + href + '">📤 Upload documents</a>'
-                     : '<a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="' + href + '">View status</a>';
-    }
-    if (m.length === 10) {
-      contact = '<a class="btn btn-ghost btn-sm" href="tel:' + m + '">📞 Call</a>' +
-        '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(VMW.docChecklistWaLink(m, { name: l.customerName, companyName: l.companyName, product: l.product, employmentType: l.employmentType, companyType: l.companyType, loanAmount: l.loanAmount })) + '">💬 Ask for documents</a>';
-    }
-    return '<div class="row-card"><div class="row-top"><div><div class="row-title">' + esc(name) + '</div>' +
-      '<div class="row-meta">' + esc(VMW.productLabel(l.product)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + (m ? ' · 📱 ' + esc(m) : '') + '</div></div>' +
-      '<div class="row-badges">' + VMW.badge(l.status) + (pending && !notElig ? VMW.docBadge('Pending') : '') + '</div></div>' +
-      (tags ? '<div class="row-tags">' + tags + '</div>' : '') + '<div class="row-actions">' + main + contact + routing + '</div></div>';
+  var pending = String(l.documentStatus || '').toLowerCase() !== 'submitted';
+  var notElig = String(l.status).toLowerCase() === 'not eligible';
+  var name = (l.employmentType === 'Self-Employed' && l.companyName) ? l.companyName : (l.customerName || '—');
+  var tags = '';
+  if (l.origin === 'subscribed') tags += '<span class="tag info">Biz Tool</span>';
+  if (l.state) tags += '<span class="tag">📍 ' + esc(l.state) + '</span>';
+  if (l.pincode) tags += '<span class="tag">Pincode ' + esc(l.pincode) + '</span>';
+  if (l.processingBank) tags += '<span class="tag">🏦 ' + esc(l.processingBank) + '</span>';
+  if (l.routedToBanker) { 
+    var rb = MY_BANKERS_BY_ID[l.routedToBanker]; 
+    tags += '<span class="tag ok">Sent to ' + esc(rb ? rb.name : l.routedToBanker) + '</span>'; 
   }
-
+  var m = VMW.mobile10(l.mobile), main = '', contact = '';
+  var routing = '';
+  if (l.leadId && !notElig && String(l.status).toLowerCase() !== 'disbursed') {
+    routing = l.routedToBanker
+      ? '<button class="btn btn-ghost btn-sm" data-pool="' + esc(l.leadId) + '" data-product="' + esc(l.product) + '">Put back in pool</button>'
+      : '<button class="btn btn-outline btn-sm" data-send="' + esc(l.leadId) + '" data-product="' + esc(l.product) + '" data-name="' + esc(name) + '">Send to my banker</button>';
+  }
+  if (l.leadId && !notElig) {
+    var href = esc(VMW.leadLink({ leadId: l.leadId, product: l.product, ref: CODE }));
+    main = pending ? '<a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="' + href + '">📤 Upload documents</a>'
+                   : '<a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="' + href + '">View status</a>';
+  }
+  if (m.length === 10) {
+    contact = '<a class="btn btn-ghost btn-sm" href="tel:' + m + '">📞 Call</a>' +
+      '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(VMW.docChecklistWaLink(m, { name: l.customerName, companyName: l.companyName, product: l.product, employmentType: l.employmentType, companyType: l.companyType, loanAmount: l.loanAmount })) + '">💬 Ask for documents</a>';
+  }
+  
+  return '<div class="row-card expandable">' +
+    '<div class="row-top" onclick="this.parentElement.classList.toggle(\'expanded\')" style="cursor:pointer;">' +
+      '<div><div class="row-title">' + esc(name) + '</div>' +
+      '<div class="row-meta">' + esc(VMW.productLabel(l.product)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + (m ? ' · 📱 ' + esc(m) : '') + '</div></div>' +
+      '<div class="row-badges" style="display:flex; align-items:center; gap:6px;">' + 
+        VMW.badge(l.status) + (pending && !notElig ? VMW.docBadge('Pending') : '') + 
+        '<span class="exp-icon">▼</span>' + 
+      '</div>' +
+    '</div>' +
+    '<div class="row-details">' +
+      (tags ? '<div class="row-tags">' + tags + '</div>' : '') + 
+      '<div class="row-actions">' + main + contact + routing + '</div>' +
+    '</div>' +
+  '</div>';
+}
   var MY_BANKERS = [], MY_BANKERS_BY_ID = {};
   function openSheet(id) { $('sheetBackdrop').style.display = 'block'; $(id).style.display = 'block'; }
   function closeSheet(id) { $(id).style.display = 'none'; $('sheetBackdrop').style.display = 'none'; }
