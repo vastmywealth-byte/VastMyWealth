@@ -159,15 +159,12 @@
   $('backLink').href = targetBackUrl;
   $('backLink').addEventListener('click', function(e) {
     e.preventDefault();
-    window.location.replace(targetBackUrl);
+    if (document.referrer && document.referrer.indexOf(location.hostname) !== -1) {
+      window.history.back();
+    } else {
+      window.location.replace(targetBackUrl);
+    }
   });
-
-  // Intercept hardware / gesture back button on mobile phones
-  history.pushState({ page: 'biztool' }, '', location.href);
-  window.addEventListener('popstate', function () {
-    window.location.replace(targetBackUrl);
-  });
-
   $('increaseLeadsBtn').addEventListener('click', function () {
     $('subscribeCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
