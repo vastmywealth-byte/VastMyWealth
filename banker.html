@@ -476,9 +476,9 @@
   $('portalLinkBtn').addEventListener('click', function () {
     var m = VMW.mobile10($('newAppMobile').value);
     if (m.length !== 10) { VMW.toast('Enter a valid 10-digit mobile number', 'error'); return; }
-    window.open(VMW.startLink(m, SESSION.refCode), '_blank');
+    window.location.href = VMW.startLink(m, SESSION.refCode);
   });
-    $('shareLinkBtn').addEventListener('click', function () {
+  $('shareLinkBtn').addEventListener('click', function () {
     if (!SESSION || !SESSION.refCode) return;
     VMW.copyWithFeedback(this, VMW.refLink(SESSION.refCode));
   });
@@ -654,8 +654,8 @@
     if (r.leadId && !notElig) {
       var link = VMW.leadLink({ leadId: r.leadId, product: r.loanType, ref: r.kind === 'referral' ? SESSION.refCode : '' });
       main = pending
-        ? '<a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="' + esc(link) + '">📤 Upload documents</a>'
-        : '<a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="' + esc(link) + '">View status</a>';
+        ? '<a class="btn btn-primary btn-sm" href="' + esc(link) + '">📤 Upload documents</a>'
+        : '<a class="btn btn-outline btn-sm" href="' + esc(link) + '">View status</a>';
     }
     return '<div class="row-card"><div class="row-top rc-head"><div><div class="row-title">' + esc(r.name || '—') + '</div>' +
   '<div class="row-meta">' + (meta.length ? meta.join(' · ') : esc(r.kindLabel)) + '</div></div>' +
