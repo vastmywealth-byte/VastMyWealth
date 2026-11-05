@@ -220,6 +220,14 @@
         <div class="field"><label for="f_bounces">Bounces (last 6 months)<span class="req">*</span></label>
           <select id="f_bounces"><option value="">Select</option><option value="No">No</option><option value="1-2">1–2</option></select></div>
       </div>
+      <div class="field hidden" id="bounceClearedField">
+  <label>Have those bounced payments been cleared?<span class="req">*</span></label>
+  <div class="toggle-row" id="bounceClearedToggle">
+    <button type="button" class="toggle-btn" data-val="Yes">Yes, cleared</button>
+    <button type="button" class="toggle-btn" data-val="No">Not yet</button>
+  </div>
+</div>
+<div id="bounceAdvice" class="alert warn hidden"></div>
       <div class="field"><label for="f_enquiries">Loan enquiries (last 3 months)</label><input type="text" id="f_enquiries" inputmode="numeric" placeholder="Optional"></div>
     </div>
 
