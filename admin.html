@@ -640,8 +640,13 @@ function renderLeads() {
   });
   leads.sort(function (a, b) { return idSortKey(b.leadId) - idSortKey(a.leadId); });
   var counts = { total: ALL_LEADS.length, pending: 0, attention: 0, awaiting: 0, disbursed: 0, rejected: 0 };
-  ALL_LEADS.forEach(function (l) { if (l.documentStatus === 'Pending') counts.pending++; if (l.stage === 'Disbursed') counts.disbursed++; if (l.stage === 'Rejected') counts.rejected++; if (l.needsAttention) counts.attention++; });
+  ALL_LEADS.forEach(function (l) {
+  if (l.documentStatus === 'Pending') counts.pending++;
+  if (l.stage === 'Disbursed') counts.disbursed++;
+  if (l.stage === 'Rejected') counts.rejected++;
+  if (l.needsAttention) counts.attention++;
   if (l.pendingParties) counts.awaiting++;
+});
   $('leadsStats').innerHTML = ['total', 'pending', 'attention', 'awaiting', 'disbursed', 'rejected'].map(function (k) {
     var lbl = { total: 'Total leads', pending: 'Docs pending', attention: 'Needs attention', disbursed: 'Disbursed', rejected: 'Rejected', awaiting: 'Awaiting updates' }[k];
     return '<div class="stat-box"><b>' + counts[k] + '</b><span>' + lbl + '</span></div>';
@@ -656,7 +661,7 @@ function renderLeads() {
     return '' +
       '<div class="card">' +
         '<div class="card-row" onclick="toggleDetail(this); loadLeadHistoryInline(this, \'' + esc(l.leadId) + '\');">' +
-          '<div><div class="name">' + displayName + (l.needsAttention ? ' <span class="tag bad">Needs attention</span>' : '') (l.pendingParties ? ' <span class="tag warn">' + l.pendingParties + ' awaiting</span>' : '')   + '</div><div class="sub">' + esc(l.product || '—') + ' · ' + inr(l.loanAmount) + (loc ? (' · ' + esc(loc)) : '') + '</div></div>' +
+          '<div><div class="name">' + displayName + (l.needsAttention ? ' <span class="tag bad">Needs attention</span>' : '') + (l.pendingParties ? ' <span class="tag warn">' + l.pendingParties + ' awaiting</span>' : '')   + '</div><div class="sub">' + esc(l.product || '—') + ' · ' + inr(l.loanAmount) + (loc ? (' · ' + esc(loc)) : '') + '</div></div>' +
           '<span class="caret">▼</span>' +
         '</div>' +
         '<div class="card-detail">' +
