@@ -18,7 +18,8 @@
 
   window.VMW_CONFIG = {
     // Apps Script Web App (/exec) — the ONE backend for every page
-    BACKEND_URL: "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec",
+    // Apps Script Web App (/exec) — the ONE backend for every page
+BACKEND_URL: "https://vmw-portal-api.vastmywealth.workers.dev/",
 
     SITE_URL: base,
     APPLY_URL: base + "apply.html",
