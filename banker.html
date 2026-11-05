@@ -853,10 +853,16 @@ s1.charset='UTF-8';
 s1.setAttribute('crossorigin','*');
 s0.parentNode.insertBefore(s1,s0);
   document.addEventListener('click', function (e) {
-  var h = e.target.closest('.rc-head');
-  if (!h || e.target.closest('a,button')) return;
-  h.parentNode.classList.toggle('open');
-});
+    // Ignore clicks on buttons, links, inputs, or dropdowns inside the row
+    if (e.target.closest('a, button, input, select, textarea')) return;
+    
+    // Find the parent row card
+    var rowCard = e.target.closest('.row-card');
+    if (!rowCard) return;
+    
+    // Toggle the open class to expand/collapse the details
+    rowCard.classList.toggle('open');
+  });
 })();
 </script>
 <!--End of Tawk.to Script-->
