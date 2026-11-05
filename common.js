@@ -70,27 +70,49 @@
     return fetchJson(C.BACKEND_URL, { method: 'POST', body: JSON.stringify(payload) }, o.tries || 1, o.timeout || 45000);
   };
 
-  /* ---------- background refresh fetcher ---------- */
+  /* ---------- background refresh fetcher (Intelligent Polling) ---------- */
   VMW.getLive = async function(action, params, onDataReady) {
+    var maxAttempts = 10; // Stop checking after 10 tries (e.g., 30 seconds total)
+    var attemptCount = 0;
+    var currentDataString = "";
+
     // 1. Initial Fetch (Instantly returns stale data from Cloudflare KV)
     try {
       var initialData = await VMW.get(action, params);
-      if (initialData) onDataReady(initialData);
+      if (initialData) {
+        currentDataString = JSON.stringify(initialData); // Save the exact state
+        onDataReady(initialData);
+      }
     } catch (err) {
       console.error("Initial load failed", err);
     }
 
-    // 2. Background Fetch (Waits 3s for Worker to update KV, then fetches fresh data)
-    setTimeout(async function() {
+    // 2. Intelligent Polling Function
+    var checkWorkerForUpdates = async function() {
+      attemptCount++;
+      if (attemptCount > maxAttempts) return; // Give up if Apps Script is taking way too long
+
       try {
         var freshData = await VMW.get(action, params);
-        if (freshData) onDataReady(freshData);
-      } catch (err) {
-        console.error("Background refresh failed", err);
-      }
-    }, 3000);
-  };
+        var freshDataString = JSON.stringify(freshData);
 
+        // Check if the Worker finally got new data from Apps Script
+        if (freshDataString !== currentDataString) {
+          // The data changed! Update the UI and STOP polling.
+          onDataReady(freshData);
+          return; 
+        } else {
+          // Data hasn't changed yet. Try again in 3 seconds.
+          setTimeout(checkWorkerForUpdates, 3000);
+        }
+      } catch (err) {
+        console.error("Background refresh check failed", err);
+      }
+    };
+
+    // Start the first check after 3 seconds
+    setTimeout(checkWorkerForUpdates, 3000);
+  };
   VMW.errMsg = function (e) {
     var m = e && e.message ? e.message : String(e || '');
     if (/failed to fetch|networkerror|load failed|network request/i.test(m)) return 'Could not reach the server. Please check your internet connection and try again.';
