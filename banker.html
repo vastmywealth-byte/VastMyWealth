@@ -829,6 +829,11 @@
       });
     }).catch(function (err) { body.innerHTML = '<div class="alert error">' + esc(VMW.errMsg(err)) + '</div>'; });
   }
+  document.addEventListener('click', function (e) {
+  var h = e.target.closest('.rc-head');
+  if (!h || e.target.closest('a,button')) return;
+  h.parentNode.classList.toggle('open');
+});
 })();
 </script>
   <!--Start of Tawk.to Script-->
