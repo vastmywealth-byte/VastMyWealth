@@ -159,6 +159,7 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
         </select>
         <input type="text" id="stateFilter" placeholder="State">
         <label><input type="checkbox" id="attentionFilter"> Needs attention only</label>
+        <label><input type="checkbox" id="awaitingFilter"> Awaiting updates only</label>
         <label><input type="checkbox" id="showHiddenCheckbox"> Show hidden</label>
       </div>
       <div id="leadsContainer"><div class="empty">Loading leads…</div></div>
@@ -209,6 +210,10 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
   <input type="file" id="waDocFiles" multiple accept="image/*,.pdf" style="color:var(--text);font-size:14px;margin-bottom:8px;">
   <button class="btn btn-line btn-block" id="waDocUploadBtn">Upload to customer folder</button>
   <div id="waDocProgress" class="sub hidden" style="margin-top:6px;"></div>
+  <div class="section-label">Follow-up — who has / hasn't updated</div>
+<p class="sub" style="margin:0 0 8px;">No portal needed — set each party's status yourself after speaking to them.</p>
+<div id="followUpRows"></div>
+<button class="btn btn-gold btn-block" style="margin-top:8px;" id="remindPendingBtn">✉ Email all pending</button>
   <div class="section-label">Full lead history</div>
   <div id="sheetHistoryRows"><div class="empty">Loading…</div></div>
   <div class="section-label">Lender pipeline (admin-assigned)</div>
@@ -630,13 +635,15 @@ function renderLeads() {
     if (docF && l.documentStatus !== docF) return false;
     if (stateF && (l.state || '').toLowerCase().indexOf(stateF) === -1) return false;
     if ($('attentionFilter').checked && !l.needsAttention) return false;
+    if ($('awaitingFilter').checked && !l.pendingParties) return false;
     return true;
   });
   leads.sort(function (a, b) { return idSortKey(b.leadId) - idSortKey(a.leadId); });
-  var counts = { total: ALL_LEADS.length, pending: 0, disbursed: 0, rejected: 0, attention: 0 };
+  var counts = { total: ALL_LEADS.length, pending: 0, attention: 0, awaiting: 0, disbursed: 0, rejected: 0 };
   ALL_LEADS.forEach(function (l) { if (l.documentStatus === 'Pending') counts.pending++; if (l.stage === 'Disbursed') counts.disbursed++; if (l.stage === 'Rejected') counts.rejected++; if (l.needsAttention) counts.attention++; });
-  $('leadsStats').innerHTML = ['total', 'pending', 'attention', 'disbursed', 'rejected'].map(function (k) {
-    var lbl = { total: 'Total leads', pending: 'Docs pending', attention: 'Needs attention', disbursed: 'Disbursed', rejected: 'Rejected' }[k];
+  if (l.pendingParties) counts.awaiting++;
+  $('leadsStats').innerHTML = ['total', 'pending', 'attention', 'awaiting', 'disbursed', 'rejected'].map(function (k) {
+    var lbl = { total: 'Total leads', pending: 'Docs pending', attention: 'Needs attention', disbursed: 'Disbursed', rejected: 'Rejected', awaiting: 'Awaiting updates' }[k];
     return '<div class="stat-box"><b>' + counts[k] + '</b><span>' + lbl + '</span></div>';
   }).join('');
   if (!leads.length) { container.innerHTML = '<div class="empty">No leads match your filters.</div>'; return; }
@@ -649,7 +656,7 @@ function renderLeads() {
     return '' +
       '<div class="card">' +
         '<div class="card-row" onclick="toggleDetail(this); loadLeadHistoryInline(this, \'' + esc(l.leadId) + '\');">' +
-          '<div><div class="name">' + displayName + (l.needsAttention ? ' <span class="tag bad">Needs attention</span>' : '') + '</div><div class="sub">' + esc(l.product || '—') + ' · ' + inr(l.loanAmount) + (loc ? (' · ' + esc(loc)) : '') + '</div></div>' +
+          '<div><div class="name">' + displayName + (l.needsAttention ? ' <span class="tag bad">Needs attention</span>' : '') (l.pendingParties ? ' <span class="tag warn">' + l.pendingParties + ' awaiting</span>' : '')   + '</div><div class="sub">' + esc(l.product || '—') + ' · ' + inr(l.loanAmount) + (loc ? (' · ' + esc(loc)) : '') + '</div></div>' +
           '<span class="caret">▼</span>' +
         '</div>' +
         '<div class="card-detail">' +
