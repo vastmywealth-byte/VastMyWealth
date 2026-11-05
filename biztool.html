@@ -157,14 +157,25 @@
   /* ---------- Mobile Back Button & Navigation Handling ---------- */
   var targetBackUrl = HOLDER.type === 'Partner' ? 'partner.html' : 'banker.html';
   $('backLink').href = targetBackUrl;
+  
   $('backLink').addEventListener('click', function(e) {
     e.preventDefault();
-    if (document.referrer && document.referrer.indexOf(location.hostname) !== -1) {
+    if (window.history.length > 1) {
       window.history.back();
     } else {
       window.location.replace(targetBackUrl);
     }
   });
+
+  // Intercept hardware / gesture back buttons on mobile webviews cleanly
+  window.addEventListener('popstate', function () {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.replace(targetBackUrl);
+    }
+  });
+
   $('increaseLeadsBtn').addEventListener('click', function () {
     $('subscribeCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
@@ -175,7 +186,6 @@
   } else {
     boot();
   }
-
   // Personal Marketing Bot
   $('connectBotBtn').href = 'https://t.me/vastmywealthBot?start=' + HOLDER.type + '_' + encodeURIComponent(HOLDER.code);
 
