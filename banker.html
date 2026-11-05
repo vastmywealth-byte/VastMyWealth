@@ -195,7 +195,7 @@
       <div class="card">
         <div class="card-title">Your subscription</div>
         <div id="bizSubStatus" class="mt8">Loading…</div>
-        <a class="btn btn-primary btn-block mt16" id="openBizToolBtn" target="_blank" rel="noopener">🚀 Open Biz Tool</a>
+        <a class="btn btn-primary btn-block mt16" id="openBizToolBtn">🚀 Open Biz Tool</a>
       </div>
     </div>  </main>
 
@@ -453,7 +453,8 @@
         $('openBizToolBtn').href = 'biztool.html?holderType=Banker&holderCode=' + encodeURIComponent(SESSION.refCode) +
       '&holderName=' + encodeURIComponent(SESSION.bankerName || '') + '&bankName=' + encodeURIComponent(SESSION.currentBankName || '');
        LOADED = {};
-    selectTab('tabLog');
+    var wanted = (location.hash || '').replace('#', '');
+    selectTab(document.getElementById(wanted) && document.getElementById(wanted).classList.contains('tab-pane') ? wanted : 'tabLog');
     loadCodes();
     setTimeout(function () { VMW.showAnnouncement('Banker'); }, 1500);
   }
@@ -461,6 +462,7 @@
     document.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.toggle('active', p.id === id); });
     document.querySelectorAll('.nav-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === id); });
     window.scrollTo(0, 0);
+    try { history.replaceState(null, '', '#' + id); } catch (e) { /* ignore */ }
     if (!SESSION) return;
     if (id === 'tabTrack' && (!LOADED.track || Date.now() - (LOADED.trackAt || 0) > 30000)) loadTrack();
     if (id === 'tabBizLeads' && (!LOADED.leads || Date.now() - (LOADED.leadsAt || 0) > 20000)) loadLeads(false);
@@ -852,17 +854,6 @@ s1.src='https://embed.tawk.to/6abe26e4d6b87e34414e927e/1k3rcfrt8';
 s1.charset='UTF-8';
 s1.setAttribute('crossorigin','*');
 s0.parentNode.insertBefore(s1,s0);
-  document.addEventListener('click', function (e) {
-    // Ignore clicks on buttons, links, inputs, or dropdowns inside the row
-    if (e.target.closest('a, button, input, select, textarea')) return;
-    
-    // Find the parent row card
-    var rowCard = e.target.closest('.row-card');
-    if (!rowCard) return;
-    
-    // Toggle the open class to expand/collapse the details
-    rowCard.classList.toggle('open');
-  });
 })();
 </script>
 <!--End of Tawk.to Script-->
