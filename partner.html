@@ -438,8 +438,8 @@
   }
   if (l.leadId && !notElig) {
     var href = esc(VMW.leadLink({ leadId: l.leadId, product: l.product, ref: CODE }));
-    main = pending ? '<a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="' + href + '">📤 Upload documents</a>'
-                   : '<a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="' + href + '">View status</a>';
+    main = pending ? '<a class="btn btn-primary btn-sm" href="' + href + '">📤 Upload documents</a>'
+                   : '<a class="btn btn-outline btn-sm" href="' + href + '">View status</a>';
   }
   if (m.length === 10) {
     contact = '<a class="btn btn-ghost btn-sm" href="tel:' + m + '">📞 Call</a>' +
@@ -633,7 +633,7 @@ $('sendBankerBtn').addEventListener('click', function () {
   $('newAppBtn').addEventListener('click', function () {
     var m = VMW.mobile10($('newAppMobile').value);
     if (m.length !== 10) { alert('Please enter a valid 10-digit mobile number.'); return; }
-    window.open('apply.html?ref=' + encodeURIComponent(CODE) + '&mobile=' + encodeURIComponent(m), '_blank');
+    window.location.href = 'apply.html?ref=' + encodeURIComponent(CODE) + '&mobile=' + encodeURIComponent(m);
   });
 
   $('leadsRefresh').addEventListener('click', loadLeads);
