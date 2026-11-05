@@ -709,7 +709,7 @@ function openLeadSheet(idx) {
   $('sheetHistoryRows').innerHTML = '<div class="empty">Loading…</div>';
   apiPost({ action: "adminGetLeadHistory", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId }).then(function (r) {
     LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId] = (r.success ? r.events : []) || [];
-    renderLeadHistoryBox($('sheetHistoryRows'), LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId]);
+    renderLeadHistoryBox($('sheetHistoryRows'), LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId]), renderFollowUps();
   }).catch(function () { $('sheetHistoryRows').innerHTML = '<div class="error-box">Could not load history.</div>'; });
 
   openSheet('leadSheet', 'leadBackdrop');
@@ -720,13 +720,17 @@ $('leadBackdrop').addEventListener('click', function () { closeSheet('leadSheet'
 
 function renderPipelineRows() {
   var el = $('pipelineRows'), pipeline = CURRENT_LEAD.pipeline || [];
-  if (!pipeline.length) { el.innerHTML = '<div class="empty">No lenders assigned by admin yet — add some below.</div>'; return; }
-  el.innerHTML = pipeline.map(function (p) {
-    var safe = p.lender.replace(/'/g, "\\'");
-    var options = ["In Process", "Approved", "Disbursed", "Rejected"].map(function (s) { return '<option value="' + s + '" ' + (s === p.status ? 'selected' : '') + '>' + s + '</option>'; }).join('');
-    return '<div class="mini-row"><div class="mini-row-top"><span class="lbl">' + esc(p.lender) + '</span><select onchange="updateStatus(\'' + safe + '\', this.value)">' + options + '</select></div>' +
-      (p.assignedDsa ? ('<div class="sub" style="margin-top:4px;">Sent to: ' + esc(p.assignedDsa) + '</div>') : '') + '</div>';
-  }).join('');
+  if (!pipeline.length) {
+    el.innerHTML = '<div class="empty">No lenders assigned by admin yet — add some below.</div>';
+  } else {
+    el.innerHTML = pipeline.map(function (p) {
+      var safe = p.lender.replace(/'/g, "\\'");
+      var options = ["In Process", "Approved", "Disbursed", "Rejected"].map(function (s) { return '<option value="' + s + '" ' + (s === p.status ? 'selected' : '') + '>' + s + '</option>'; }).join('');
+      return '<div class="mini-row"><div class="mini-row-top"><span class="lbl">' + esc(p.lender) + '</span><select onchange="updateStatus(\'' + safe + '\', this.value)">' + options + '</select></div>' +
+        (p.assignedDsa ? ('<div class="sub" style="margin-top:4px;">Sent to: ' + esc(p.assignedDsa) + '</div>') : '') + '</div>';
+    }).join('');
+  }
+  renderFollowUps();
 }
 
 function renderClaimHistory() {
@@ -757,11 +761,10 @@ function renderDsaSelectList() {
 
 function updateStatus(lenderName, status) {
   apiPost({ action: "adminUpdateLenderStatus", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, lenderName: lenderName, status: status }).then(function (r) {
-    if (r.success) { showToast("Status updated"); var row = CURRENT_LEAD.pipeline.find(function (p) { return p.lender === lenderName; }); if (row) row.status = status; renderLeads(); }
+    if (r.success) { showToast("Status updated"); var row = CURRENT_LEAD.pipeline.find(function (p) { return p.lender === lenderName; }); if (row) row.status = status; renderLeads(); renderPipelineRows(); }
     else showToast(r.error || "Update failed", true);
   }).catch(function (err) { showToast("Connection error: " + err.message, true); });
 }
-
 $('addLendersBtn').addEventListener('click', function () {
   var checked = Array.prototype.slice.call(document.querySelectorAll('.lenderCheckbox:checked')).map(function (c) { return c.value; });
   if (!checked.length) { showToast("Select at least one lender"); return; }
@@ -866,7 +869,206 @@ $('saveProcessingBankBtn').addEventListener('click', function () {
       .then(function (r) { if (r.success) { showToast("Processing bank saved"); CURRENT_LEAD.processingBank = bankName; reloadLeadsOnly(); } else showToast(r.error || "Save failed", true); });
   }).catch(function (err) { showToast("Connection error: " + err.message, true); });
 });
+/* ================= FOLLOW-UP PANEL ================= */
+var CLAIM_STATUSES = [['Active', 'No update yet'], ['Approved', 'Approved'], ['Rejected', 'Rejected'], ['Disbursed', 'Disbursed']];
+var DSA_STATUSES = ['In Process', 'Approved', 'Disbursed', 'Rejected'];
 
+function escA(s) { return esc(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function digits10(m) { return String(m || '').replace(/\D/g, '').slice(-10); }
+function agoText(ts) {
+  if (!ts) return '';
+  var m = Math.floor((Date.now() - ts) / 60000);
+  if (m < 60) return Math.max(m, 1) + 'm ago';
+  var h = Math.floor(m / 60); if (h < 24) return h + 'h ago';
+  return Math.floor(h / 24) + 'd ago';
+}
+
+function buildFollowUps(lead) {
+  var out = [];
+  (lead.claims || []).forEach(function (c) {
+    var st = c.claimStatus || 'Active';
+    out.push({
+      type: 'Banker', code: c.bankerCode || '', name: c.bankerName || c.bankerCode || 'Banker',
+      mobile: c.bankerMobile || '', email: c.bankerEmail || '', claimId: c.claimId, status: st, pending: st === 'Active',
+      since: c.claimedAt,
+      detail: 'Claimed from pool' + (c.dsaCodeUsed ? ' · DSA code ' + c.dsaCodeUsed : '') +
+        (st === 'Rejected' && c.rejectionReason ? ' · ' + c.rejectionReason : '') +
+        (st === 'Disbursed' && c.disbursedAmount ? ' · ' + inr(c.disbursedAmount) : '')
+    });
+  });
+  var byDsa = {}, order = [];
+  (lead.pipeline || []).forEach(function (p) {
+    String(p.assignedDsa || '').split(',').forEach(function (n) {
+      n = n.trim(); if (!n) return;
+      if (!byDsa[n]) { byDsa[n] = { rows: [], since: null }; order.push(n); }
+      byDsa[n].rows.push({ lender: p.lender, status: p.status });
+      if (p.lastUpdated && (!byDsa[n].since || p.lastUpdated > byDsa[n].since)) byDsa[n].since = p.lastUpdated;
+    });
+  });
+  order.forEach(function (n) {
+    var info = ACTIVE_DSAS.filter(function (d) { return d.name === n; })[0] || {}, d = byDsa[n];
+    var open = d.rows.filter(function (r) { return r.status === 'In Process'; }).length;
+    out.push({
+      type: 'DSA', code: '', name: n, mobile: info.phone || '', email: info.emails || '', rows: d.rows,
+      status: open ? 'In Process' : 'Updated', pending: open > 0, since: d.since,
+      detail: open + ' of ' + d.rows.length + ' lender(s) still open'
+    });
+  });
+  return out;
+}
+
+function lastFollowUp(f) {
+  var events = LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId] || [], best = null;
+  events.forEach(function (e) {
+    if (!/^Follow-up/.test(e.event || '')) return;
+    var match = f.code ? (e.actorCode === f.code) : (e.actorName === f.name);
+    if (match && (!best || e.timestamp > best.timestamp)) best = e;
+  });
+  return best;
+}
+
+function renderFollowUps() {
+  var el = $('followUpRows');
+  if (!el || !CURRENT_LEAD) return;
+  var list = buildFollowUps(CURRENT_LEAD);
+  CURRENT_LEAD._followUps = list;
+  $('remindPendingBtn').disabled = !list.some(function (f) { return f.pending && f.email; });
+  if (!list.length) { el.innerHTML = '<div class="empty">No bankers or DSAs attached to this lead yet.</div>'; return; }
+
+  el.innerHTML = list.map(function (f, i) {
+    var d = digits10(f.mobile), last = lastFollowUp(f);
+    var msg = 'Hi ' + f.name + ', please share the current status of ' + (CURRENT_LEAD.name || 'the') + ' ' +
+      (CURRENT_LEAD.product || '') + ' lead (' + CURRENT_LEAD.leadId + '). — VastMyWealth';
+    var controls = '';
+    if (f.type === 'Banker') {
+      var opts = CLAIM_STATUSES.slice();
+      if (!opts.some(function (o) { return o[0] === f.status; })) opts.unshift([f.status, f.status]);
+      controls = '<div class="mini-row-top" style="margin-top:8px;"><span class="sub">Status</span><select data-claim="' + i + '">' +
+        opts.map(function (o) { return '<option value="' + escA(o[0]) + '"' + (o[0] === f.status ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select></div>';
+    } else {
+      controls = f.rows.map(function (r) {
+        return '<div class="mini-row-top" style="margin-top:8px;"><span class="sub">' + esc(r.lender) + '</span>' +
+          '<select data-dsa="' + i + '" data-lender="' + escA(r.lender) + '">' +
+          DSA_STATUSES.map(function (s) { return '<option value="' + s + '"' + (s === r.status ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></div>';
+      }).join('');
+    }
+    return '<div class="mini-row">' +
+      '<div class="mini-row-top"><span class="lbl">' + esc(f.name) + ' <span class="sub">(' + f.type + ')</span></span>' +
+      '<span class="tag ' + (f.pending ? 'warn' : 'ok') + '">' + (f.pending ? 'Pending' : esc(f.status)) + '</span></div>' +
+      '<div class="sub" style="margin-top:4px;">' + esc(f.detail) + (f.since ? ' · since ' + agoText(f.since) : '') + '</div>' +
+      '<div class="sub" style="margin-top:2px;">' + (last ? 'Last follow-up: ' + esc(last.event.replace(/^Follow-up /, '')) + ' · ' + agoText(last.timestamp) : 'No follow-up logged yet') + '</div>' +
+      controls +
+      '<div class="icon-row" style="margin-top:10px;align-items:center;flex-wrap:wrap;">' +
+        (d ? '<a class="icon-btn" data-contact="Call" data-i="' + i + '" href="tel:+91' + d + '" title="Call">☎</a>' +
+             '<a class="icon-btn" data-contact="WhatsApp" data-i="' + i + '" href="https://wa.me/91' + d + '?text=' + encodeURIComponent(msg) + '" target="_blank" rel="noopener" title="WhatsApp">✓</a>'
+           : '<span class="sub">No phone on file</span>') +
+        (f.email ? '<button class="btn btn-line btn-sm" data-remind="' + i + '">✉ Email</button>' : '<span class="sub">No email</span>') +
+        '<button class="btn btn-line btn-sm" data-note="' + i + '">📝 Log note</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+function reloadHistory() {
+  if (!CURRENT_LEAD) return Promise.resolve();
+  var id = CURRENT_LEAD.leadId;
+  return apiPost({ action: "adminGetLeadHistory", password: ADMIN_PASSWORD, leadId: id }).then(function (r) {
+    LEAD_HISTORY_CACHE[id] = (r.success ? r.events : []) || [];
+    if (CURRENT_LEAD && CURRENT_LEAD.leadId === id) {
+      renderLeadHistoryBox($('sheetHistoryRows'), LEAD_HISTORY_CACHE[id]);
+      renderFollowUps();
+    }
+  }).catch(function () {});
+}
+
+function refreshLead() {
+  var id = CURRENT_LEAD.leadId;
+  return apiPost({ action: "adminGetAllLeads", password: ADMIN_PASSWORD, includeHidden: currentIncludeHidden() }).then(function (r) {
+    if (!r.success) return;
+    ALL_LEADS = r.leads || [];
+    var fresh = ALL_LEADS.filter(function (l) { return l.leadId === id; })[0];
+    if (fresh) CURRENT_LEAD = fresh;
+    renderLeads(); renderPipelineRows(); renderClaimHistory();
+  }).then(reloadHistory);
+}
+
+function logContact(f, channel, note) {
+  return apiPost({ action: "adminLogContact", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product,
+    customerName: CURRENT_LEAD.name, type: f.type, code: f.code, name: f.name, channel: channel, note: note || '' }).then(reloadHistory);
+}
+
+function sendReminders(targets, btn) {
+  if (!targets.length) { showToast('No one to email', true); return; }
+  var names = targets.map(function (f) { return f.name; }).join(', ');
+  if (!confirm('Email a status-update reminder to: ' + names + '?')) return;
+  withBusy(btn, 'Sending…', function () {
+    return apiPost({ action: "adminSendFollowUp", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product,
+      customerName: CURRENT_LEAD.name, loanAmount: CURRENT_LEAD.loanAmount,
+      targets: targets.map(function (f) { return { type: f.type, code: f.code, name: f.name }; }) })
+    .then(function (r) {
+      var skipped = (r.skipped && r.skipped.length) ? ' · skipped: ' + r.skipped.join(', ') : '';
+      showToast(r.success ? ('Reminder sent to ' + r.sent + skipped) : (r.error || 'Failed') + skipped, !r.success);
+      return reloadHistory();
+    });
+  }).catch(function (err) { showToast(err.message, true); });
+}
+
+$('followUpRows').addEventListener('click', function (e) {
+  var c = e.target.closest('[data-contact]');
+  if (c) { logContact(CURRENT_LEAD._followUps[+c.getAttribute('data-i')], c.getAttribute('data-contact')); return; } // link still opens normally
+  var r = e.target.closest('[data-remind]');
+  if (r) { sendReminders([CURRENT_LEAD._followUps[+r.getAttribute('data-remind')]], r); return; }
+  var n = e.target.closest('[data-note]');
+  if (n) {
+    var f = CURRENT_LEAD._followUps[+n.getAttribute('data-note')];
+    var note = prompt('Note about ' + f.name + ' (e.g. "Spoke to him, will update tomorrow"):');
+    if (note && note.trim()) logContact(f, 'Note', note.trim()).then(function () { showToast('Note saved'); });
+  }
+});
+
+$('followUpRows').addEventListener('change', function (e) {
+  var sel = e.target, f;
+  if (sel.hasAttribute('data-claim')) {
+    f = CURRENT_LEAD._followUps[+sel.getAttribute('data-claim')];
+    var status = sel.value, reason = '', amount = '';
+    if (status === f.status) return;
+    if (!confirm('Set ' + f.name + ' (banker) to "' + status + '"?')) { renderFollowUps(); return; }
+    if (status === 'Rejected') {
+      reason = prompt('Reason for rejection by ' + f.name + ' (required):');
+      if (reason === null || !reason.trim()) { if (reason !== null) showToast('A reason is required', true); renderFollowUps(); return; }
+      reason = reason.trim();
+    }
+    if (status === 'Disbursed') {
+      amount = prompt('Disbursed amount (₹) by ' + f.name + ':', CURRENT_LEAD.loanAmount || '');
+      if (amount === null || !String(amount).replace(/[^0-9.]/g, '')) { if (amount !== null) showToast('Amount is required', true); renderFollowUps(); return; }
+    }
+    sel.disabled = true;
+    apiPost({ action: "adminSetClaimStatus", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product,
+      customerName: CURRENT_LEAD.name, claimId: f.claimId, status: status, reason: reason, amount: amount })
+    .then(function (r) {
+      if (r.success) { showToast(f.name + ' → ' + status); return refreshLead(); }
+      showToast(r.error || 'Update failed', true); renderFollowUps();
+    }).catch(function (err) { showToast('Connection error: ' + err.message, true); renderFollowUps(); });
+    return;
+  }
+  if (sel.hasAttribute('data-dsa')) {
+    f = CURRENT_LEAD._followUps[+sel.getAttribute('data-dsa')];
+    var lender = sel.getAttribute('data-lender'), st = sel.value, note = '';
+    if (!confirm('Set ' + lender + ' (via DSA ' + f.name + ') to "' + st + '"?')) { renderFollowUps(); return; }
+    if (st === 'Rejected') { var rr = prompt('Rejection reason (optional, saved in lead history):'); note = rr ? rr.trim() : ''; }
+    sel.disabled = true;
+    apiPost({ action: "adminSetDsaStatus", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product,
+      customerName: CURRENT_LEAD.name, dsaName: f.name, lenderName: lender, status: st, note: note })
+    .then(function (r) {
+      if (r.success) { showToast(lender + ' → ' + st); return refreshLead(); }
+      showToast(r.error || 'Update failed', true); renderFollowUps();
+    }).catch(function (err) { showToast('Connection error: ' + err.message, true); renderFollowUps(); });
+  }
+});
+
+$('remindPendingBtn').addEventListener('click', function () {
+  sendReminders(CURRENT_LEAD._followUps.filter(function (f) { return f.pending && f.email; }), this);
+});
+$('awaitingFilter').addEventListener('change', renderLeads);
 /* ================= BANKERS ================= */
 function loadBankers() {
   $('bankersContainer').innerHTML = '<div class="empty">Loading bankers…</div>';
