@@ -694,7 +694,7 @@
   /* ---------- business leads ---------- */
   var LEADS = { all: [], page: 1, per: 5 };
   function isNewLead(l) { return l.timestamp && (Date.now() - l.timestamp) < 24 * 3600 * 1000; }
-  function leadCardHtml(l) {
+ function leadCardHtml(l) {
   return '<div class="row-card"><div class="row-top rc-head"><div><div class="row-title">' + esc(l.customerName) + (isNewLead(l) ? ' <span class="badge info">NEW</span>' : '') + '</div>' +
     '<div class="row-meta">' + esc(VMW.productLabel(l.loanType)) + (l.loanAmount ? ' · ' + esc(VMW.inr(l.loanAmount)) : '') + '</div></div>' +
     '<span class="rc-caret">▼</span></div>' +
