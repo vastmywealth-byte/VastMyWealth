@@ -445,7 +445,7 @@ function doLogin() {
   withBusy($("loginBtn"), "Signing in…", function () {
     return apiPost(payload).then(function (r) {
       if (!r.success) {
-        errEl.textContent = "Incorrect password or unauthorized phone number.";
+        errEl.textContent = r.error ? ("Server said: " + r.error) : "Incorrect password or unauthorized phone number. (server reply: " + JSON.stringify(r).slice(0, 160) + ")";
         errEl.classList.remove('hidden');
         return;
       }
