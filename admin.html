@@ -279,7 +279,7 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
 </div>
 
 <script>
-var API_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
+var API_URL = "https://vmw-portal-api.vastmywealth.workers.dev/";   // same backend as every other page (Cloudflare worker)
 var SITE_BASE = String(location.href).split('#')[0].split('?')[0].replace(/[^\/]*$/, '');
 function refLinkFor(code) { return SITE_BASE + "apply.html?ref=" + encodeURIComponent(code); }
 function copyText(text) {
