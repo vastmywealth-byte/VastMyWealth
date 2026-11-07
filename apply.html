@@ -616,7 +616,8 @@ $('bounceAdvice').addEventListener('click', function (e) {
     var parts = ['Documents for: ' + who, 'Loan Type: ' + VMW.productLabel(S.loanType)];
     if (p.loanAmount) parts.push('Amount: ' + VMW.inr(p.loanAmount));
     if (S.leadId) parts.push('Ref: ' + S.leadId);
-    return waTeam(parts.join(' | '));
+    // Documents go to the WhatsApp API number (9405088782) so they are received and saved to the lead automatically.
+    return VMW.waLink(C.WHATSAPP_DOCS_NUMBER || '919405088782', parts.join(' | '));
   }
 
   function renderFresh(data, profile) {
