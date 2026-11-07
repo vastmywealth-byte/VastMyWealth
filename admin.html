@@ -205,7 +205,7 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
     <button class="close-x" id="closeLeadSheet">✕</button>
   </div>
   <div id="exclusivityBanner" class="hidden" style="background:var(--warn-bg);border:1px solid rgba(240,185,75,.4);border-radius:9px;padding:9px 11px;margin:8px 0;font-size:12.5px;color:var(--warn);"></div>
-  <div class="section-label">Upload documents received on WhatsApp (9594592020)</div>
+  <div class="section-label">Upload documents received on WhatsApp</div>
   <p class="sub" style="margin:0 0 8px;">Select the file(s) exactly as received — they're saved straight into this customer's Drive folder, with no per-document labelling.</p>
   <input type="file" id="waDocFiles" multiple accept="image/*,.pdf" style="color:var(--text);font-size:14px;margin-bottom:8px;">
   <button class="btn btn-line btn-block" id="waDocUploadBtn">Upload to customer folder</button>
@@ -306,6 +306,7 @@ function showToast(msg, isError) { var t = $('toast'); t.textContent = msg; t.cl
 function apiPost(payload) {
   if (CURRENT_USER_PHONE === SUPER_ADMIN_PHONE) {
     payload.superAdminPhone = SUPER_ADMIN_PHONE;
+    payload.mobile = SUPER_ADMIN_PHONE;   // backend reads "mobile"
   }
   return fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
     .then(function (r) { return r.text(); })
@@ -420,6 +421,11 @@ document.addEventListener("DOMContentLoaded", function () {
     loadBankerTabData();
     apiPost({ action: "adminGetDashboardData", password: ADMIN_PASSWORD }).then(function (r) {
       if (r.success) { localStorage.setItem('vmw_admin_cache', JSON.stringify(r)); applyDashboardData(r); }
+      else if (r.error === 'Unauthorized') {   // stale saved PIN / phone: back to the login screen instead of a dead dashboard
+        try { localStorage.removeItem('vmw_admin_pin'); localStorage.removeItem('vmw_admin_cache'); } catch (e) {}
+        ADMIN_PASSWORD = ""; $("app").style.display = "none"; $("loginScreen").style.display = "block";
+        $("loginError").textContent = "Session expired — please sign in again."; $("loginError").classList.remove('hidden');
+      }
     }).catch(function () {});
   }
 });
