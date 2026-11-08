@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <title>VastMyWealth Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,12 +21,14 @@
     margin: 0; padding: 0; height: 100%;
     font-family: 'Inter', sans-serif;
     background-color: var(--bg);
-    overflow-x: hidden;
+    overflow: hidden;
   }
   .chat-container {
     display: flex; flex-direction: column;
     width: 100%; max-width: 600px; margin: 0 auto;
-    height: 100vh; height: 100dvh;
+    height: 100vh;
+    height: 100dvh;
+    height: var(--app-h, 100dvh);
     background: var(--chat-bg);
     box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     position: relative;
@@ -40,12 +42,13 @@
   .header {
     background: var(--primary); color: white;
     padding: 16px 20px; display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0;
   }
   .header img { width: 32px; height: 32px; border-radius: 4px; }
   .header h2 { margin: 0; font-family: 'Poppins', sans-serif; font-size: 16px; }
   .header p { margin: 0; font-size: 12px; opacity: 0.8; }
   .chat-box {
-    flex: 1; overflow-y: auto; padding: 20px;
+    flex: 1; min-height: 0; overflow-y: auto; padding: 20px;
     display: flex; flex-direction: column; gap: 16px;
   }
   .msg { max-width: 85%; padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
@@ -65,8 +68,6 @@
   .chip:active { background: var(--user-msg); }
   .chip.opt { padding: 10px 16px; font-size: 13.5px; font-weight: 500; border-radius: 20px; }
 
-  /* A proper call-to-action card for the Telegram connect step — not a
-     bare inline link inside a chat bubble. */
   .cta-card {
     align-self: flex-start; max-width: 85%; background: #F4F6F9; border: 1px solid #E3E9F3;
     border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px;
@@ -130,6 +131,18 @@
   </div>
 </div>
 <script>
+  // ---------- Mobile fit: always match the visible screen (keyboard-aware) ----------
+  function scrollDown() { const b = document.getElementById("chatBox"); if (b) b.scrollTop = b.scrollHeight; }
+  function setAppHeight() {
+    const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-h', h + 'px');
+    window.scrollTo(0, 0);
+    scrollDown();
+  }
+  setAppHeight();
+  window.addEventListener('resize', setAppHeight);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', setAppHeight);
+
   const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGTSTzKTJYrhx2wP3UuBPG_64g-ZczNPhem3-PfcPPu8AYQaT0MvSgz1FsyRdoonVndg/exec";
   const WELCOME_TEXT = "Welcome to VastMyWealth! 👋\n\nPlease let us know the type of loan you are looking for, and we'll connect you to the right advisor.";
   // Home Loan / Loan Against Property: offered to direct customers (no referrer)
@@ -140,8 +153,7 @@
   const REDIRECT_FORMS = { VL: "Vehicle Loan", EL: "Education Loan" };
 
   // Partner / banker referral code — same rules as apply.html: a ?ref= in THIS
-  // link always wins, otherwise the one saved from an earlier visit (the chat
-  // and apply.html share app.vastmywealth.com, so they share localStorage).
+  // link always wins, otherwise the one saved from an earlier visit.
   const REF = (function () {
     try {
       const fromLink = (new URLSearchParams(location.search).get('ref') || '').trim();
@@ -175,7 +187,6 @@
 
   // A small record of the submitted application lives in localStorage, so a
   // customer who closes the tab and comes back tomorrow is still recognised.
-  // (sessionStorage alone is wiped when the tab closes.)
   const LEAD_KEY = 'vmw_aichat_lead';
   function readLeadRecord() {
     try { return JSON.parse(localStorage.getItem(LEAD_KEY) || 'null'); } catch (e) { return null; }
@@ -201,7 +212,6 @@
     try { sessionStorage.removeItem('vmw_aichat_session'); } catch (e) { /* ignore */ }
   }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
-  function scrollDown() { const b = document.getElementById("chatBox"); b.scrollTop = b.scrollHeight; }
 
   function setPersona(p) {
     if (!p) return;
@@ -228,22 +238,20 @@
     document.getElementById("chatBox").appendChild(div);
     scrollDown();
   }
-  // A proper card + button for the Telegram connect step, not a bare
-  // inline link sitting inside a chat bubble.
   function appendCta(title, sub, label, url, sameTab) {
     const card = document.createElement("div");
     card.className = "cta-card";
     const t = document.createElement("div"); t.className = "cta-title"; t.innerText = title;
     const s = document.createElement("div"); s.className = "cta-sub"; s.innerText = sub;
     const a = document.createElement("a");
-    a.className = a.className = "cta-btn"; a.href = url; a.innerText = label;
-if (!sameTab) { a.target = "_blank"; a.rel = "noopener"; }
+    a.className = "cta-btn"; a.href = url; a.innerText = label;
+    if (!sameTab) { a.target = "_blank"; a.rel = "noopener"; }
     card.appendChild(t); card.appendChild(s); card.appendChild(a);
     document.getElementById("chatBox").appendChild(card);
     scrollDown();
   }
 
-  // ---------- Answer buttons (loan types, Yes/No, Salaried/Self-Employed, ...) ----------
+  // ---------- Answer buttons ----------
   function clearOptions() {
     if (optionRow) { optionRow.remove(); optionRow = null; }
   }
@@ -265,9 +273,6 @@ if (!sameTab) { a.target = "_blank"; a.rel = "noopener"; }
   }
 
   // ---------- Document chips ----------
-  // Cards depend on the applicant: business people see GST / current-account
-  // statement, salaried people see salary slips / residence proof. The server
-  // sends the list (session.docTypes); this is only the fallback.
   function docTypesForSession() {
     if (session.docTypes && session.docTypes.length) return session.docTypes;
     const a = session.answers || {};
@@ -295,9 +300,6 @@ if (!sameTab) { a.target = "_blank"; a.rel = "noopener"; }
     renderDocActions();
   }
 
-  // "I'll do it later" is always there. "Finished uploading" only appears once
-  // at least one file has really gone through — pressing it with nothing
-  // uploaded used to mark the lead as "documents submitted" and stop reminders.
   function renderDocActions() {
     const old = document.getElementById("docActions");
     if (old) old.remove();
@@ -341,8 +343,6 @@ if (!sameTab) { a.target = "_blank"; a.rel = "noopener"; }
     sendPayload(text, "");
   }
 
-  // The server drives the conversation: it validates the answer, replies
-  // with one or more messages and (optionally) answer buttons.
   async function sendPayload(message, choice, opts) {
     if (busy) return;
     busy = true;
@@ -372,7 +372,6 @@ if (!sameTab) { a.target = "_blank"; a.rel = "noopener"; }
         appendMessage(m.text, "bot");
       }
       showTyping(false);
-      // Vehicle / Education loan: they have their own form — same hand-off as apply.html.
       if (data.redirect && REDIRECT_FORMS[data.redirect]) {
         let url = "../vl-el-application.html?product=" + encodeURIComponent(data.redirect);
         if (REF) url += "&ref=" + encodeURIComponent(REF);
@@ -387,8 +386,6 @@ if (!sameTab) { a.target = "_blank"; a.rel = "noopener"; }
 
       if (!wasDocs && session.phase === 'docs') {
         appendDocChips();
-        // Telegram connect CTA is intentionally NOT shown here — it only
-        // appears after the customer finishes uploading (see finalizeDocs).
         if (data.loanBotLink) session.loanBotLink = data.loanBotLink;
       }
     } catch (e) {
@@ -447,8 +444,6 @@ if (!sameTab) { a.target = "_blank"; a.rel = "noopener"; }
 
   let docsBusy = false;
 
-  // "I'll do it later": nothing is submitted, the lead stays Pending (so
-  // reminders keep going), and this is the moment to offer Telegram.
   async function docsLater() {
     if (!session.leadId || docsBusy) return;
     docsBusy = true;
@@ -495,7 +490,6 @@ if (!sameTab) { a.target = "_blank"; a.rel = "noopener"; }
       const data = await response.json().catch(function () { return {}; });
       showTyping(false);
       if (data.noDocs) {
-        // Server found no files — don't mark anything as submitted.
         session.docsUploaded = 0;
         saveSession();
         appendMessage("I can't see any uploaded documents yet. Please upload at least one, or tap \"I'll do it later\".", "bot");
@@ -510,9 +504,6 @@ if (!sameTab) { a.target = "_blank"; a.rel = "noopener"; }
       appendMessage("Thank you" + (who ? ", " + who : "") + "! Our team will review your documents and get in touch with you shortly.", "bot");
       const botLink = data.loanBotLink || session.loanBotLink;
       if (botLink) {
-        // Only now — after the customer has actually finished uploading —
-        // do we offer the Telegram connect card, with a short pause so it
-        // doesn't land in the same breath as the thank-you message.
         await sleep(1200);
         appendCta(
           "🔔 Get reminders on Telegram",
@@ -529,8 +520,6 @@ if (!sameTab) { a.target = "_blank"; a.rel = "noopener"; }
   }
 
   // ---------- Page load ----------
-  // Customer is back after leaving without finishing: tell them plainly what
-  // is missing and give a one-tap magic link to the upload page.
   async function guidedReturn() {
     const who = customerFirstName();
     const hi = who ? who + ", " : "";
@@ -570,7 +559,6 @@ if (!sameTab) { a.target = "_blank"; a.rel = "noopener"; }
   }
 
   (function init() {
-    // Came back in a new tab/day: restore from the saved application record.
     if (!session.leadId) {
       const rec = readLeadRecord();
       if (rec && rec.leadId && !rec.docsDone && (Date.now() - (rec.ts || 0)) < 30 * 24 * 3600 * 1000) {
