@@ -966,7 +966,9 @@ function renderFollowUps() {
     return '<div class="mini-row">' +
       '<div class="mini-row-top"><span class="lbl">' + esc(f.name) + ' <span class="sub">(' + f.type + ')</span></span>' +
       '<span class="tag ' + (f.pending ? 'warn' : 'ok') + '">' + (f.pending ? 'Pending' : esc(f.status)) + '</span></div>' +
-      '<div class="sub" style="margin-top:4px;">' + esc(f.detail) + (f.since ? ' · since ' + agoText(f.since) : '') + '</div>' +
+           '<div class="sub" style="margin-top:4px;">' + esc(f.detail) + (f.since ? ' · since ' + agoText(f.since) : '') +
+        ((f.pending && f.since && Math.floor((Date.now() - f.since) / 86400000) >= 2)
+          ? ' <span class="tag bad">' + Math.floor((Date.now() - f.since) / 86400000) + ' days no update</span>' : '') + '</div>' +
       '<div class="sub" style="margin-top:2px;">' + (last ? 'Last follow-up: ' + esc(last.event.replace(/^Follow-up /, '')) + ' · ' + agoText(last.timestamp) : 'No follow-up logged yet') + '</div>' +
       controls +
       '<div class="icon-row" style="margin-top:10px;align-items:center;flex-wrap:wrap;">' +
