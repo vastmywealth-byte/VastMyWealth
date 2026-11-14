@@ -560,7 +560,7 @@ function casesScreen() {
       return h('button', { class: 'item', onclick: () => { if (has) location.hash = '#/results/' + c.caseId; else { const m = store.get('vmw.consults', {}); const cid = Object.keys(m).find(k => m[k] === c.caseId); location.hash = cid ? '#/consult/' + cid : '#/'; } } },
         h('span', {}, d ? d.icon : '📁'), h('span', {}, s ? L(s) : c.caseId, h('small', {}, `${c.caseId} · ${new Date(c.ts).toLocaleDateString(S.lang === 'hi' ? 'hi-IN' : 'en-IN')}`)), h('span', { class: 'chev' }, '›')); })
       : h('p', { class: 'muted' }, t('cases_none')),
-    h('button', { class: 'btn ghost', onclick: () => { if (confirm(t('clear_confirm'))) { Object.keys(localStorage).filter(k => k.startsWith('vmw.') && !['vmw.lang', 'vmw.consent'].includes(k)).forEach(k => localStorage.removeItem(k)); location.hash = '#/'; } } }, '🗑️ ' + t('clear_data'))), { back: '#/' });
+    h('button', { class: 'btn ghost', onclick: () => { if (confirm(t('clear_confirm'))) { Object.keys(localStorage).filter(k => k.startsWith('vmw.') && !k.startsWith('vmw.l.') && !['vmw.lang', 'vmw.consent'].includes(k)).forEach(k => localStorage.removeItem(k)); location.hash = '#/'; } } }, '🗑️ ' + t('clear_data'))), { back: '#/' });
 }
 function legalScreen() {
   chrome(h('div', { class: 'stack' }, h('h1', {}, t('legal_title')),
