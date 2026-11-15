@@ -4,14 +4,12 @@
 'use strict';
 const API = (window.VMW && window.VMW.API) || '';
 const $app = document.getElementById('app');
-
 // ---------- safe storage ----------
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
   del(k) { try { localStorage.removeItem(k); } catch {} },
 };
-
 // ---------- state ----------
 const S = {
   cfg: null,
@@ -27,7 +25,6 @@ const t = (k, v) => {
 };
 const L = o => (o && (o[S.lang] || o.en)) || '';
 const inr = n => '₹' + Number(n).toLocaleString('en-IN');
-
 // ---------- dom helper ----------
 function h(tag, props, ...kids) {
   const el = document.createElement(tag);
@@ -47,12 +44,10 @@ function h(tag, props, ...kids) {
 }
 const rc = (el, ...k) => el.replaceChildren(...k.flat(Infinity).filter(x => x !== null && x !== undefined && x !== false));
 const clearTimers = () => { S.timers.forEach(clearInterval); S.timers = []; };
-
 function toast(msg) {
   const el = h('div', { class: 'toast', role: 'status' }, msg);
   document.body.append(el); setTimeout(() => el.remove(), 3800);
 }
-
 // ---------- api ----------
 function tokenFor(caseId) { return (store.get('vmw.cases', []).find(c => c.caseId === caseId) || {}).token; }
 async function api(path, { method = 'GET', body, token, raw, headers } = {}) {
@@ -67,7 +62,6 @@ async function api(path, { method = 'GET', body, token, raw, headers } = {}) {
   if (!res.ok) { const e = new Error(j.error || t('err_generic')); e.status = res.status; throw e; }
   return j;
 }
-
 // ---------- privacy: same patterns as the server, so the user can see what will be hidden ----------
 const PATTERNS = [
   /\b[\w.+-]+@[\w-]+(\.[\w-]+)+\b/g, /\b[A-Z]{5}\d{4}[A-Z]\b/gi, /\b[A-Z]{4}0[A-Z0-9]{6}\b/g, /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g,
@@ -78,13 +72,11 @@ function maskCount(text) {
   for (const re of PATTERNS) text = text.replace(re, () => { n++; return '·'; });
   return n;
 }
-
 // ---------- scripts ----------
 const loaded = {};
 function loadScript(src) {
   return loaded[src] || (loaded[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error(t('err_network'))); document.head.append(s); }));
 }
-
 // ---------- chrome ----------
 function chrome(content, { back, bar } = {}) {
   clearTimers();
@@ -99,7 +91,6 @@ function chrome(content, { back, bar } = {}) {
 }
 function syncOffline() { const o = document.getElementById('offline'); if (o) o.classList.toggle('hide', navigator.onLine); }
 addEventListener('online', syncOffline); addEventListener('offline', syncOffline);
-
 // ---------- config + consent ----------
 async function loadConfig() {
   try { S.cfg = await api('/api/config'); store.set('vmw.cfg', S.cfg); }
@@ -108,7 +99,6 @@ async function loadConfig() {
 }
 const dom = id => S.cfg.domains.find(d => d.id === id);
 const subOf = (d, id) => d.subs.find(s => s.id === id);
-
 function consentOk() { const c = store.get('vmw.consent'); return c && c.v === S.cfg.consentVersion; }
 function consentScreen(then) {
   let ok = false;
@@ -121,7 +111,6 @@ function consentScreen(then) {
       h('label', { class: 'check', for: 'cc', style: 'border:0' }, cb, h('span', {}, t('consent_check'))),
       btn)));
 }
-
 // ---------- router ----------
 async function route() {
   if (!S.cfg) { try { await loadConfig(); } catch (e) { return fatal(e); } }
@@ -147,7 +136,6 @@ async function route() {
 function fatal(e) {
   chrome(h('div', { class: 'card center stack' }, h('h2', {}, t('err_title')), h('p', { class: 'muted' }, e.message || t('err_generic')), h('button', { class: 'btn', onclick: () => { S.cfg = null; route(); } }, t('retry'))));
 }
-
 // ---------- HOME ----------
 function home() {
   const q = h('input', { class: 'field', type: 'search', placeholder: t('search_ph'), 'aria-label': t('search_ph'), autocomplete: 'off' });
@@ -173,14 +161,12 @@ function home() {
     cases.length ? h('button', { class: 'btn ghost', onclick: () => (location.hash = '#/cases') }, t('my_cases', { n: cases.length })) : null,
     h('p', { class: 'center small muted' }, h('a', { href: '#/legal' }, t('terms_link')))));
 }
-
 function areaScreen(id) {
   const d = dom(id); if (!d) return home();
   chrome(h('div', { class: 'stack' },
     h('div', {}, h('div', { class: 'eyebrow' }, t('step_area')), h('h1', {}, d.icon + ' ' + L(d)), h('p', { class: 'muted' }, t('pick_issue'))),
     d.subs.map(s => h('button', { class: 'item', onclick: () => { S.step = 1; location.hash = `#/describe/${d.id}/${s.id}`; } }, h('span', {}, L(s)), h('span', { class: 'chev' }, '›')))), { back: '#/' });
 }
-
 // ---------- DESCRIBE (3-step wizard) ----------
 function describeScreen(did, sid) {
   const d = dom(did); const s = d && subOf(d, sid); if (!s) return home();
@@ -194,7 +180,6 @@ function describeScreen(did, sid) {
       if (multi) F[key] = on ? F[key].filter(x => x !== id) : [...F[key], id]; else F[key] = on ? '' : id;
       describeScreen(did, sid); } }, L(o) || o);
   }));
-
   let body;
   if (S.step === 1) {
     const sel = h('select', { class: 'field', id: 'st', 'aria-label': t('f_state'), onchange: e => { F.state = e.target.value; store.set('vmw.state', F.state); } },
@@ -241,7 +226,6 @@ function describeScreen(did, sid) {
     S.step > 1 ? h('button', { class: 'btn ghost', onclick: () => { S.step--; describeScreen(did, sid); } }, t('prev')) : null,
     nextBtn ? h('div', { class: 'bar' }, h('div', { class: 'in' }, nextBtn)) : null), { back });
 }
-
 // ---------- SUBMIT / ANALYZING ----------
 async function submitCase() {
   const [did, sid] = S._sub.split('/');
@@ -270,7 +254,6 @@ async function submitCase() {
     describeScreen(did, sid);
   }
 }
-
 // ---------- RESULTS ----------
 const unlockedSet = cid => new Set(store.get('vmw.unl.' + cid, []));
 function resultsScreen(cid) {
@@ -282,42 +265,33 @@ function resultsScreen(cid) {
   const limitBadge = g.limitStatus ? h('span', { class: 'badge ' + (g.limitStatus === 'ok' ? 'ok' : g.limitStatus === 'late' ? 'bad' : 'warn') }, t('lim_' + g.limitStatus)) : null;
   const consults = store.get('vmw.consults', {});
   const existing = Object.keys(consults).filter(k => consults[k] === cid)[0];
-
   chrome(h('div', { class: 'stack' },
     h('div', {}, h('div', { class: 'eyebrow' }, `${L(d)} › ${L(s)}`), h('h1', {}, t('res_title')), h('p', { class: 'small muted' }, `${t('case_no')} ${cid}` + (data.redactedCount ? ' · ' + t('shield_hidden', { n: data.redactedCount }) : ''))),
     g.alert ? h('div', { class: 'banner bad', role: 'alert' }, h('span', { class: 'ic' }, '🚨'), h('div', {}, g.alert)) : null,
     ov && ov.urgent && ov.urgentNote ? h('div', { class: 'banner warn' }, h('span', { class: 'ic' }, '⏱️'), h('div', {}, ov.urgentNote)) : null,
     data.suggestedDomain && dom(data.suggestedDomain) ? h('div', { class: 'banner info' }, h('span', { class: 'ic' }, '💡'), h('div', {}, t('suggest_dom', { d: L(dom(data.suggestedDomain)) }))) : null,
-
     ov ? h('div', { class: 'card stack' },
       h('h2', {}, t('res_overview')), h('p', {}, ov.summary),
       ov.points.length ? h('div', {}, h('h3', {}, t('res_matters')), h('ul', { class: 'pts' }, ov.points.map(x => h('li', {}, x)))) : null,
       ov.laws.length ? h('div', {}, h('h3', {}, t('res_laws')), h('ul', { class: 'pts' }, ov.laws.map(l => h('li', {}, h('b', {}, l.name), ' — ', l.why)))) : null)
       : h('div', { class: 'banner warn' }, h('span', { class: 'ic' }, 'ℹ️'), h('div', {}, t('no_ai'))),
-
     h('div', { class: 'card stack' },
       h('h2', {}, t('res_where')),
       h('div', {}, h('div', { class: 'eyebrow' }, t('res_forum')), h('p', { class: 'pre', style: 'margin:0' }, g.forum)),
       h('div', {}, h('div', { class: 'row between' }, h('div', { class: 'eyebrow' }, t('res_limit')), limitBadge), h('p', { style: 'margin:0' }, g.limit)),
       h('p', { class: 'small muted', style: 'margin:0' }, '📚 ' + g.law)),
-
     ov && ov.nextSteps.length ? h('div', { class: 'card' }, h('h2', {}, t('res_steps')), h('ol', { class: 'steps' }, ov.nextSteps.map(x => h('li', {}, x)))) : null,
-
     h('div', { class: 'card' }, h('h2', {}, t('res_docs')), h('p', { class: 'small muted' }, t('res_docs_sub')),
       g.docs.map((x, i) => h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: checks.has(i), onchange: e => { e.target.checked ? checks.add(i) : checks.delete(i); store.set('vmw.docs.' + cid, [...checks]); } }), h('span', {}, x)))),
-
     h('div', { class: 'stack' },
       h('div', {}, h('h2', { style: 'margin-bottom:2px' }, t('res_cases')), h('p', { class: 'small muted' }, t('res_cases_sub', { n: inr(S.cfg.prices.unlock) }))),
       data.results.length ? data.results.map(r => caseCard(cid, r, unl.has(r.tid))) : h('div', { class: 'card muted' }, t('no_cases'))),
-
     ov && ov.lawyerQuestions.length ? h('div', { class: 'card' }, h('h2', {}, t('res_ask')), h('ul', { class: 'pts' }, ov.lawyerQuestions.map(x => h('li', {}, x)))) : null,
     h('p', { class: 'small muted' }, t('disclaimer')),
-
     h('div', { class: 'bar' }, h('div', { class: 'in' },
       existing ? h('button', { class: 'btn', onclick: () => (location.hash = '#/consult/' + existing) }, t('open_consult'))
         : h('button', { class: 'btn gold', onclick: () => (location.hash = '#/book/' + cid) }, t('talk_lawyer', { p: inr(S.cfg.prices.consult), m: S.cfg.prices.minutes }))))), { back: '#/' });
 }
-
 function caseCard(cid, r, unlocked) {
   return h('div', { class: 'card stack' },
     h('div', { class: 'case-title' }, r.title),
@@ -326,7 +300,6 @@ function caseCard(cid, r, unlocked) {
     unlocked ? h('button', { class: 'btn', onclick: () => (location.hash = `#/judgment/${cid}/${r.tid}`) }, '📖 ' + t('read_summary'))
       : h('button', { class: 'btn ghost', onclick: () => unlock(cid, r) }, '🔓 ' + t('unlock', { n: inr(S.cfg.prices.unlock) })));
 }
-
 // ---------- PAYMENTS ----------
 async function checkout(o) {
   if (S.cfg.demo) {   // local demo server only: no real money
@@ -351,7 +324,6 @@ async function checkout(o) {
   });
 }
 async function verifyPayment(p) { return api('/api/pay/verify', { method: 'POST', body: p }); }
-
 async function unlock(cid, r) {
   const token = tokenFor(cid);
   try {
@@ -364,7 +336,6 @@ async function unlock(cid, r) {
     location.hash = `#/judgment/${cid}/${r.tid}`;
   } catch (e) { if (e.message !== 'cancelled') toast(e.message); }
 }
-
 // ---------- JUDGMENT BRIEF ----------
 async function judgmentScreen(cid, tid) {
   const data = store.get('vmw.case.' + cid);
@@ -399,7 +370,6 @@ async function download(tid, cid) {
     document.body.append(a); a.click(); a.remove();
   } catch (e) { toast(e.message); }
 }
-
 // ---------- BOOK A LAWYER ----------
 async function bookScreen(cid) {
   const data = store.get('vmw.case.' + cid); if (!data) { location.hash = '#/'; return; }
@@ -447,7 +417,6 @@ async function bookScreen(cid) {
   chrome(root, { back: '#/results/' + cid });
   render();
 }
-
 // ---------- CONSULTATION STATUS ----------
 const fmtWhen = iso => iso ? new Intl.DateTimeFormat(S.lang === 'hi' ? 'hi-IN' : 'en-IN', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }).format(new Date(iso)) + ' IST' : '';
 function consultScreen(id) {
@@ -472,14 +441,12 @@ function consultScreen(id) {
 }
 let cdTarget = null;
 function updateCountdown() { const el = document.getElementById('cd'); if (!el || !cdTarget) return; const ms = cdTarget - Date.now(); el.textContent = ms <= 0 ? t('cd_now') : t('cd_in', { x: ms > 3600000 * 24 ? Math.floor(ms / 86400000) + 'd ' + Math.floor(ms % 86400000 / 3600000) + 'h' : ms > 3600000 ? Math.floor(ms / 3600000) + 'h ' + Math.floor(ms % 3600000 / 60000) + 'm' : Math.max(1, Math.ceil(ms / 60000)) + ' min' }); }
-
 function paintConsult(root, id, cid, token, c, files, refresh) {
   const st = c.status;
   const steps = [['paid', t('tl_paid')], ['match', t('tl_match')], ['docs', t('tl_docs')], ['call', t('tl_call')], ['done', t('tl_done')]];
   const stage = { Open: 1, Claimed: 3, Completed: 4, Released: 5, Disputed: 5, Refunded: 5 }[st] || 1;
   const tl = h('ul', { class: 'tl' }, steps.map((s, i) => h('li', { class: i < stage ? 'done' : i === stage ? 'now' : '' }, h('span', { class: 'dot' }, i < stage ? '✓' : i + 1), h('span', {}, s[1]))));
   cdTarget = c.slotStart ? Date.parse(c.slotStart) : null;
-
   let main;
   if (st === 'Open') main = h('div', { class: 'card stack center' }, h('div', { class: 'spin', style: 'margin:auto' }), h('h2', {}, t('c_finding')), h('p', { class: 'muted' }, c.mode === 'asap' ? t('c_finding_asap') : t('c_finding_sched', { w: fmtWhen(c.slotStart) })), h('p', { class: 'small muted' }, t('c_refund_note')));
   else if (st === 'Claimed' || st === 'Completed') {
@@ -492,7 +459,6 @@ function paintConsult(root, id, cid, token, c, files, refresh) {
   else if (st === 'Disputed') main = h('div', { class: 'banner warn' }, h('span', {}, '⏳'), h('div', {}, t('c_disputed')));
   else if (st === 'Refunded') main = h('div', { class: 'banner info' }, h('span', {}, '↩️'), h('div', {}, t('c_refunded')));
   else main = h('div', { class: 'banner info' }, h('div', {}, st));
-
   const fb = (st === 'Claimed' || st === 'Completed') && c.slotStart && Date.now() > Date.parse(c.slotStart) + 5 * 60000 ? feedbackCard(id, token, refresh) : null;
   rc(root, 
     h('div', {}, h('div', { class: 'eyebrow' }, id), h('h1', {}, t('c_title'))),
@@ -501,7 +467,6 @@ function paintConsult(root, id, cid, token, c, files, refresh) {
     c.vaultOpen ? vaultCard(id, token, files, refresh) : null);
   updateCountdown();
 }
-
 function feedbackCard(id, token, refresh) {
   const reason = h('textarea', { class: 'field hide', style: 'min-height:80px', maxlength: 300, placeholder: t('fb_reason_ph') });
   const send = async ok => { try { await api(`/api/consult/${id}/feedback`, { method: 'POST', token, body: { ok, reason: reason.value } }); toast(t('fb_thanks')); refresh(); } catch (e) { toast(e.message); } };
@@ -509,7 +474,6 @@ function feedbackCard(id, token, refresh) {
     h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => send(true) }, '👍 ' + t('fb_yes')), h('button', { class: 'btn ghost', onclick: () => { reason.classList.remove('hide'); sendNo.classList.remove('hide'); } }, '👎 ' + t('fb_no'))),
     reason, (window.sendNo = h('button', { class: 'btn danger hide', onclick: () => send(false) }, t('fb_report'))));
 }
-
 function vaultCard(id, token, files, refresh) {
   let label = 'Other';
   const labels = ['FIR', 'Notice', 'Agreement', 'Receipt', 'Court order', 'ID proof', 'Photos', 'Other'];
@@ -526,7 +490,6 @@ function vaultCard(id, token, files, refresh) {
     h('div', { class: 'lbl small' }, t('v_type')), labelChips, inp,
     h('button', { class: 'btn ghost', disabled: files.length >= 10, onclick: () => inp.click() }, '📎 ' + t('v_add')));
 }
-
 async function joinCall(id, token) {
   try {
     const { url } = await api('/api/room/' + id, { token });
@@ -537,7 +500,6 @@ async function joinCall(id, token) {
     document.body.append(f);
   } catch (e) { toast(e.message); }
 }
-
 // ---------- resume from email link ----------
 function resume(q) {
   const tk = q.get('t'), cid = q.get('c');
@@ -551,7 +513,6 @@ function resume(q) {
     location.replace(cid ? '#/consult/' + cid : '#/cases');
   } catch { location.replace('#/'); }
 }
-
 // ---------- my cases / legal ----------
 function casesScreen() {
   const cases = store.get('vmw.cases', []);
@@ -567,7 +528,6 @@ function legalScreen() {
     ['legal_1', 'legal_2', 'legal_3', 'legal_4', 'legal_5'].map(k => h('div', { class: 'card' }, h('p', { style: 'margin:0' }, t(k)))),
     h('button', { class: 'btn', onclick: () => history.back() }, t('back'))), { back: true });
 }
-
 // ---------- boot ----------
 document.documentElement.lang = S.lang;
 addEventListener('hashchange', route);
