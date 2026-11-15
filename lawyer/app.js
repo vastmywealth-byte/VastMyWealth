@@ -11,7 +11,6 @@ const store = {
 const S = { cfg: null, token: store.get('vmw.l.token', ''), timers: [], seen: new Set() };
 const inr = n => '₹' + Number(n).toLocaleString('en-IN');
 const ist = iso => iso ? new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }).format(new Date(iso)) + ' IST' : 'ASAP';
-
 function h(tag, props, ...kids) {
   const el = document.createElement(tag);
   for (const k in (props || {})) {
@@ -25,7 +24,6 @@ function h(tag, props, ...kids) {
 const toast = m => { const e = h('div', { class: 'toast' }, m); document.body.append(e); setTimeout(() => e.remove(), 3800); };
 const rc = (el, ...k) => el.replaceChildren(...k.flat(Infinity).filter(x => x !== null && x !== undefined && x !== false));
 const clearTimers = () => { S.timers.forEach(clearInterval); S.timers = []; };
-
 async function api(path, { method = 'GET', body, form } = {}) {
   const opts = { method, headers: {} };
   if (S.token) opts.headers.Authorization = 'Bearer ' + S.token;
@@ -45,7 +43,6 @@ function chrome(content, { nav } = {}) {
 }
 const dom = id => S.cfg.domains.find(d => d.id === id);
 const subName = (d, s) => { const x = dom(d); const y = x && x.subs.find(z => z.id === s); return (y && y.en) || s; };
-
 async function route() {
   if (!S.cfg) { try { S.cfg = await api('/api/config'); } catch (e) { return chrome(h('div', { class: 'card' }, e.message)); } }
   const p = (location.hash || '#/').slice(2).split('/');
@@ -57,7 +54,6 @@ async function route() {
   return tab('leads');
 }
 addEventListener('hashchange', route);
-
 // ---------- login ----------
 function login(stage = 'email', email = '') {
   const em = h('input', { class: 'field', type: 'email', inputmode: 'email', autocomplete: 'email', placeholder: 'you@example.com', value: email });
@@ -71,7 +67,6 @@ function login(stage = 'email', email = '') {
         : [h('p', { class: 'muted', style: 'margin:0' }, 'Code sent to ' + email), code, h('button', { class: 'btn', onclick: verify }, 'Log in'), h('button', { class: 'btn ghost', onclick: () => login('email', email) }, 'Use a different email')]),
     h('a', { class: 'btn ghost', href: '#/register' }, 'New here? Apply to join')));
 }
-
 // ---------- registration ----------
 function register() {
   const f = {}; const inp = (k, label, props = {}) => h('div', {}, h('label', { class: 'lbl' }, label), (f[k] = h('input', { class: 'field', ...props })));
@@ -101,7 +96,6 @@ function register() {
     h('label', { class: 'check', style: 'border:0' }, consent, h('span', { class: 'small' }, 'I confirm the details are true, I hold a valid Certificate of Practice, and I accept the partner terms and the 48-hour document deletion policy.')),
     h('button', { class: 'btn gold', onclick: submit }, 'Submit application'), h('a', { class: 'btn ghost', href: '#/login' }, 'Back to login')));
 }
-
 // ---------- tabs ----------
 function tab(name) {
   const body = h('div', { class: 'stack' }, h('div', { class: 'card' }, h('div', { class: 'skel' }), h('div', { class: 'skel' })));
@@ -113,7 +107,6 @@ function tab(name) {
   run();
   if (name === 'leads' || name === 'calls') S.timers.push(setInterval(run, 15000));
 }
-
 async function loadLeads(body) {
   const { leads, payoutReady } = await api('/api/lawyer/leads');
   const fresh = leads.filter(l => !S.seen.has(l.id));
@@ -130,7 +123,6 @@ async function loadLeads(body) {
       h('button', { class: 'btn gold', disabled: !payoutReady, onclick: async e => { e.target.disabled = true; try { await api('/api/lawyer/claim/' + l.id, { method: 'POST' }); toast('Case claimed. See My calls.'); location.hash = '#/calls'; } catch (err) { toast(err.message); loadLeads(body); } } }, 'Accept this case')))
       : h('div', { class: 'card center muted' }, 'No open leads for your areas right now. We will email you when one arrives.'));
 }
-
 async function loadCalls(body) {
   const { calls } = await api('/api/lawyer/calls');
   const order = { Claimed: 0, Completed: 1, Disputed: 2, Released: 3 };
@@ -163,7 +155,6 @@ async function docs(id) {
     document.body.append(ov);
   } catch (e) { toast(e.message); }
 }
-
 async function loadMoney(body) {
   const m = await api('/api/lawyer/payouts');
   const stat = (l, v, cls) => h('div', { class: 'card center' }, h('div', { class: 'small muted' }, l), h('div', { class: 'price serif', style: 'font-size:1.4rem' }, inr(v)), cls ? h('span', { class: 'badge ' + cls }, '') : null);
@@ -180,7 +171,6 @@ async function loadMe(body) {
     h('div', {}, p.payoutReady ? h('span', { class: 'badge ok' }, '✓ Payout account active') : h('span', { class: 'badge warn' }, 'Payout account pending')),
     h('label', { class: 'check', style: 'border:0' }, h('input', { type: 'checkbox', checked: p.notifyEmail, onchange: async e => { try { await api('/api/lawyer/notify', { method: 'POST', body: { email: e.target.checked } }); toast('Saved'); } catch (err) { toast(err.message); } } }), h('span', {}, 'Email me new leads in my areas'))));
 }
-
 if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 route();
 })();
