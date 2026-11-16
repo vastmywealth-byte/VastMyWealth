@@ -657,43 +657,68 @@ function renderLeads() {
     var lbl = { total: 'Total leads', pending: 'Docs pending', attention: 'Needs attention', disbursed: 'Disbursed', rejected: 'Rejected', awaiting: 'Awaiting updates' }[k];
     return '<div class="stat-box"><b>' + counts[k] + '</b><span>' + lbl + '</span></div>';
   }).join('');
-  if (!leads.length) { container.innerHTML = '<div class="empty">No leads match your filters.</div>'; return; }
-  container.innerHTML = leads.map(function (l) {
-    var idx = ALL_LEADS.indexOf(l);
-    var isDirect = (l.partnerName === 'Direct' || !l.partnerName);
-    var displayName = isDirect ? esc(l.name || '—') : '<span class="cp">' + esc(l.partnerName) + '</span> — ' + esc(l.name || '—');
-    var loc = [l.state, l.pincode].filter(Boolean).join(' · ');
-    var activeClaim = (l.claims || []).find(function (c) { return c.claimStatus === 'Active'; });
-    return '' +
-      '<div class="card">' +
-        '<div class="card-row" onclick="toggleDetail(this); loadLeadHistoryInline(this, \'' + esc(l.leadId) + '\');">' +
-          '<div><div class="name">' + displayName + (l.needsAttention ? ' <span class="tag bad">Needs attention</span>' : '') + (l.pendingParties ? ' <span class="tag warn">' + l.pendingParties + ' awaiting</span>' : '')   + '</div><div class="sub">' + esc(l.product || '—') + ' · ' + inr(l.loanAmount) + (loc ? (' · ' + esc(loc)) : '') + '</div></div>' +
-          '<span class="caret">▼</span>' +
+    if (!leads.length) { container.innerHTML = '<div class="empty">No leads match your filters.</div>'; return; }
+
+  var notSent = [], sent = [];
+  leads.forEach(function (l) { (sentDsaNames(l).length ? sent : notSent).push(l); });
+
+  function section(title, list, emptyMsg) {
+    return '<div class="section-label" style="margin-top:18px;font-size:12.5px;">' + title + ' (' + list.length + ')</div>' +
+      (list.length ? list.map(leadCardHtml).join('') : '<div class="empty">' + emptyMsg + '</div>');
+  }
+  container.innerHTML =
+    section('Not yet sent to DSA', notSent, 'No leads in this section.') +
+    section('Sent to DSA', sent, 'No leads in this section.');
+}
+
+/* DSAs a lead has been sent to (from pipeline rows; also covers a just-assigned lead) */
+function sentDsaNames(l) {
+  var seen = {}, out = [];
+  function add(n) { n = String(n || '').trim(); if (n && !seen[n]) { seen[n] = true; out.push(n); } }
+  (l.pipeline || []).forEach(function (p) { String(p.assignedDsa || '').split(',').forEach(add); });
+  (l.sentToDsas || []).forEach(add);
+  return out;
+}
+
+function leadCardHtml(l) {
+  var idx = ALL_LEADS.indexOf(l);
+  var isDirect = (l.partnerName === 'Direct' || !l.partnerName);
+  var displayName = isDirect ? esc(l.name || '—') : '<span class="cp">' + esc(l.partnerName) + '</span> — ' + esc(l.name || '—');
+  var loc = [l.state, l.pincode].filter(Boolean).join(' · ');
+  var activeClaim = (l.claims || []).find(function (c) { return c.claimStatus === 'Active'; });
+  var dsas = sentDsaNames(l);
+  return '' +
+    '<div class="card">' +
+      '<div class="card-row" onclick="toggleDetail(this); loadLeadHistoryInline(this, \'' + esc(l.leadId) + '\');">' +
+        '<div><div class="name">' + displayName + (l.needsAttention ? ' <span class="tag bad">Needs attention</span>' : '') + (l.pendingParties ? ' <span class="tag warn">' + l.pendingParties + ' awaiting</span>' : '') + '</div>' +
+        '<div class="sub">' + esc(l.product || '—') + ' · ' + inr(l.loanAmount) + (loc ? (' · ' + esc(loc)) : '') + '</div>' +
+        (dsas.length ? '<div class="sub" style="color:var(--info);">Sent to: ' + esc(dsas.join(', ')) + '</div>' : '') + '</div>' +
+        '<span class="caret">▼</span>' +
+      '</div>' +
+      '<div class="card-detail">' +
+        '<div class="meta-line">' +
+          '<span class="tag ' + stageTagClass(l.stage) + '">' + esc(l.stage) + '</span>' +
+          (l.documentStatus === 'Pending' ? '<span class="tag warn">Docs pending</span>' : (l.documentStatus === 'Submitted' ? '<span class="tag ok">Docs received</span>' : '')) +
+          (l.hidden ? '<span class="tag">Hidden</span>' : '') +
+          (l.processingBank ? '<span class="tag info">' + esc(l.processingBank) + '</span>' : '') +
+          dsas.map(function (n) { return '<span class="tag info">DSA: ' + esc(n) + '</span>'; }).join('') +
+          (activeClaim ? '<span class="tag info">With ' + esc(activeClaim.bankerName) + (activeClaim.dsaName ? (' · DSA ' + esc(activeClaim.dsaName)) : '') + '</span>' : '') +
+          (l.category ? '<span class="tag">Cat ' + esc(l.category) + '</span>' : '') +
+          '<span class="tag' + (l.commissionPercent === 100 ? ' ok' : '') + '">VMW share ' + esc(l.commissionPercent) + '%</span>' +
+          (l.isExclusive ? ('<span class="tag warn">Exclusive to ' + esc(l.sourcedByName || l.sourcedBy) + ' — ' + l.exclusiveDaysLeft + ' day' + (l.exclusiveDaysLeft === 1 ? '' : 's') + ' left</span>') : '') +
         '</div>' +
-        '<div class="card-detail">' +
-          '<div class="meta-line">' +
-            '<span class="tag ' + stageTagClass(l.stage) + '">' + esc(l.stage) + '</span>' +
-            (l.documentStatus === 'Pending' ? '<span class="tag warn">Docs pending</span>' : (l.documentStatus === 'Submitted' ? '<span class="tag ok">Docs received</span>' : '')) +
-            (l.hidden ? '<span class="tag">Hidden</span>' : '') +
-            (l.processingBank ? '<span class="tag info">' + esc(l.processingBank) + '</span>' : '') +
-            (activeClaim ? '<span class="tag info">With ' + esc(activeClaim.bankerName) + (activeClaim.dsaName ? (' · DSA ' + esc(activeClaim.dsaName)) : '') + '</span>' : '') +
-            (l.category ? '<span class="tag">Cat ' + esc(l.category) + '</span>' : '') +
-            '<span class="tag' + (l.commissionPercent === 100 ? ' ok' : '') + '">VMW share ' + esc(l.commissionPercent) + '%</span>' +
-            (l.isExclusive ? ('<span class="tag warn">Exclusive to ' + esc(l.sourcedByName || l.sourcedBy) + ' — ' + l.exclusiveDaysLeft + ' day' + (l.exclusiveDaysLeft === 1 ? '' : 's') + ' left</span>') : '') +
-          '</div>' +
-          '<div class="meta-line">' + esc(l.mobile || '') + (l.email ? (' · ' + esc(l.email)) : '') + '</div>' +
-          (l.companyName ? '<div class="meta-line">' + esc(l.companyName) + '</div>' : '') +
-          '<div class="icon-row" style="margin-bottom:10px;">' +
-            (l.mobile ? '<a class="icon-btn" href="tel:' + esc(l.mobile) + '" title="Call">☎</a>' : '') +
-            (l.mobile ? '<a class="icon-btn" href="https://wa.me/91' + esc(String(l.mobile).replace(/\D/g,"")) + '" target="_blank" rel="noopener" title="WhatsApp">✓</a>' : '') +
-            (l.documentsFolderUrl ? '<a class="icon-btn" href="' + esc(l.documentsFolderUrl) + '" target="_blank" rel="noopener" title="Documents">📁</a>' : '') +
-          '</div>' +
-          '<div class="section-label">Full lead history</div>' +
-          '<div class="lead-history-box" id="hist_' + esc(l.leadId) + '"><div class="empty">Loading…</div></div>' +
-          '<button class="btn btn-line btn-block" style="margin-top:8px;" onclick="event.stopPropagation(); openLeadSheet(' + idx + ')">Manage pipeline, claims &amp; DSA</button>' +
+        '<div class="meta-line">' + esc(l.mobile || '') + (l.email ? (' · ' + esc(l.email)) : '') + '</div>' +
+        (l.companyName ? '<div class="meta-line">' + esc(l.companyName) + '</div>' : '') +
+        '<div class="icon-row" style="margin-bottom:10px;">' +
+          (l.mobile ? '<a class="icon-btn" href="tel:' + esc(l.mobile) + '" title="Call">☎</a>' : '') +
+          (l.mobile ? '<a class="icon-btn" href="https://wa.me/91' + esc(String(l.mobile).replace(/\D/g,"")) + '" target="_blank" rel="noopener" title="WhatsApp">✓</a>' : '') +
+          (l.documentsFolderUrl ? '<a class="icon-btn" href="' + esc(l.documentsFolderUrl) + '" target="_blank" rel="noopener" title="Documents">📁</a>' : '') +
         '</div>' +
-      '</div>';
-  }).join('');
+        '<div class="section-label">Full lead history</div>' +
+        '<div class="lead-history-box" id="hist_' + esc(l.leadId) + '"><div class="empty">Loading…</div></div>' +
+        '<button class="btn btn-line btn-block" style="margin-top:8px;" onclick="event.stopPropagation(); openLeadSheet(' + idx + ')">Manage pipeline, claims &amp; DSA</button>' +
+      '</div>' +
+    '</div>';
 }
 
 function openLeadSheet(idx) {
