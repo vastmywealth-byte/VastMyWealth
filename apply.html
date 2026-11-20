@@ -195,13 +195,12 @@
       <div class="card-title">Financial details</div>
       <div id="blFields" class="hidden" style="margin-top:14px;">
         <div class="row2">
-          <div class="field"><label for="f_startMonth">When did your business start?<span class="req">*</span></label>
-            <div class="row2" style="gap:8px;">
-              <select id="f_startMonth"><option value="">Month</option><option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Apr</option><option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option></select>
-              <select id="f_startYear"><option value="">Year</option></select>
-            </div></div>
-          <div class="field"><label for="f_gstYear">GST registration year</label>
-            <select id="f_gstYear"><option value="">Select</option><option value="No GST">No GST</option></select></div>
+          <div class="field"><label for="f_startYear">Which year did you start your business?<span class="req">*</span></label>
+            <select id="f_startYear"><option value="">Select</option></select>
+            <div id="startupNotice" class="hint hidden" style="font-size:12.5px;margin-top:6px;padding:8px 10px;border-radius:8px;background:#FFF7E6;color:#7A4B00;"></div></div>
+          <div class="field"><label for="f_turnover">Last year's turnover<span class="req">*</span></label>
+            <select id="f_turnover"><option value="">Select</option><option value="Below 1 Cr">Below 1 Cr</option><option value="1 - 5 Cr">1 - 5 Cr</option><option value="Above 5 Cr">Above 5 Cr</option></select>
+            <div class="hint" style="font-size:12px;opacity:.75;margin-top:4px;">Please give accurate details — it speeds up your loan approval.</div></div>
         </div>
         <div class="row2">
           <div class="field"><label for="f_udyam">Udyam registration</label>
@@ -472,20 +471,36 @@
     $('personCountLabel').innerHTML = (this.value === 'Pvt Ltd' ? 'Number of directors' : 'Number of partners') + '<span class="req">*</span>';
   updateBounceAdvice();
   });
-/* ---------- business start / GST year dropdowns ---------- */
+/* ---------- business start year (options always follow today's year) ---------- */
 (function () {
-  var y = new Date().getFullYear(), sy = $('f_startYear'), gy = $('f_gstYear'), i, o;
-  for (i = y; i >= y - 40; i--) { o = document.createElement('option'); o.value = o.textContent = String(i); sy.appendChild(o); }
-  for (i = y; i >= y - 12; i--) { o = document.createElement('option'); o.value = o.textContent = String(i); gy.appendChild(o); }
+  var y = new Date().getFullYear(), sy = $('f_startYear'), o;
+  [String(y), String(y - 1), String(y - 2), String(y - 3), 'Before ' + (y - 3)].forEach(function (t) {
+    o = document.createElement('option'); o.value = o.textContent = t; sy.appendChild(o);
+  });
 })();
-function businessStartValue() {
-  var m = val('f_startMonth'), y = val('f_startYear');
-  return (m && y) ? (y + '-' + m) : '';
+function businessStartValue() { return val('f_startYear'); }
+/* Startup (started this year or last year): loans go up to Rs 5 lakh. Tell the customer straight away and set the amount. */
+var STARTUP_CAP = 500000;
+function checkStartupAmount() {
+  var box = $('startupNotice'), v = businessStartValue(), y = new Date().getFullYear(), n = parseInt(v, 10);
+  var isStartup = !!n && n >= y - 1 && !/^before/i.test(v);
+  if (!isStartup) { box.classList.add('hidden'); return; }
+  var amt = parseFloat(num('f_loanAmount')) || 0;
+  box.classList.remove('hidden');
+  if (amt > STARTUP_CAP) {
+    $('f_loanAmount').value = String(STARTUP_CAP); $('f_loanAmount').dispatchEvent(new Event('input'));
+    box.textContent = 'Startup loans go up to \u20B95 lakh, so we have set your amount to \u20B95,00,000. Once your business is a year old you can apply for more.';
+  } else {
+    box.textContent = 'Startup loans (business about a year old or less) go up to \u20B95 lakh.';
+  }
 }
-function vintageYearsFromStart(ym) {
-  var p = String(ym || '').split('-'); if (p.length !== 2) return '';
-  var now = new Date(), months = (now.getFullYear() - Number(p[0])) * 12 + (now.getMonth() + 1 - Number(p[1]));
-  return String(Math.max(0, Math.round(months / 12 * 10) / 10));
+$('f_startYear').addEventListener('change', checkStartupAmount);
+$('f_loanAmount').addEventListener('change', checkStartupAmount);
+function vintageYearsFromStart(v) {
+  var y = new Date().getFullYear(), t = String(v || '');
+  if (/^before/i.test(t)) return '5';
+  var n = parseInt(t, 10); if (!n) return '';
+  return n >= y ? '0.5' : String(Math.max(1, y - n));
 }
 
 /* ---------- bounce follow-up: cleared? if not, suggest LAP ---------- */
@@ -543,9 +558,9 @@ $('bounceAdvice').addEventListener('click', function (e) {
       if (!S.companyType) bad('f_companyType', 'Please select your type of company.');
       if (val('f_companyName').length < 2) bad('f_companyName', 'Please enter your company / business name.');
       if (needsCount) { var pc = parseInt(val('f_personCount'), 10); if (!(pc >= 2 && pc <= 10)) bad('f_personCount', 'Enter a number between 2 and 10.'); }
-      var bs = businessStartValue();
-      if (!bs) bad('f_startMonth', 'Please select the month and year your business started.');
-      else { var nowD = new Date(); if (Number(bs.slice(0, 4)) === nowD.getFullYear() && Number(bs.slice(5)) > nowD.getMonth() + 1) bad('f_startMonth', 'The start month cannot be in the future.'); }
+      if (!businessStartValue()) bad('f_startYear', 'Please select the year your business started.');
+      checkStartupAmount();
+      if (!val('f_turnover')) bad('f_turnover', "Please select last year's turnover.");
     }
     if (!val('f_house')) bad('f_house', 'Please select your house type.');
     if (!(parseFloat(num('f_income')) > 0)) bad('f_income', 'Enter your monthly income.');
@@ -568,7 +583,7 @@ $('bounceAdvice').addEventListener('click', function (e) {
       companyName: SE ? val('f_companyName') : '', personCount: (SE && needsCount) ? val('f_personCount') : '',
       house: val('f_house'), monthlyIncome: num('f_income'), existingEmi: num('f_emi'), loanAmount: num('f_loanAmount'),
       cibilBracket: val('f_cibil'), bounces: val('f_bounces'), enquiries: val('f_enquiries'),
-      businessStart: SE ? businessStartValue() : '', vintageYears: SE ? vintageYearsFromStart(businessStartValue()) : '', gstVintage: SE ? val('f_gstYear') : '',
+      businessStart: SE ? businessStartValue() : '', vintageYears: SE ? vintageYearsFromStart(businessStartValue()) : '', annualTurnover: SE ? val('f_turnover') : '',
       udyam: SE ? val('f_udyam') : '', bankAccountType: SE ? val('f_bankAccountType') : '',
       propertyAddress: secured ? val('f_propertyAddress') : '', propertyPincode: secured ? VMW.digits(val('f_propertyPincode')) : '',
       marketValue: secured ? num('f_marketValue') : '', bounceCleared: S.bounceCleared || '',
