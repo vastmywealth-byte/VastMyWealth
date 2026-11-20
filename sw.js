@@ -3,7 +3,7 @@
    Network-first for HTML/JS/CSS, cache fallback for offline,
    cache-first for images.
    ============================================================ */
-const CACHE_NAME = 'vmw-cache-v13';
+const CACHE_NAME = 'vmw-cache-v14';
 const CORE = [
   './',
   './index.html',
