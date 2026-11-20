@@ -195,10 +195,13 @@
       <div class="card-title">Financial details</div>
       <div id="blFields" class="hidden" style="margin-top:14px;">
         <div class="row2">
-          <div class="field"><label for="f_vintage">Business vintage<span class="req">*</span></label>
-            <select id="f_vintage"><option value="">Select</option><option value="0.5">Less than 1 year</option><option value="1">1–2 years</option><option value="2">2–3 years</option><option value="3">3+ years</option></select></div>
-          <div class="field"><label for="f_gstVintage">GST vintage</label>
-            <select id="f_gstVintage"><option value="">Select</option><option value="No GST">No GST</option><option value="<1 Year">Less than 1 year</option><option value="1-2 Years">1–2 years</option><option value="2+ Years">2 years and more</option></select></div>
+          <div class="field"><label for="f_startMonth">When did your business start?<span class="req">*</span></label>
+            <div class="row2" style="gap:8px;">
+              <select id="f_startMonth"><option value="">Month</option><option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Apr</option><option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option></select>
+              <select id="f_startYear"><option value="">Year</option></select>
+            </div></div>
+          <div class="field"><label for="f_gstYear">GST registration year</label>
+            <select id="f_gstYear"><option value="">Select</option><option value="No GST">No GST</option></select></div>
         </div>
         <div class="row2">
           <div class="field"><label for="f_udyam">Udyam registration</label>
@@ -215,10 +218,12 @@
       </div>
       <div class="field"><label for="f_loanAmount">Loan amount required (₹)<span class="req">*</span></label><input type="text" id="f_loanAmount" inputmode="numeric"></div>
       <div class="row2">
-        <div class="field"><label for="f_cibil">Approximate CIBIL score<span class="req">*</span></label>
-          <select id="f_cibil"><option value="">Select</option><option value="Above 750">750+</option><option value="700-749">700–749</option><option value="650-699">650–699</option><option value="Below 650">Below 650</option></select></div>
+        <div class="field"><label for="f_cibil">CIBIL score<span class="req">*</span></label>
+          <select id="f_cibil"><option value="">Select</option><option value="Above 750">750+</option><option value="700-749">700–749</option><option value="650-699">650–699</option><option value="Below 650">Below 650</option></select>
+          <div class="hint" style="font-size:12px;opacity:.75;margin-top:4px;">Please give accurate details — it speeds up your loan approval.</div></div>
         <div class="field"><label for="f_bounces">Bounces (last 6 months)<span class="req">*</span></label>
-          <select id="f_bounces"><option value="">Select</option><option value="No">No</option><option value="1-2">1–2</option></select></div>
+          <select id="f_bounces"><option value="">Select</option><option value="No">No</option><option value="1-2">1–2</option><option value="3+">3 or more</option></select>
+          <div class="hint" style="font-size:12px;opacity:.75;margin-top:4px;">Please give accurate details — it speeds up your loan approval.</div></div>
       </div>
       <div class="field hidden" id="bounceClearedField">
   <label>Have those bounced payments been cleared?<span class="req">*</span></label>
@@ -467,6 +472,22 @@
     $('personCountLabel').innerHTML = (this.value === 'Pvt Ltd' ? 'Number of directors' : 'Number of partners') + '<span class="req">*</span>';
   updateBounceAdvice();
   });
+/* ---------- business start / GST year dropdowns ---------- */
+(function () {
+  var y = new Date().getFullYear(), sy = $('f_startYear'), gy = $('f_gstYear'), i, o;
+  for (i = y; i >= y - 40; i--) { o = document.createElement('option'); o.value = o.textContent = String(i); sy.appendChild(o); }
+  for (i = y; i >= y - 12; i--) { o = document.createElement('option'); o.value = o.textContent = String(i); gy.appendChild(o); }
+})();
+function businessStartValue() {
+  var m = val('f_startMonth'), y = val('f_startYear');
+  return (m && y) ? (y + '-' + m) : '';
+}
+function vintageYearsFromStart(ym) {
+  var p = String(ym || '').split('-'); if (p.length !== 2) return '';
+  var now = new Date(), months = (now.getFullYear() - Number(p[0])) * 12 + (now.getMonth() + 1 - Number(p[1]));
+  return String(Math.max(0, Math.round(months / 12 * 10) / 10));
+}
+
 /* ---------- bounce follow-up: cleared? if not, suggest LAP ---------- */
 function canOfferLap() { return !REF || String(REF).trim().toUpperCase() === FULL_MENU_REF; }
 
@@ -483,11 +504,11 @@ function updateBounceAdvice() {
   if (secured) {
     adv.innerHTML = 'Thanks for being upfront. Lenders will want those dues settled, so please clear them as soon as you can. We will flag it for our advisor.';
   } else if (canOfferLap()) {
-    adv.innerHTML = 'With bounced payments still pending, lenders tend to be cautious on unsecured loans. ' +
+    adv.innerHTML = 'With bounced payments still pending, we cannot move an unsecured loan forward — your file will stay on hold until they are cleared. ' +
       'If you own a property, a <b>Loan Against Property</b> is often easier for lenders to consider. Clearing the pending amount soon will also help your CIBIL.' +
       '<div class="mt12"><button type="button" class="btn btn-primary btn-sm" id="switchToLapBtn">Switch to Loan Against Property</button></div>';
   } else {
-    adv.innerHTML = 'With bounced payments still pending, lenders tend to be cautious on unsecured loans. Clearing the pending amount soon will help your CIBIL, and our advisor can guide you on options.';
+    adv.innerHTML = 'With bounced payments still pending, we cannot move an unsecured loan forward — your file will stay on hold until they are cleared. Our advisor can guide you on options.';
   }
   adv.className = 'alert warn';
 }
@@ -522,7 +543,9 @@ $('bounceAdvice').addEventListener('click', function (e) {
       if (!S.companyType) bad('f_companyType', 'Please select your type of company.');
       if (val('f_companyName').length < 2) bad('f_companyName', 'Please enter your company / business name.');
       if (needsCount) { var pc = parseInt(val('f_personCount'), 10); if (!(pc >= 2 && pc <= 10)) bad('f_personCount', 'Enter a number between 2 and 10.'); }
-      if (!val('f_vintage')) bad('f_vintage', 'Please select your business vintage.');
+      var bs = businessStartValue();
+      if (!bs) bad('f_startMonth', 'Please select the month and year your business started.');
+      else { var nowD = new Date(); if (Number(bs.slice(0, 4)) === nowD.getFullYear() && Number(bs.slice(5)) > nowD.getMonth() + 1) bad('f_startMonth', 'The start month cannot be in the future.'); }
     }
     if (!val('f_house')) bad('f_house', 'Please select your house type.');
     if (!(parseFloat(num('f_income')) > 0)) bad('f_income', 'Enter your monthly income.');
@@ -545,7 +568,7 @@ $('bounceAdvice').addEventListener('click', function (e) {
       companyName: SE ? val('f_companyName') : '', personCount: (SE && needsCount) ? val('f_personCount') : '',
       house: val('f_house'), monthlyIncome: num('f_income'), existingEmi: num('f_emi'), loanAmount: num('f_loanAmount'),
       cibilBracket: val('f_cibil'), bounces: val('f_bounces'), enquiries: val('f_enquiries'),
-      vintageYears: SE ? val('f_vintage') : '', gstVintage: SE ? val('f_gstVintage') : '',
+      businessStart: SE ? businessStartValue() : '', vintageYears: SE ? vintageYearsFromStart(businessStartValue()) : '', gstVintage: SE ? val('f_gstYear') : '',
       udyam: SE ? val('f_udyam') : '', bankAccountType: SE ? val('f_bankAccountType') : '',
       propertyAddress: secured ? val('f_propertyAddress') : '', propertyPincode: secured ? VMW.digits(val('f_propertyPincode')) : '',
       marketValue: secured ? num('f_marketValue') : '', bounceCleared: S.bounceCleared || '',
