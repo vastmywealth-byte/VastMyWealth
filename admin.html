@@ -1,1024 +1,1381 @@
-// ============================================================
-// ADMIN PORTAL — VastMyWealth
-// Lives in the SAME Apps Script project as Code.gs / BankerCRM.gs /
-// VehicleEducationLoans.gs.
-// ============================================================
-var LENDER_PIPELINE_TAB   = "Lender Pipeline";
-var DSA_TAB                = "DSA Partners";
-var DSA_ASSIGNMENTS_TAB    = "DSA Assignments";
-var ADMIN_PASSWORD_PROP    = "ADMIN_PASSWORD";
-var DOMAIN_SPREADSHEET_ID  = "1sMUnJQcewkY0rlFTFdgw4ANagUrPq7_1-JZtg72tv_c";
-var DOMAIN_TAB_NAME        = "Domain";
-var SUPER_ADMIN_PHONE      = "9594592020";
-var DEFAULT_ADMIN_PIN      = "1976";
-
-// ============================================================
-// ONE-TIME SETUP — safe to re-run any time.
-// ============================================================
-function setupAdminPortalTabs() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  setupLenderPipelineTab(ss);
-  setupDsaTab(ss);
-  setupDsaAssignmentsTab(ss);
-  migrateLeadIdAndCompanyColumns();
-  migrateHiddenColumn();
-  Logger.log("✅ Admin portal tabs ready");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VastMyWealth — Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B1220; --panel:#111A2E; --panel-2:#16223A; --line:#233251;
+  --gold:#D4A741; --gold-light:#F0D593;
+  --ink:#0F1E3D; --text:#EAF0FC; --muted:#8FA0C4;
+  --ok:#34D399; --ok-bg:rgba(52,211,153,.14);
+  --warn:#F0B94B; --warn-bg:rgba(240,185,75,.14);
+  --bad:#F0665E; --bad-bg:rgba(240,102,94,.14);
+  --info:#7FB0FF; --info-bg:rgba(127,176,255,.14);
+  --radius:12px;
 }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+button{cursor:pointer;border:none;font-family:inherit;background:none;color:inherit}
+input,select,textarea{font-family:inherit}
+a{color:var(--gold-light)}
+.hidden{display:none!important}
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:32px 26px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.login-logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--gold),#B8863B);display:flex;align-items:center;justify-content:center;color:var(--ink);font-weight:800;font-size:18px;margin:0 auto 14px}
+.login-card h1{text-align:center;font-size:19px;font-weight:800}
+.login-card p{text-align:center;color:var(--muted);font-size:13px;margin:6px 0 22px}
+.login-card input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);color:#fff;font-size:15px;margin-bottom:12px}
+.login-card input:focus{outline:2px solid var(--gold);outline-offset:1px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border-radius:9px;font-weight:700;font-size:13.5px;transition:opacity .12s}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-block{width:100%}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#B8863B);color:var(--ink)}
+.btn-line{background:var(--panel-2);border:1px solid var(--line);color:var(--text)}
+.btn-ok{background:var(--ok-bg);color:var(--ok)}
+.btn-bad{background:var(--bad-bg);color:var(--bad)}
+.btn-sm{padding:7px 11px;font-size:12px;border-radius:7px}
+.err-msg{color:#FCA5A5;font-size:12.5px;text-align:center;margin-top:10px}
+#app{display:none;min-height:100vh}
+header.topbar{position:sticky;top:0;z-index:30;background:rgba(11,18,32,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14.5px}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--gold)}
+.topbar .spacer{flex:1}
+.global-search{padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:#fff;font-size:13px;min-width:180px}
+nav.tabs{display:flex;gap:4px;padding:8px 12px 0;overflow-x:auto}
+.tab-btn{padding:9px 14px;border-radius:9px 9px 0 0;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent}
+.tab-btn.active{color:#fff;background:var(--panel);border-bottom-color:var(--gold)}
+main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.toolbar input,.toolbar select{padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:#fff;font-size:13px}
+.toolbar label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:14px}
+.stat-box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat-box b{display:block;font-size:20px}
+.stat-box span{font-size:11px;color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.card-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;cursor:pointer}
+.card-row .name{font-size:14.5px;font-weight:700;color:#fff}
+.card-row .cp{color:var(--gold-light);font-weight:800}
+.card-row .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.caret{color:var(--muted);font-size:11px;transition:transform .15s;flex-shrink:0;margin-top:4px}
+.caret.open{transform:rotate(180deg)}
+.card-detail{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.card-detail.open{display:block}
+.meta-line{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:12px;color:var(--muted);margin-bottom:8px;align-items:center}
+.tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--panel-2);color:var(--text);white-space:nowrap}
+.tag.ok{background:var(--ok-bg);color:var(--ok)}
+.tag.warn{background:var(--warn-bg);color:var(--warn)}
+.tag.bad{background:var(--bad-bg);color:var(--bad)}
+.tag.info{background:var(--info-bg);color:var(--info)}
+.icon-row{display:flex;gap:6px}
+.icon-btn{width:30px;height:30px;border-radius:50%;background:var(--panel-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;text-decoration:none;color:var(--text)}
+.section-label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--gold-light);margin:14px 0 8px}
+.section-label:first-child{margin-top:0}
+.mini-row{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-bottom:6px;font-size:12.5px}
+.mini-row-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mini-row .lbl{font-weight:700;color:#fff}
+.mini-row select{font-size:12px;padding:5px 6px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:#fff}
+.pick-list{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;max-height:200px;overflow-y:auto}
+.pick-list label{display:flex;align-items:center;gap:9px;padding:9px 11px;font-size:13px;border-bottom:1px solid var(--line)}
+.pick-list label:last-child{border-bottom:0}
+.pick-list input{width:auto}
+.empty{text-align:center;padding:30px 12px;color:var(--muted);font-size:13px}
+.error-box{text-align:center;padding:30px 16px;color:#FCA5A5;font-size:13px;line-height:1.6}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11.5px;font-weight:700;color:var(--gold-light);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:11px 12px;border-radius:9px;border:1px solid var(--line);background:var(--panel-2);color:#fff;font-size:14px}
+.danger-zone{border:1px solid rgba(240,102,94,.4);border-radius:10px;padding:12px;margin-top:14px}
+.linkbox{display:flex;gap:8px;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:7px 7px 7px 10px}
+.linkbox span{flex:1;min-width:0;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.backdrop{display:none;position:fixed;inset:0;background:rgba(4,8,18,.72);z-index:60}
+.sheet{display:none;position:fixed;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;background:var(--bg);border-top:3px solid var(--gold);border-radius:16px 16px 0 0;padding:16px 16px 30px;z-index:61;max-width:640px;margin:0 auto}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.sheet-head h3{font-size:16px}
+.sheet-head .sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+.close-x{width:32px;height:32px;border-radius:50%;background:var(--panel-2);border:1px solid var(--line);font-size:15px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--ink);padding:10px 18px;border-radius:24px;font-size:13px;font-weight:700;z-index:80;display:none;max-width:90%;text-align:center}
+.toast.error{background:var(--bad);color:#fff}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
+.super-badge{background:var(--gold);color:var(--ink);padding:2px 8px;border-radius:6px;font-size:11px;font-weight:800;margin-left:8px}
+.domain-check-box{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<!-- ===================== LOGIN ===================== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">VMW</div>
+    <h1>Admin Control Panel</h1>
+    <p>Leads, bankers, partners &amp; DSA assignments</p>
+    <input type="password" id="adminPassword" placeholder="Admin password or PIN">
+    <button class="btn btn-gold btn-block" id="loginBtn">Sign in</button>
+    <div class="err-msg hidden" id="loginError"></div>
+  </div>
+</div>
 
-function setAdminPassword(password) {
-  PropertiesService.getScriptProperties().setProperty(ADMIN_PASSWORD_PROP, String(password));
-  Logger.log("✅ Admin password set.");
-}
+<!-- ===================== APP ===================== -->
+<div id="app">
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span>VastMyWealth Admin <span id="superAdminBadge" class="super-badge hidden">Super Admin</span></div>
+    <div class="spacer"></div>
+    <input type="text" class="global-search" id="globalSearch" placeholder="Search name, mobile, company…">
+    <button class="btn btn-line btn-sm" id="refreshBtn">↻ Refresh</button>
+    <button class="btn btn-line btn-sm" id="logoutBtn">Log out</button>
+  </header>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="tabLeads">Leads</button>
+    <button class="tab-btn" data-tab="tabBankers">Bankers</button>
+    <button class="tab-btn" data-tab="tabPartners">Partners</button>
+    <button class="tab-btn" data-tab="tabSubs">Biz Tool</button>
+  </nav>
+  <main>
+    <!-- ============ LEADS ============ -->
+    <div id="tabLeads" class="tab-pane">
+      <div class="stats-row" id="leadsStats"></div>
+      <div class="toolbar">
+        <select id="productFilter">
+          <option value="">All loan types</option>
+          <option value="PL">Personal Loan</option><option value="BL">Business Loan</option>
+          <option value="HL">Home Loan</option><option value="LAP">Loan Against Property</option>
+          <option value="VL">Vehicle Loan</option><option value="EL">Education Loan</option>
+        </select>
+        <select id="stageFilter">
+          <option value="">All stages</option>
+          <option value="No activity yet">No activity yet</option>
+          <option value="In process">In process</option>
+          <option value="Approved">Approved</option>
+          <option value="Disbursed">Disbursed</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+        <select id="docFilter">
+          <option value="">All documents</option>
+          <option value="Pending">Documents pending</option>
+          <option value="Submitted">Documents submitted</option>
+        </select>
+        <input type="text" id="stateFilter" placeholder="State">
+        <label><input type="checkbox" id="attentionFilter"> Needs attention only</label>
+        <label><input type="checkbox" id="awaitingFilter"> Awaiting updates only</label>
+        <label><input type="checkbox" id="showHiddenCheckbox"> Show hidden</label>
+      </div>
+      <div id="leadsContainer"><div class="empty">Loading leads…</div></div>
+    </div>
+    <!-- ============ BANKERS ============ -->
+    <div id="tabBankers" class="tab-pane hidden">
+      <div class="stats-row" id="bankersStats"></div>
+      <div class="section-label">⚠ Blocked / near limit (8 rejections in 30 days)</div>
+      <div id="blockedBankersContainer"><div class="empty">Loading…</div></div>
+      <div class="section-label" style="margin-top:20px;">Partner-referred bankers awaiting approval</div>
+      <div id="pendingPartnerBankersContainer"><div class="empty">Loading…</div></div>
+      <div class="section-label" style="margin-top:20px;">Pending DSA code verification</div>
+      <div id="pendingCodesContainer"><div class="empty">Loading…</div></div>
+      <div class="section-label" style="margin-top:20px;">All bankers</div>
+      <div class="toolbar"><input type="text" id="bankerSearchBox" placeholder="Search banker name or mobile…">
+        <label><input type="checkbox" id="showAllBankers"> Show all bankers (incl. inactive)</label>
+        <button class="btn btn-gold btn-sm" id="addBankerCodeBtn">+ Add DSA code</button>
+      </div>
+      <div id="bankersContainer"><div class="empty">Loading bankers…</div></div>
+    </div>
+    <!-- ============ PARTNERS ============ -->
+    <div id="tabPartners" class="tab-pane hidden">
+      <div class="toolbar"><input type="text" id="partnerSearchBox" placeholder="Search partner name or mobile…">
+        <label><input type="checkbox" id="showAllPartners"> Show all partners (incl. inactive)</label></div>
+      <div id="partnersContainer"><div class="empty">Loading partners…</div></div>
+    </div>
+    <!-- ============ BIZ TOOL SUBSCRIPTIONS ============ -->
+    <div id="tabSubs" class="tab-pane hidden">
+      <div class="stats-row" id="subsStats"></div>
+      <div class="toolbar">
+        <button class="btn btn-gold btn-sm" id="addSubBtn">+ New subscription</button>
+      </div>
+      <div id="subsContainer"><div class="empty">Loading…</div></div>
+    </div>
+  </main>
+</div>
 
-function setupLenderPipelineTab(ss) {
-  var tab = ss.getSheetByName(LENDER_PIPELINE_TAB);
-  if (tab) return;
-  tab = ss.insertSheet(LENDER_PIPELINE_TAB);
-  var headers = ["Lead ID","Mobile","Customer Name","Company Name","Product",
-    "Lender Name","Status","Last Updated","Assigned DSA(s)"];
-  tab.appendRow(headers);
-  tab.getRange(1,1,1,headers.length).setBackground("#16233F").setFontColor("white").setFontWeight("bold");
-  tab.setFrozenRows(1);
-}
+<!-- ===================== LEAD DETAIL SHEET ===================== -->
+<div class="backdrop" id="leadBackdrop"></div>
+<div class="sheet" id="leadSheet">
+  <div class="sheet-head">
+    <div><h3 id="sheetName"></h3><div class="sub" id="sheetSub"></div></div>
+    <button class="close-x" id="closeLeadSheet">✕</button>
+  </div>
+  <div id="exclusivityBanner" class="hidden" style="background:var(--warn-bg);border:1px solid rgba(240,185,75,.4);border-radius:9px;padding:9px 11px;margin:8px 0;font-size:12.5px;color:var(--warn);"></div>
+  <div class="section-label">Upload documents received on WhatsApp</div>
+  <p class="sub" style="margin:0 0 8px;">Select the file(s) exactly as received — they're saved straight into this customer's Drive folder, with no per-document labelling.</p>
+  <input type="file" id="waDocFiles" multiple accept="image/*,.pdf" style="color:var(--text);font-size:14px;margin-bottom:8px;">
+  <button class="btn btn-line btn-block" id="waDocUploadBtn">Upload to customer folder</button>
+  <div id="waDocProgress" class="sub hidden" style="margin-top:6px;"></div>
+  <div class="section-label">Follow-up — who has / hasn't updated</div>
+<p class="sub" style="margin:0 0 8px;">No portal needed — set each party's status yourself after speaking to them.</p>
+<div id="followUpRows"></div>
+<button class="btn btn-gold btn-block" style="margin-top:8px;" id="remindPendingBtn">✉ Email all pending</button>
+  <div class="section-label">Full lead history</div>
+  <div id="sheetHistoryRows"><div class="empty">Loading…</div></div>
+  <div class="section-label">Lender pipeline (admin-assigned)</div>
+  <div id="pipelineRows"></div>
+  <div class="section-label">Banker claim history (from the leads pool)</div>
+  <div id="claimHistoryRows"></div>
+  <div class="section-label">Send to additional lenders</div>
+  <div class="pick-list" id="lenderSelectList"><div class="empty">Loading lenders…</div></div>
+  <button class="btn btn-line btn-block" style="margin-top:8px;" id="addLendersBtn">Add selected lenders</button>
+  <div class="section-label">Assign to processing DSA</div>
+  <div class="pick-list" id="dsaSelectList"><div class="empty">Loading…</div></div>
+  <button class="btn btn-gold btn-block" style="margin-top:8px;" id="assignDsaBtn">Assign &amp; email documents</button>
+  <div id="processingBankSection" class="hidden">
+    <div class="section-label">Processing bank</div>
+    <input type="text" id="processingBankInput" placeholder="Bank name" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:#fff;margin-bottom:8px;">
+    <button class="btn btn-gold btn-block" id="saveProcessingBankBtn">Save</button>
+  </div>
+  <div class="danger-zone">
+    <div class="section-label">Danger zone</div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-line btn-block" id="hideLeadBtn">Hide from list</button>
+      <button class="btn btn-bad btn-block" id="deleteLeadBtn">Delete permanently</button>
+    </div>
+  </div>
+</div>
 
-function setupDsaTab(ss) {
-  var tab = ss.getSheetByName(DSA_TAB);
-  if (tab) return;
-  tab = ss.insertSheet(DSA_TAB);
-  var headers = ["DSA Name","Email(s)","Active"];
-  tab.appendRow(headers);
-  tab.getRange(1,1,1,headers.length).setBackground("#16233F").setFontColor("white").setFontWeight("bold");
-  tab.setFrozenRows(1);
-  tab.appendRow(["Example DSA","dsa1@example.com, dsa2@example.com","Yes"]);
-  tab.getRange(2,3).setNote("Type Yes or No. Only 'Yes' rows show up in the admin panel's DSA dropdown.");
-}
+<!-- ===================== ADD DSA CODE SHEET ===================== -->
+<div class="backdrop" id="addCodeBackdrop"></div>
+<div class="sheet" id="addCodeSheet">
+  <div class="sheet-head"><h3>Add a DSA code for a banker</h3><button class="close-x" id="closeAddCodeSheet">✕</button></div>
+  <div class="field"><label for="acBanker">Banker</label>
+    <select id="acBanker"><option value="">Select a banker…</option></select></div>
+  <div class="field"><label for="acBank">Bank / NBFC name</label><input type="text" id="acBank" autocomplete="off"></div>
+  <div class="field"><label for="acLoanType">Loan type</label>
+    <select id="acLoanType">
+      <option value="PL">Personal Loan</option><option value="BL">Business Loan</option>
+      <option value="HL">Home Loan</option><option value="LAP">Loan Against Property</option>
+      <option value="VL">Vehicle Loan</option><option value="EL">Education Loan</option>
+    </select></div>
+  <div class="field"><label for="acCode">DSA code</label><input type="text" id="acCode" autocomplete="off"></div>
+  <button class="btn btn-gold btn-block" id="acSubmitBtn">Add &amp; activate</button>
+  <div id="acResult" class="err-msg hidden"></div>
+</div>
+<div class="toast" id="toast"></div>
 
-function setupDsaAssignmentsTab(ss) {
-  var tab = ss.getSheetByName(DSA_ASSIGNMENTS_TAB);
-  if (tab) return;
-  tab = ss.insertSheet(DSA_ASSIGNMENTS_TAB);
-  var headers = ["Timestamp","Lead ID","Customer Name","DSA Name","DSA Email(s)","Lenders Included","Assigned By"];
-  tab.appendRow(headers);
-  tab.getRange(1,1,1,headers.length).setBackground("#16233F").setFontColor("white").setFontWeight("bold");
-  tab.setFrozenRows(1);
-}
+<!-- ===================== NEW SUBSCRIPTION SHEET ===================== -->
+<div class="backdrop" id="addSubBackdrop"></div>
+<div class="sheet" id="addSubSheet">
+  <div class="sheet-head"><h3>New Biz Tool subscription</h3><button class="close-x" id="closeAddSubSheet">✕</button></div>
+  <div class="field"><label for="subHolderType">Holder type</label>
+    <select id="subHolderType"><option value="Banker">Banker</option><option value="Partner">Partner / DSA</option></select></div>
+  <div class="field"><label for="subHolderCode">Holder code</label><input type="text" id="subHolderCode" placeholder="Partner Code, e.g. B12345 or P12345"></div>
+  <div class="field"><label for="subHolderName">Holder name</label><input type="text" id="subHolderName"></div>
+  <div class="field"><label for="subBankName">Bank name (bankers only)</label><input type="text" id="subBankName"></div>
+  <div class="field"><label for="subStates">State(s) — comma separated</label><input type="text" id="subStates" placeholder="e.g. Maharashtra, Karnataka"></div>
+  <div class="field"><label for="subCity">City (optional — leave blank for the whole state)</label><input type="text" id="subCity"></div>
+  <div class="field"><label for="subPlan">Plan</label>
+    <select id="subPlan"><option value="Monthly">Monthly — ₹7,000</option><option value="Quarterly">Quarterly — ₹18,000</option></select></div>
+  <div class="field"><label for="subAmount">Amount paid (₹) — leave blank to use the plan price</label><input type="text" id="subAmount" inputmode="numeric"></div>
+  <div class="field"><label for="subProof">Payment reference / proof note</label><input type="text" id="subProof" placeholder="UTR, cheque no., or a note"></div>
+  <button class="btn btn-gold btn-block" id="subSubmitBtn">Create — active immediately</button>
+  <div id="subResult" class="err-msg hidden"></div>
+</div>
 
-function migrateLeadIdAndCompanyColumns() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  [PORTAL_LEADS_TAB, LAP_HL_LEADS_TAB].forEach(function(tabName) {
-    var tab = ss.getSheetByName(tabName);
-    if (!tab) { Logger.log(tabName + ": tab not found, skipping"); return; }
-    function ensureColumn(colName) {
-      var lastCol = tab.getLastColumn();
-      var headers = tab.getRange(1, 1, 1, lastCol).getValues()[0];
-      if (headers.indexOf(colName) !== -1) return;
-      tab.getRange(1, lastCol + 1).setValue(colName)
-        .setBackground("#16233F").setFontColor("white").setFontWeight("bold");
-    }
-    ensureColumn("Lead ID");
-    var lastCol = tab.getLastColumn();
-    var headers = tab.getRange(1, 1, 1, lastCol).getValues()[0];
-    var leadIdCol = headers.indexOf("Lead ID") + 1;
-    var lastRow = tab.getLastRow();
-    if (lastRow >= 2) {
-      var leadIdRange = tab.getRange(2, leadIdCol, lastRow - 1, 1);
-      var leadIdValues = leadIdRange.getValues();
-      var isModified = false;
-      for (var r = 0; r < leadIdValues.length; r++) {
-        if (!leadIdValues[r][0]) { leadIdValues[r][0] = generateLeadId(); isModified = true; }
-      }
-      if (isModified) leadIdRange.setValues(leadIdValues);
-    }
-    ensureColumn("Company Name");
-    if (tabName === PORTAL_LEADS_TAB) ensureColumn("Documents Folder");
-    Logger.log(tabName + ": migration checked/applied");
+<script>
+var API_URL = "https://vmw-portal-api.vastmywealth.workers.dev/";   // same backend as every other page (Cloudflare worker)
+var SITE_BASE = String(location.href).split('#')[0].split('?')[0].replace(/[^\/]*$/, '');
+function refLinkFor(code) { return SITE_BASE + "apply.html?ref=" + encodeURIComponent(code); }
+function copyText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+  return new Promise(function (res, rej) {
+    try { var t = document.createElement('textarea'); t.value = text; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); var ok = document.execCommand('copy'); document.body.removeChild(t); ok ? res() : rej(new Error('copy failed')); }
+    catch (e) { rej(e); }
   });
 }
 
-function generateLeadId() {
-  return "LD" + new Date().getTime() + Math.floor(100 + Math.random() * 900);
+var ADMIN_PASSWORD = "";
+var SUPER_ADMIN_PHONE = "9594592020";
+var CURRENT_USER_PHONE = "";
+var BANK_DOMAINS_LIST = [];
+var ALL_LEADS = [], ACTIVE_LENDERS = [], ACTIVE_DSAS = [], ALL_PARTNERS = [], ALL_BANKERS = [], ALL_SUBS = [];
+var CURRENT_LEAD = null, SUBS_LOADED = false;
+
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { var d = document.createElement('div'); d.textContent = (s === undefined || s === null) ? '' : s; return d.innerHTML; }
+function inr(n) { var v = parseFloat(String(n || '').replace(/[^0-9.]/g, '')); return isNaN(v) ? '—' : '₹' + v.toLocaleString('en-IN'); }
+function fmtDate(ts) { if (!ts) return '—'; return new Date(ts).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+function showToast(msg, isError) { var t = $('toast'); t.textContent = msg; t.className = 'toast' + (isError ? ' error' : ''); t.style.display = 'block'; setTimeout(function () { t.style.display = 'none'; }, 3200); }
+
+function apiPost(payload) {
+  if (CURRENT_USER_PHONE === SUPER_ADMIN_PHONE) {
+    payload.superAdminPhone = SUPER_ADMIN_PHONE;
+    payload.mobile = SUPER_ADMIN_PHONE;   // backend reads "mobile"
+  }
+  return fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
+    .then(function (r) { return r.text(); })
+    .then(function (raw) { try { return JSON.parse(raw); } catch (e) { throw new Error("Server returned non-JSON response."); } });
 }
 
-function populateLenderPipeline(leadId, mobile, customerName, companyName, product, lenders) {
-  var tab = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LENDER_PIPELINE_TAB);
-  if (!tab || !leadId) return;
-  lenders.forEach(function(l) {
-    tab.appendRow([leadId, mobile || "", customerName || "", companyName || "", product || "",
-      l.name, "In Process", new Date(), ""]);
-  });
+function withBusy(btn, label, fn) {
+  var orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span> ' + esc(label);
+  return fn().finally(function () { btn.disabled = false; btn.innerHTML = orig; });
 }
 
-function isValidAdmin(password, mobile) {
-  var cleanPass = String(password || "").trim();
-  var cleanMobile = String(mobile || "").replace(/\D/g, "");
-  
-  if (cleanPass === DEFAULT_ADMIN_PIN || cleanPass === SUPER_ADMIN_PHONE) return true;
-  if (cleanMobile === SUPER_ADMIN_PHONE) return true;
-
-  var real = PropertiesService.getScriptProperties().getProperty(ADMIN_PASSWORD_PROP);
-  return !!(real && cleanPass && cleanPass === String(real).trim());
+/* ================= 3. BACK BUTTON NAVIGATION HANDLER ================= */
+// Prevents accidentally exiting or reloading the app when tapping back on phone
+function openSheet(s, b) {
+  $(b).style.display = 'block';
+  $(s).style.display = 'block';
+  window.history.pushState({ modalOpen: true, sheetId: s, backdropId: b }, "");
 }
 
-// Bank domain lookup
-function getBankDomainMap() {
-  return getCachedOrFetch('vmw_bank_domains_map', 600, function () {
-    try {
-      var extSS = SpreadsheetApp.openById(DOMAIN_SPREADSHEET_ID);
-      var tab = extSS.getSheetByName(DOMAIN_TAB_NAME) || extSS.getSheets()[0];
-      var data = tab.getDataRange().getValues();
-      var map = {};
-      var list = [];
-      for (var i = 1; i < data.length; i++) {
-        var bankName = String(data[i][0] || "").trim();
-        var domain = String(data[i][1] || "").trim().toLowerCase().replace(/^@/, '');
-        if (bankName && domain) {
-          map[bankName.toLowerCase()] = domain;
-          list.push({ bankName: bankName, domain: domain });
-        }
-      }
-      return { map: map, list: list };
-    } catch (e) {
-      Logger.log("Error loading domain sheet: " + e.toString());
-      return { map: {}, list: [] };
+function closeSheet(s, b) {
+  $(s).style.display = 'none';
+  $(b).style.display = 'none';
+}
+
+window.addEventListener('popstate', function (event) {
+  var openBackdrops = document.querySelectorAll('.backdrop');
+  var anyOpen = false;
+  openBackdrops.forEach(function (el) {
+    if (el.style.display === 'block') {
+      el.style.display = 'none';
+      anyOpen = true;
     }
   });
-}
-
-// ============================================================
-// Called from doPost() in Code.gs
-// ============================================================
-function handleAdminAction(payload) {
-  // The admin page sends the super-admin phone as "mobile" and/or "superAdminPhone"
-  if (!payload.mobile && payload.superAdminPhone) payload.mobile = payload.superAdminPhone;
-  if (payload.action === "adminLogin") {
-    var valid = isValidAdmin(payload.password, payload.mobile);
-    return jsonResponse({ success: valid });
-  }
-  if (!isValidAdmin(payload.password, payload.mobile)) {
-    return jsonResponse({ success: false, error: "Unauthorized" });
-  }
-
-  if (payload.action === "adminGetDashboardData")      return handleGetDashboardData(payload);
-  if (payload.action === "adminGetAllLeads")           return handleGetAllLeads(payload);
-  if (payload.action === "adminGetDsaList")            return handleGetDsaList();
-  if (payload.action === "adminGetActiveLenders")      return handleGetActiveLenders();
-  if (payload.action === "adminGetPartners")           return handleGetPartnersDirectory();
-  if (payload.action === "adminClearCache")            return handleClearAdminCache();
-  if (payload.action === "adminUpdateLenderStatus")    return handleUpdateLenderStatus(payload);
-  if (payload.action === "adminAddLendersToPipeline")  return handleAddLendersToPipeline(payload);
-  if (payload.action === "adminAssignDsa")             return handleAssignDsa(payload);
-  if (payload.action === "adminSetLeadState")          return handleAdminSetLeadState(payload);   // Release / Hold / Reject / Auto
-  if (payload.action === "adminSetVlElProcessingBank") return handleSetVlElProcessingBank(payload);
-  if (payload.action === "adminHideLead")              return handleHideLead(payload, true);
-  if (payload.action === "adminUnhideLead")            return handleHideLead(payload, false);
-  if (payload.action === "adminDeleteLead")            return handleDeleteLead(payload);
-  if (payload.action === "adminUploadDocument")        return handleAdminUploadDocument(payload);
-  if (payload.action === "adminFinalizeDocuments")     return handleAdminFinalizeDocuments(payload);
-
-  // ---- Bankers ----
-  if (payload.action === "adminGetBankers")            return handleAdminGetBankers();
-  if (payload.action === "adminGetPendingDsaCodes")    return adminListPendingVerifications(payload);
-  if (payload.action === "adminApproveDsaCode")        return adminVerifyBanker(payload);
-  if (payload.action === "adminAddDsaCodeForBanker")   return handleAdminAddDsaCodeForBanker(payload);
-  if (payload.action === "adminGetBlockedBankers")     return handleGetBlockedBankers();
-  if (payload.action === "adminUnblockBanker")         return adminUnblockBankerLeads(payload);
-  if (payload.action === "adminUpdateBankerStatus")    return handleAdminUpdateBankerStatus(payload);
-  if (payload.action === "adminListPendingPartnerBankers") return handleListPendingPartnerBankersWithDomains(payload);
-  if (payload.action === "adminApprovePartnerBanker")  return adminApprovePartnerBanker(payload);
-  if (payload.action === "adminRejectPartnerBanker")   return adminRejectPartnerBanker(payload);
-
-  // ---- Lead history / lifecycle ----
-  if (payload.action === "adminGetLeadHistory")        return handleGetLeadHistory(payload);
-  if (payload.action === "adminGetLeadWorkers")        return handleGetLeadWorkers(payload);
-  if (payload.action === "adminNudgeWorker")           return handleNudgeWorker(payload);
-    // ---- Follow-up (FOLLOW-UP.gs) ----
-  if (payload.action === "adminSetClaimStatus")        return handleAdminSetClaimStatus(payload);
-  if (payload.action === "adminSetDsaStatus")          return handleAdminSetDsaStatus(payload);
-  if (payload.action === "adminSendFollowUp")          return handleAdminSendFollowUp(payload);
-  if (payload.action === "adminLogContact")            return handleAdminLogContact(payload);
-
-  // ---- Subscriptions ----
-  if (typeof handleSubscriptionAdminAction === "function") {
-    var subResult = handleSubscriptionAdminAction(payload);
-    if (subResult) return subResult;
-  }
-  return null;
-}
-
-function handleListPendingPartnerBankersWithDomains(payload) {
-  var rawResponse;
-  if (typeof adminListPendingPartnerBankers === "function") {
-    var serviceOut = adminListPendingPartnerBankers(payload);
-    try {
-      rawResponse = JSON.parse(serviceOut.getContent());
-    } catch(e) {
-      rawResponse = { status: "success", pending: [] };
+  var openSheets = document.querySelectorAll('.sheet');
+  openSheets.forEach(function (el) {
+    if (el.style.display === 'block') {
+      el.style.display = 'none';
+      anyOpen = true;
     }
+  });
+  if (anyOpen) {
+    return; // Closed the sheet on back press
+  }
+  var activeTab = document.querySelector('.tab-pane:not(.hidden)');
+  if (activeTab && activeTab.id !== 'tabLeads') {
+    var leadsTabBtn = document.querySelector('[data-tab="tabLeads"]');
+    if (leadsTabBtn) leadsTabBtn.click();
+  }
+});
+
+function toggleDetail(rowEl) {
+  var d = rowEl.nextElementSibling, c = rowEl.querySelector('.caret');
+  if (!d) return; d.classList.toggle('open'); if (c) c.classList.toggle('open');
+}
+
+/* Click the customer name card -> fetch (once per page load) and render the
+   full Lead Lifecycle history for that lead, right inside the expanded card. */
+var LEAD_HISTORY_CACHE = {};
+function leadEventTagClass(ev) {
+  if (/disbursed/i.test(ev)) return 'ok'; if (/rejected/i.test(ev)) return 'bad';
+  if (/incomplete/i.test(ev)) return 'warn';
+  if (/claimed|routed|assigned/i.test(ev)) return 'info'; return '';
+}
+function loadLeadHistoryInline(rowEl, leadId) {
+  var box = $('hist_' + leadId);
+  if (!box) return;
+  var detail = rowEl.nextElementSibling;
+  if (!detail || !detail.classList.contains('open')) return; // just closed — nothing to load
+  if (LEAD_HISTORY_CACHE[leadId]) { renderLeadHistoryBox(box, LEAD_HISTORY_CACHE[leadId]); return; }
+  box.innerHTML = '<div class="empty">Loading…</div>';
+  apiPost({ action: "adminGetLeadHistory", password: ADMIN_PASSWORD, leadId: leadId }).then(function (r) {
+    var events = (r.success ? r.events : []) || [];
+    LEAD_HISTORY_CACHE[leadId] = events;
+    renderLeadHistoryBox(box, events);
+  }).catch(function () { box.innerHTML = '<div class="error-box">Could not load history.</div>'; });
+}
+function renderLeadHistoryBox(box, events) {
+  if (!events.length) { box.innerHTML = '<div class="empty">No lifecycle events logged yet.</div>'; return; }
+  box.innerHTML = events.map(function (e) {
+    return '<div class="mini-row"><div class="mini-row-top"><span class="lbl">' + esc(e.event) + '</span><span class="tag ' + leadEventTagClass(e.event) + '">' + fmtDate(e.timestamp) + '</span></div>' +
+      '<div class="sub" style="margin-top:4px;">' + esc(e.actorType || '') + (e.actorName ? (' · ' + esc(e.actorName)) : '') + (e.actorCode ? (' (' + esc(e.actorCode) + ')') : '') +
+      (e.commissionPercent !== null && e.commissionPercent !== '' ? (' · VMW ' + esc(e.commissionPercent) + '%') : '') + '</div>' +
+      (e.details ? ('<div class="sub" style="margin-top:2px;">' + esc(e.details) + '</div>') : '') + '</div>';
+  }).join('');
+}
+
+/* ================= AUTO-LOGIN & 9594592020 SUPER ADMIN ================= */
+document.addEventListener("DOMContentLoaded", function () {
+  var urlParams = new URLSearchParams(window.location.search);
+  var phoneParam = urlParams.get('phone') || urlParams.get('mobile') || urlParams.get('superAdmin');
+  if (phoneParam && String(phoneParam).replace(/\D/g, '') === SUPER_ADMIN_PHONE) {
+    CURRENT_USER_PHONE = SUPER_ADMIN_PHONE;
+    localStorage.setItem('vmw_admin_phone', SUPER_ADMIN_PHONE);
+    $('superAdminBadge').classList.remove('hidden');
   } else {
-    rawResponse = { status: "success", pending: [] };
+    var storedPhone = localStorage.getItem('vmw_admin_phone');
+    if (storedPhone === SUPER_ADMIN_PHONE) {
+      CURRENT_USER_PHONE = SUPER_ADMIN_PHONE;
+      $('superAdminBadge').classList.remove('hidden');
+    }
   }
 
-  var domainData = getBankDomainMap();
-  var domainMap = domainData.map || {};
-  var pendingList = rawResponse.pending || [];
-
-  pendingList.forEach(function(p) {
-    var bank = String(p.bankName || "").trim().toLowerCase();
-    var email = String(p.email || "").trim().toLowerCase();
-    var emailDomain = email.indexOf("@") !== -1 ? email.split("@").pop() : "";
-    var expectedDomain = domainMap[bank] || "";
-
-    p.emailDomain = emailDomain;
-    p.expectedDomain = expectedDomain;
-    p.domainMatch = expectedDomain ? (emailDomain === expectedDomain.toLowerCase()) : null;
-  });
-
-  return jsonResponse({
-    status: "success",
-    pending: pendingList,
-    bankDomains: domainData.list || []
-  });
-}
-
-function getCachedOrFetch(key, ttlSeconds, fetchFn) {
-  var cache = CacheService.getScriptCache();
-  try {
-    var cached = cache.get(key);
-    if (cached) return JSON.parse(cached);
-  } catch (e) {}
-  var data = fetchFn();
-  try { cache.put(key, JSON.stringify(data), ttlSeconds); } catch (e) {}
-  return data;
-}
-
-function getActiveLendersData() {
-  return getCachedOrFetch('vmw_active_lenders', 300, function () {
-    var tab = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LENDERS_TAB);
-    if (!tab) return [];
-    var data = tab.getDataRange().getValues();
-    var list = [];
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][12] === "Yes") list.push({ name: data[i][0], product: data[i][1], category: data[i][2] });
+  var savedPin = localStorage.getItem('vmw_admin_pin');
+  var cachedData = localStorage.getItem('vmw_admin_cache');
+  if (savedPin || CURRENT_USER_PHONE === SUPER_ADMIN_PHONE) {
+    ADMIN_PASSWORD = savedPin || "";
+    $("loginScreen").style.display = "none";
+    $("app").style.display = "block";
+    if (cachedData) {
+      try { applyDashboardData(JSON.parse(cachedData)); } catch(e){}
     }
-    return list;
-  });
-}
-
-function getDsaListData() {
-  return getCachedOrFetch('vmw_dsa_list', 300, function () {
-    var tab = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DSA_TAB);
-    if (!tab) return [];
-    var data = tab.getDataRange().getValues();
-    var phoneCol = data[0].indexOf("Phone");
-    var list = [];
-    for (var i = 1; i < data.length; i++) {
-      if (String(data[i][2]).trim().toLowerCase() === "yes") {
-        list.push({ name: data[i][0], emails: data[i][1], phone: phoneCol !== -1 ? String(data[i][phoneCol] || "") : "" });
+    loadBankerTabData();
+    apiPost({ action: "adminGetDashboardData", password: ADMIN_PASSWORD }).then(function (r) {
+      if (r.success) { localStorage.setItem('vmw_admin_cache', JSON.stringify(r)); applyDashboardData(r); }
+      else if (r.error === 'Unauthorized') {   // stale saved PIN / phone: back to the login screen instead of a dead dashboard
+        try { localStorage.removeItem('vmw_admin_pin'); localStorage.removeItem('vmw_admin_cache'); } catch (e) {}
+        ADMIN_PASSWORD = ""; $("app").style.display = "none"; $("loginScreen").style.display = "block";
+        $("loginError").textContent = "Session expired — please sign in again."; $("loginError").classList.remove('hidden');
       }
-    }
-    return list;
-  });
-}
+    }).catch(function () {});
+  }
+});
 
-function getPartnersListData() {
-  return getCachedOrFetch('vmw_partners_list', 90, function () {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var tab = ss.getSheetByName(PARTNERS_TAB);
-    if (!tab) return [];
-    var data = tab.getDataRange().getValues();
-    var headers = data[0];
-    var lastLoginCol = headers.indexOf("Last Login");
-    var typeCol = headers.indexOf("Type");
-    var inactiveCutoff = new Date();
-    inactiveCutoff.setDate(inactiveCutoff.getDate() - 30);
-    var list = [];
-    for (var i = 1; i < data.length; i++) {
-      if (typeCol !== -1 && data[i][typeCol] === "Banker") continue;
-      var lastLoginRaw = lastLoginCol !== -1 ? data[i][lastLoginCol] : "";
-      var lastLoginDate = lastLoginRaw ? new Date(lastLoginRaw) : null;
-      var isInactive = !lastLoginDate || isNaN(lastLoginDate.getTime()) || lastLoginDate < inactiveCutoff;
-      list.push({
-        partnerCode: data[i][0], name: data[i][1], mobile: data[i][2], email: data[i][3],
-        chequeLink: data[i][7] || "", status: data[i][11],
-        lastLogin: lastLoginDate ? lastLoginDate.getTime() : null,
-        inactive: isInactive
-      });
-    }
-    return list;
-  });
-}
+function doLogin() {
+  var pw = $("adminPassword").value.trim(), errEl = $("loginError");
+  errEl.classList.add('hidden');
+  if (!pw) return;
 
-function handleClearAdminCache() {
-  CacheService.getScriptCache().removeAll([
-    'vmw_active_lenders', 'vmw_dsa_list', 'vmw_partners_list',
-    'vmw_all_leads', 'vmw_all_leads_hidden', 'vmw_admin_bankers',
-    'vmw_admin_blocked', 'vmw_bank_domains_map', 'vmw_lead_last_event',
-    'vmw_dsa_directory'
-  ]);
-  return jsonResponse({ success: true });
-}
-
-function handleGetDashboardData(payload) {
-  var includeHidden = !!(payload && payload.includeHidden);
-  var cacheKey = includeHidden ? 'vmw_all_leads_hidden' : 'vmw_all_leads';
-  return jsonResponse({
-    success: true,
-    leads: getCachedOrFetch(cacheKey, 60, function(){ return getAllLeadsData(includeHidden); }),
-    lenders: getActiveLendersData(),
-    dsas: getDsaListData(),
-    partners: getPartnersListData()
-  });
-}
-
-function getClaimsByLeadId() {
-  var s;
-  var contacts = {};
-  try { contacts = getBankerContactMap() || {}; } catch (ce) { contacts = {}; }   // bug fix: "contacts" was never defined
-  try { s = readSheet(BUSINESS_LEADS_TAB, true); } catch (e) { return {}; }
-  var byLead = {};
-  (s.rows || []).forEach(function (r) {
-    var leadId = r[1];
-    if (!leadId) return;
-    if (!byLead[leadId]) byLead[leadId] = [];
-    byLead[leadId].push({
-      claimId: r[0], bankerCode: r[3], bankerName: r[4], bankerEmail: r[5],
-      bankerMobile: (contacts[r[3]] || {}).mobile || "",
-      dsaCodeUsed: r[10], claimStatus: r[11], rejectionReason: r[12],
-      claimedAt: r[13] ? new Date(r[13]).getTime() : null,
-      resolvedAt: r[14] ? new Date(r[14]).getTime() : null,
-      disbursedAmount: r[17] || "", dsaName: r[18] || ""
-    });
-  });
-  return byLead;
-}
-
-function computeLeadStage(pipeline, claims) {
-  var texts = [];
-  (pipeline || []).forEach(function (p) { texts.push(p.status); });
-  (claims || []).forEach(function (c) { texts.push(c.claimStatus); });
-  if (!texts.length) return "No activity yet";
-  if (texts.indexOf("Disbursed") !== -1) return "Disbursed";
-  if (texts.indexOf("Approved") !== -1) return "Approved";
-  if (texts.indexOf("Active") !== -1 || texts.indexOf("In Process") !== -1) return "In process";
-  if (texts.every(function (t) { return t === "Rejected"; })) return "Rejected";
-  return texts[0];
-}
-
-function getAllLeadsData(includeHidden) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var pipelineTab = ss.getSheetByName(LENDER_PIPELINE_TAB);
-  var pipelineData = pipelineTab ? pipelineTab.getDataRange().getValues() : [[]];
-  var pipelineByLead = {};
-  for (var pi = 1; pi < pipelineData.length; pi++) {
-    var row = pipelineData[pi];
-    var lid = row[0];
-    if (!lid) continue;
-    if (!pipelineByLead[lid]) pipelineByLead[lid] = [];
-    pipelineByLead[lid].push({
-      lender: row[5], status: row[6],
-      lastUpdated: row[7] ? new Date(row[7]).getTime() : null,
-      assignedDsa: row[8] || ""
-    });
+  var cleanPhone = pw.replace(/\D/g, "");
+  var payload = { action: "adminLogin", password: pw };
+  if (cleanPhone === SUPER_ADMIN_PHONE || CURRENT_USER_PHONE === SUPER_ADMIN_PHONE) {
+    CURRENT_USER_PHONE = SUPER_ADMIN_PHONE;
+    payload.mobile = SUPER_ADMIN_PHONE;
   }
 
-  var claimsByLead = getClaimsByLeadId();
-  var lastEventByLead = getLeadLifecycleLastEventMap();
-  var actorEventMap = getLeadActorLastEventMap();   // per-banker last update (LeadFollowUp.gs)
-  var ATTENTION_DAYS = 3;
-  var attentionCutoff = Date.now() - ATTENTION_DAYS * 24 * 60 * 60 * 1000;
-  var CLOSED_STAGES = { "Disbursed": true, "Rejected": true };
-  var leads = [];
-  var tabConfigs = [
-    { tabName: PORTAL_LEADS_TAB },
-    { tabName: LAP_HL_LEADS_TAB },
-    { tabName: (typeof VL_LEADS_TAB !== "undefined" ? VL_LEADS_TAB : null) },
-    { tabName: (typeof EL_LEADS_TAB !== "undefined" ? EL_LEADS_TAB : null), nameField: "Student Name", mobileField: "Student Mobile" }
+  withBusy($("loginBtn"), "Signing in…", function () {
+    return apiPost(payload).then(function (r) {
+      if (!r.success) {
+        errEl.textContent = r.error ? ("Server said: " + r.error) : "Incorrect password or unauthorized phone number. (server reply: " + JSON.stringify(r).slice(0, 160) + ")";
+        errEl.classList.remove('hidden');
+        return;
+      }
+      ADMIN_PASSWORD = pw;
+      localStorage.setItem('vmw_admin_pin', pw);
+      if (r.isSuperAdmin || CURRENT_USER_PHONE === SUPER_ADMIN_PHONE) {
+        CURRENT_USER_PHONE = SUPER_ADMIN_PHONE;
+        localStorage.setItem('vmw_admin_phone', SUPER_ADMIN_PHONE);
+        $('superAdminBadge').classList.remove('hidden');
+      }
+      $("loginScreen").style.display = "none";
+      $("app").style.display = "block";
+      $("leadsContainer").innerHTML = '<div class="empty">Loading leads…</div>';
+      loadBankerTabData();
+      return apiPost({ action: "adminGetDashboardData", password: ADMIN_PASSWORD }).then(function (result) {
+        if (result.success) {
+          localStorage.setItem('vmw_admin_cache', JSON.stringify(result));
+          applyDashboardData(result);
+        } else {
+          $("leadsContainer").innerHTML = '<div class="error-box">Failed to load: ' + esc(result.error || "Unknown error") + '</div>';
+        }
+      });
+    }).catch(function (err) {
+      errEl.textContent = "Connection error: " + err.message;
+      errEl.classList.remove('hidden');
+    });
+  });
+}
+
+function applyDashboardData(result) {
+  ALL_LEADS = result.leads || [];
+  ACTIVE_LENDERS = result.lenders || [];
+  ACTIVE_DSAS = result.dsas || [];
+  ALL_PARTNERS = result.partners || [];
+  renderLeads();
+  renderPartners();
+}
+
+function loadBankerTabData() {
+  loadBankers();
+  loadPendingCodes();
+  loadBlockedBankers();
+  loadPendingPartnerBankers();
+  SUBS_LOADED = true;
+  loadSubscriptions();
+}
+
+/* ================= 2. PENDING BANKERS & DOMAIN DROPDOWN ================= */
+function loadPendingPartnerBankers() {
+  $('pendingPartnerBankersContainer').innerHTML = '<div class="empty">Loading pending approvals…</div>';
+  apiPost({ action: "adminListPendingPartnerBankers", password: ADMIN_PASSWORD }).then(function (r) {
+    var pending = (r.status === 'success' ? r.pending : []) || [];
+    BANK_DOMAINS_LIST = r.bankDomains || [];
+    var el = $('pendingPartnerBankersContainer');
+    if (!pending.length) { el.innerHTML = '<div class="empty">None waiting right now.</div>'; return; }
+
+    el.innerHTML = pending.map(function (p, pIdx) {
+      var bankOptions = '<option value="">-- Choose/Verify Bank Domain --</option>' +
+        BANK_DOMAINS_LIST.map(function(bd) {
+          var sel = (p.bankName && p.bankName.toLowerCase() === bd.bankName.toLowerCase()) ? 'selected' : '';
+          return '<option value="' + esc(bd.domain) + '" ' + sel + ' data-bank="' + esc(bd.bankName) + '">' + esc(bd.bankName) + ' (@' + esc(bd.domain) + ')</option>';
+        }).join('');
+
+      var domainStatusHtml = '';
+      if (p.domainMatch === true) {
+        domainStatusHtml = '<span class="tag ok">✅ Official Email Verified (@' + esc(p.expectedDomain) + ')</span>';
+      } else if (p.domainMatch === false) {
+        domainStatusHtml = '<span class="tag bad">⚠ Domain Mismatch: expected @' + esc(p.expectedDomain) + ', got @' + esc(p.emailDomain) + '</span>';
+      } else {
+        domainStatusHtml = '<span class="tag warn">Domain not checked</span>';
+      }
+
+      return '<div class="card" data-card-idx="' + pIdx + '">' +
+        '<div class="card-row" style="cursor:default;">' +
+          '<div>' +
+            '<div class="name">' + esc(p.name || p.bankerId) + '</div>' +
+            '<div class="sub">' + esc(p.bankName || '—') + ' · ' + esc(p.mobile || '') + ' · <b>' + esc(p.email || 'No email') + '</b></div>' +
+            '<div class="sub">Referred by Partner: ' + esc(p.referredBy) + '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:6px;">' +
+            '<button class="btn btn-ok btn-sm" data-approve-pb="' + esc(p.bankerId) + '">Approve</button>' +
+            '<button class="btn btn-bad btn-sm" data-reject-pb="' + esc(p.bankerId) + '" data-reject-pb-name="' + esc(p.name || p.bankerId) + '">Reject</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="domain-check-box">' +
+          '<div style="font-size:11.5px;font-weight:700;color:var(--gold-light);margin-bottom:4px;">VERIFY BANK OFFICIAL EMAIL DOMAIN</div>' +
+          '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+            '<select class="bank-domain-select" style="padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:#fff;font-size:12px;flex:1;min-width:200px;" onchange="onBankDomainChanged(' + pIdx + ', this.value, \'' + esc(p.email || '') + '\')">' + bankOptions + '</select>' +
+            '<div id="domainStatus_' + pIdx + '">' + domainStatusHtml + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }).catch(function () { $('pendingPartnerBankersContainer').innerHTML = '<div class="error-box">Could not load pending bankers.</div>'; });
+}
+
+function onBankDomainChanged(pIdx, expectedDomain, email) {
+  var statusEl = $('domainStatus_' + pIdx);
+  if (!statusEl) return;
+  var emailDomain = (email.indexOf('@') !== -1) ? email.split('@').pop().toLowerCase() : '';
+  if (!expectedDomain) {
+    statusEl.innerHTML = '<span class="tag warn">Select a bank to verify domain</span>';
+    return;
+  }
+  if (emailDomain === expectedDomain.toLowerCase()) {
+    statusEl.innerHTML = '<span class="tag ok">✅ Official Email Verified (@' + esc(expectedDomain) + ')</span>';
+  } else {
+    statusEl.innerHTML = '<span class="tag bad">⚠ Domain Mismatch: expected @' + esc(expectedDomain) + ', got @' + esc(emailDomain) + '</span>';
+  }
+}
+
+$('pendingPartnerBankersContainer').addEventListener('click', function (e) {
+  var approveBtn = e.target.closest('[data-approve-pb]');
+  if (approveBtn) {
+    withBusy(approveBtn, 'Approving…', function () {
+      return apiPost({ action: "adminApprovePartnerBanker", password: ADMIN_PASSWORD, bankerId: approveBtn.getAttribute('data-approve-pb') }).then(function (r) {
+        showToast(r.status === 'success' ? 'Approved successfully' : (r.message || 'Failed'), r.status !== 'success');
+        if (r.status === 'success') { loadPendingPartnerBankers(); loadBankers(); }
+      });
+    }).catch(function (err) { showToast(err.message, true); });
+    return;
+  }
+  var rejectBtn = e.target.closest('[data-reject-pb]');
+  if (rejectBtn) {
+    var name = rejectBtn.getAttribute('data-reject-pb-name') || 'this banker';
+    var reason = prompt('Reason for rejecting ' + name + ' (the referring partner will see this):');
+    if (reason === null) return;
+    reason = reason.trim();
+    if (!reason) { showToast('A reason is required', true); return; }
+    withBusy(rejectBtn, 'Rejecting…', function () {
+      return apiPost({ action: "adminRejectPartnerBanker", password: ADMIN_PASSWORD, bankerId: rejectBtn.getAttribute('data-reject-pb'), reason: reason }).then(function (r) {
+        showToast(r.status === 'success' ? 'Rejected — partner notified' : (r.message || 'Failed'), r.status !== 'success');
+        if (r.status === 'success') { loadPendingPartnerBankers(); loadBankers(); }
+      });
+    }).catch(function (err) { showToast(err.message, true); });
+  }
+});
+
+function refreshAll() {
+  $("leadsContainer").innerHTML = '<div class="empty">Loading leads…</div>';
+  apiPost({ action: "adminClearCache", password: ADMIN_PASSWORD }).catch(function () {})
+    .then(function () { return apiPost({ action: "adminGetDashboardData", password: ADMIN_PASSWORD, includeHidden: currentIncludeHidden() }); })
+    .then(function (result) {
+      if (result.success) { localStorage.setItem('vmw_admin_cache', JSON.stringify(result)); applyDashboardData(result); showToast("Refreshed"); }
+      else showToast(result.error || "Failed to refresh", true);
+      loadBankerTabData();
+    })
+    .catch(function () { showToast("Connection error", true); });
+}
+
+/* ================= TABS ================= */
+document.querySelectorAll('.tab-btn').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('.tab-btn').forEach(function (x) { x.classList.toggle('active', x === b); });
+    document.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.toggle('hidden', p.id !== b.dataset.tab); });
+    window.scrollTo(0, 0);
+    window.history.pushState({ tab: b.dataset.tab }, "");
+    if (b.dataset.tab === 'tabSubs' && !SUBS_LOADED) { SUBS_LOADED = true; loadSubscriptions(); }
+  });
+});
+
+$('globalSearch').addEventListener('input', function () {
+  var active = document.querySelector('.tab-btn.active').dataset.tab;
+  if (active === 'tabLeads') { renderLeads(); }
+  else if (active === 'tabBankers') { $('bankerSearchBox').value = this.value; renderBankers(); }
+  else if (active === 'tabPartners') { $('partnerSearchBox').value = this.value; renderPartners(); }
+});
+
+/* ================= LEADS ================= */
+function idSortKey(id) { var d = String(id || "").match(/\d+/g); return d ? Number(d[d.length - 1]) : 0; }
+function currentIncludeHidden() { return !!$("showHiddenCheckbox").checked; }
+function reloadLeadsOnly() {
+  $("leadsContainer").innerHTML = '<div class="empty">Loading leads…</div>';
+  apiPost({ action: "adminGetAllLeads", password: ADMIN_PASSWORD, includeHidden: currentIncludeHidden() }).then(function (result) {
+    if (result.success) { ALL_LEADS = result.leads || []; renderLeads(); }
+    else $("leadsContainer").innerHTML = '<div class="error-box">' + esc(result.error || "Failed to load leads") + '</div>';
+  }).catch(function (err) { $("leadsContainer").innerHTML = '<div class="error-box">' + esc(err.message) + '</div>'; });
+}
+
+function stageTagClass(stage) {
+  if (stage === 'Disbursed') return 'ok'; if (stage === 'Approved') return 'info';
+  if (stage === 'Rejected') return 'bad'; if (stage === 'In process') return 'warn'; return '';
+}
+
+function renderLeads() {
+  var q = ($('globalSearch').value || '').toLowerCase();
+  var productF = $('productFilter').value, stageF = $('stageFilter').value, docF = $('docFilter').value, stateF = ($('stateFilter').value || '').toLowerCase();
+  var container = $('leadsContainer');
+  var leads = ALL_LEADS.filter(function (l) {
+    if (q) { var hay = ((l.name || '') + ' ' + (l.companyName || '') + ' ' + (l.mobile || '')).toLowerCase(); if (hay.indexOf(q) === -1) return false; }
+    if (productF && l.product !== productF) return false;
+    if (stageF && l.stage !== stageF) return false;
+    if (docF && l.documentStatus !== docF) return false;
+    if (stateF && (l.state || '').toLowerCase().indexOf(stateF) === -1) return false;
+    if ($('attentionFilter').checked && !l.needsAttention) return false;
+    if ($('awaitingFilter').checked && !l.pendingParties) return false;
+    return true;
+  });
+  leads.sort(function (a, b) { return idSortKey(b.leadId) - idSortKey(a.leadId); });
+  var counts = { total: ALL_LEADS.length, pending: 0, attention: 0, awaiting: 0, disbursed: 0, rejected: 0 };
+  ALL_LEADS.forEach(function (l) {
+  if (l.documentStatus === 'Pending') counts.pending++;
+  if (l.stage === 'Disbursed') counts.disbursed++;
+  if (l.stage === 'Rejected') counts.rejected++;
+  if (l.needsAttention) counts.attention++;
+  if (l.pendingParties) counts.awaiting++;
+});
+  $('leadsStats').innerHTML = ['total', 'pending', 'attention', 'awaiting', 'disbursed', 'rejected'].map(function (k) {
+    var lbl = { total: 'Total leads', pending: 'Docs pending', attention: 'Needs attention', disbursed: 'Disbursed', rejected: 'Rejected', awaiting: 'Awaiting updates' }[k];
+    return '<div class="stat-box"><b>' + counts[k] + '</b><span>' + lbl + '</span></div>';
+  }).join('');
+    if (!leads.length) { container.innerHTML = '<div class="empty">No leads match your filters.</div>'; return; }
+
+  var sent = [], pending = [], hold = [];
+  leads.forEach(function (l) {
+    var b = leadBucket(l);
+    (b === 'sent' ? sent : b === 'hold' ? hold : pending).push(l);
+  });
+
+  var buckets = [
+    { key: 'sent', label: 'Sent to DSA', list: sent },
+    { key: 'pending', label: 'Pending documents', list: pending },
+    { key: 'hold', label: 'Hold / Reject', list: hold }
   ];
+  if (!buckets.some(function (b) { return b.key === LEAD_BUCKET; })) LEAD_BUCKET = 'pending';
+  var tabsHtml = '<div class="bucket-tabs" style="display:flex;gap:6px;margin:14px 0 4px;">' + buckets.map(function (b) {
+    var on = b.key === LEAD_BUCKET;
+    return '<button type="button" onclick="setLeadBucket(\'' + b.key + '\')" style="flex:1;padding:10px 6px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;border:1px solid ' +
+      (on ? 'var(--navy,#16233F)' : 'var(--line,#d0d5dd)') + ';background:' + (on ? 'var(--navy,#16233F)' : 'transparent') + ';color:' + (on ? '#fff' : 'inherit') + ';">' +
+      esc(b.label) + ' (' + b.list.length + ')</button>';
+  }).join('') + '</div>';
+  var cur = buckets.filter(function (b) { return b.key === LEAD_BUCKET; })[0];
+  container.innerHTML = tabsHtml + (cur.list.length ? cur.list.map(leadCardHtml).join('') : '<div class="empty">No leads in this section.</div>');
+}
+var LEAD_BUCKET = 'pending';
+function setLeadBucket(k) { LEAD_BUCKET = k; renderLeads(); }
 
-  tabConfigs.forEach(function (cfg) {
-    if (!cfg.tabName) return;
-    var tab = ss.getSheetByName(cfg.tabName);
-    if (!tab) return;
-    var data = tab.getDataRange().getValues();
-    if (data.length < 2) return;
-    var headers = data[0];
-    var idx = {};
-    headers.forEach(function (h, i) { idx[h] = i; });
-    var nameField = cfg.nameField || "Name";
-    var mobileField = cfg.mobileField || "Mobile";
-    var pincodeField = idx["Pincode"] !== undefined ? "Pincode" : "Property Pincode";
-
-    for (var r = 1; r < data.length; r++) {
-      var row = data[r];
-      if (!includeHidden && idx["Hidden"] !== undefined && row[idx["Hidden"]] === "Yes") continue;
-      var leadId = idx["Lead ID"] !== undefined ? row[idx["Lead ID"]] : "";
-      var partnerCode = idx["Partner Code"] !== undefined ? row[idx["Partner Code"]] : "";
-      var pipeline = leadId ? (pipelineByLead[leadId] || []) : [];
-      var claims = leadId ? (claimsByLead[leadId] || []) : [];
-      var stageVal = computeLeadStage(pipeline, claims);
-
-      // Biz Tool exclusivity — who it's sourced to, and how many days are left
-      // in the 7-day exclusivity window (0 once it has expired or been released).
-      var sourcedBy = idx["Sourced By"] !== undefined ? (row[idx["Sourced By"]] || "") : "";
-      var sourcedByName = idx["Sourced By Name"] !== undefined ? (row[idx["Sourced By Name"]] || "") : "";
-      var sourceTier = idx["Source Tier"] !== undefined ? (row[idx["Source Tier"]] || "") : "";
-      var exclusiveUntilRaw = idx["Exclusive Until"] !== undefined ? row[idx["Exclusive Until"]] : "";
-      var bizToolStatus = idx["Biz Tool Status"] !== undefined ? row[idx["Biz Tool Status"]] : "";
-      var isExclusive = !!sourcedBy && bizToolStatus !== "Rejected" && isStillExclusive(exclusiveUntilRaw);
-      var exclusiveUntilMs = exclusiveUntilRaw ? new Date(exclusiveUntilRaw).getTime() : null;
-      var exclusiveDaysLeft = isExclusive ? Math.max(1, Math.ceil((exclusiveUntilMs - Date.now()) / 86400000)) : 0;
-
-      // Commission slab this lead currently falls under — 100% direct, or 30/25/15%
-      // once a partner, banker or Biz Tool subscriber is attached to it.
-      var hasPartnerOrBanker = !!partnerCode || !!sourcedBy || (claims && claims.length > 0);
-      var commissionPercent = computeCommissionPercent(hasPartnerOrBanker, sourceTier);
-
-      // No lead should sit untouched — flag anything still open with no lifecycle
-      // activity (or no activity at all) in the last few days.
-      var createdAtMs = row[0] ? new Date(row[0]).getTime() : 0;
-      var lastEventAt = (leadId && lastEventByLead[leadId]) ? lastEventByLead[leadId] : createdAtMs;
-      var needsAttention = !CLOSED_STAGES[stageVal] && lastEventAt && lastEventAt <= attentionCutoff;
-      // Also flag the lead when any ACTIVE banker has been silent for FOLLOWUP_STALE_DAYS (2) — even if someone else keeps updating.
-      var staleBankers = (leadId && !CLOSED_STAGES[stageVal]) ? staleBankersForLead_(leadId, claims, actorEventMap) : [];
-      if (staleBankers.length) needsAttention = true;
-      var pendingParties = 0;
-      if (!CLOSED_STAGES[stageVal]) {
-        claims.forEach(function (c) { if (c.claimStatus === "Active") pendingParties++; });
-        var dsaOpen = {};
-        pipeline.forEach(function (p) {
-          if (p.status === "In Process" && p.assignedDsa) {
-            String(p.assignedDsa).split(",").forEach(function (n) { n = n.trim(); if (n) dsaOpen[n] = true; });
-          }
-        });
-        pendingParties += Object.keys(dsaOpen).length;
-      }
-      leads.push({
-        leadId: leadId,
-        timestamp: row[0] ? new Date(row[0]).getTime() : null,
-        name: idx[nameField] !== undefined ? (row[idx[nameField]] || "") : "",
-        companyName: idx["Company Name"] !== undefined ? (row[idx["Company Name"]] || "") : "",
-        mobile: String(idx[mobileField] !== undefined ? (row[idx[mobileField]] || "") : ""),
-        email: idx["Email"] !== undefined ? (row[idx["Email"]] || "") : "",
-        product: idx["Loan Type"] !== undefined ? (row[idx["Loan Type"]] || "") : "",
-        loanAmount: idx["Loan Amount"] !== undefined ? (row[idx["Loan Amount"]] || "") : "",
-        category: idx["Matched Category"] !== undefined ? (row[idx["Matched Category"]] || "") : "",
-        state: idx["State"] !== undefined ? (row[idx["State"]] || "") : "",
-        pincode: idx[pincodeField] !== undefined ? (row[idx[pincodeField]] || "") : "",
-        partnerCode: partnerCode || "",
-        partnerName: partnerCode || "Direct",
-        documentsFolderUrl: idx["Documents Folder"] !== undefined ? (row[idx["Documents Folder"]] || "") : "",
-        documentStatus: idx["Document Status"] !== undefined ? (row[idx["Document Status"]] || "") : "",
-        processingBank: idx["Processing Bank"] !== undefined ? (row[idx["Processing Bank"]] || "") : "",
-        hidden: idx["Hidden"] !== undefined && row[idx["Hidden"]] === "Yes",
-        pipeline: pipeline,
-        claims: claims,
-        stage: stageVal,
-        sourcedBy: sourcedBy,
-        sourcedByName: sourcedByName,
-        sourceTier: sourceTier,
-        isExclusive: isExclusive,
-        exclusiveUntil: exclusiveUntilMs,
-        exclusiveDaysLeft: exclusiveDaysLeft,
-        commissionPercent: commissionPercent,
-        needsAttention: !!needsAttention,
-        staleBankers: staleBankers,
-        lastActivityAt: lastEventAt || null,
-        // ---- lead-quality engine (LeadRules.gs) ----
-        leadState: idx["Lead State"] !== undefined ? (row[idx["Lead State"]] || "") : "",
-        stateReason: idx["State Reason"] !== undefined ? (row[idx["State Reason"]] || "") : "",
-        docsFound: idx["Docs Found"] !== undefined ? (row[idx["Docs Found"]] || "") : "",
-        startup: idx["Startup"] !== undefined && row[idx["Startup"]] === "Yes",
-        sentToDsa: idx["Sent To DSA"] !== undefined ? (row[idx["Sent To DSA"]] || "") : "",
-        sentToDsaOn: (idx["Sent To DSA On"] !== undefined && row[idx["Sent To DSA On"]]) ? new Date(row[idx["Sent To DSA On"]]).getTime() : null
-      });
-    }
-  });
-
-  leads.sort(function (a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
-  return leads;
+/* Which of the 3 sections a lead belongs to (state comes from the backend rules engine) */
+function leadBucket(l) {
+  if (l.leadState === 'Sent to DSA' || sentDsaNames(l).length) return 'sent';
+  if (l.leadState === 'Hold' || l.leadState === 'Rejected') return 'hold';
+  return 'pending';   // Pending Documents, Ready (goes at the next 9 AM run) and older leads with no state
+}
+function leadStateTags(l) {
+  var t = '';
+  if (l.leadState === 'Pending Documents') t += '<span class="tag warn">Pending documents</span>';
+  else if (l.leadState === 'Ready') t += '<span class="tag ok">Ready — sends at next 9 AM run</span>';
+  else if (l.leadState === 'Hold') t += '<span class="tag bad">Hold</span>';
+  else if (l.leadState === 'Rejected') t += '<span class="tag bad">Rejected</span>';
+  else if (l.leadState === 'Sent to DSA') t += '<span class="tag info">Sent to DSA</span>';
+  else if (!l.leadState && leadBucket(l) === 'pending') t += '<span class="tag">Older lead — send manually</span>';
+  if (l.startup) t += '<span class="tag info">Startup</span>';
+  return t;
+}
+function setLeadState(idx, state) {
+  var l = ALL_LEADS[idx]; if (!l) return;
+  var note = '';
+  if (state === 'Hold' || state === 'Rejected') { note = window.prompt('Reason (optional):', '') || ''; }
+  else if (!window.confirm('Release this lead? It will be sent to the DSA at the next 9 AM run even if a rule failed.')) return;
+  apiPost({ action: 'adminSetLeadState', password: ADMIN_PASSWORD, leadId: l.leadId, product: l.product, state: state, note: note }).then(function (r) {
+    if (r && r.success) { showToast('Lead updated'); reloadLeadsOnly(); } else { showToast((r && r.error) || 'Could not update.', true); }
+  }).catch(function (e) { showToast('Connection error: ' + e.message, true); });
 }
 
-function handleGetAllLeads(payload)   { return jsonResponse({ success:true, leads: getAllLeadsData(!!(payload && payload.includeHidden)) }); }
-
-// ============================================================
-// LEAD LIFECYCLE — full history for the admin "click customer name" view,
-// a quick last-activity map for the "needs attention" flag, and the
-// exclusivity guard used by handleAssignDsa / handleAddLendersToPipeline.
-// ============================================================
-
-// One row per Lead ID -> timestamp (ms) of its most recent Lead Lifecycle
-// event. Cached briefly since this scans the whole (append-only) log.
-function getLeadLifecycleLastEventMap() {
-  return getCachedOrFetch('vmw_lead_last_event', 45, function () {
-    var map = {};
-    try {
-      var ss = SpreadsheetApp.getActiveSpreadsheet();
-      var tab = ss.getSheetByName(typeof LEAD_LIFECYCLE_TAB !== "undefined" ? LEAD_LIFECYCLE_TAB : "Lead Lifecycle");
-      if (!tab) return map;
-      var data = tab.getDataRange().getValues();
-      for (var i = 1; i < data.length; i++) {
-        var leadId = data[i][1];
-        if (!leadId) continue;
-        var ts = data[i][0] ? new Date(data[i][0]).getTime() : 0;
-        if (!map[leadId] || ts > map[leadId]) map[leadId] = ts;
-      }
-    } catch (e) { Logger.log("getLeadLifecycleLastEventMap error: " + e.toString()); }
-    return map;
-  });
-}
-
-// Full event-by-event history for ONE lead — what the admin sees when they
-// click a customer's name card.
-function handleGetLeadHistory(payload) {
-  var leadId = payload && payload.leadId;
-  if (!leadId) return jsonResponse({ success: false, error: "Missing leadId." });
-  var out = [];
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var tab = ss.getSheetByName(typeof LEAD_LIFECYCLE_TAB !== "undefined" ? LEAD_LIFECYCLE_TAB : "Lead Lifecycle");
-    if (tab) {
-      var data = tab.getDataRange().getValues();
-      for (var i = 1; i < data.length; i++) {
-        var r = data[i];
-        if (String(r[1]) !== String(leadId)) continue;
-        out.push({
-          timestamp: r[0] ? new Date(r[0]).getTime() : null,
-          leadId: r[1], customerName: r[2], product: r[3], event: r[4],
-          actorType: r[5], actorCode: r[6], actorName: r[7], details: r[8],
-          commissionPercent: (r[9] === "" || r[9] === undefined) ? null : r[9]
-        });
-      }
-      out.sort(function (a, b) { return (a.timestamp || 0) - (b.timestamp || 0); });
-    }
-  } catch (e) { Logger.log("handleGetLeadHistory error: " + e.toString()); }
-  return jsonResponse({ success: true, leadId: leadId, events: out });
-}
-
-// Used before any admin action that allocates a lead elsewhere (adding
-// lenders to the pipeline, assigning a processing DSA). Blocks the action
-// while the lead is still inside its Biz Tool exclusivity window — the
-// subscriber who paid for exclusivity is the only one who should be
-// working it until that window ends (or they release it early).
-function vmwLeadExclusivityCheck(leadId, product) {
-  var out = { exclusive: false, sourcedBy: "", sourcedByName: "", exclusiveUntil: null, daysLeft: 0 };
-  if (!leadId) return out;
-  try {
-    var tabName = (product === "LAP" || product === "HL") ? LAP_HL_LEADS_TAB
-      : (product === "VL" && typeof VL_LEADS_TAB !== "undefined") ? VL_LEADS_TAB
-      : (product === "EL" && typeof EL_LEADS_TAB !== "undefined") ? EL_LEADS_TAB
-      : PORTAL_LEADS_TAB;
-    var hit = vmwFindLeadRow(tabName, leadId);
-    if (!hit) return out;
-    var r = hit.tab.getRange(hit.row, 1, 1, hit.lastCol).getValues()[0];
-    var idx = hit.idx;
-    var sourcedBy = idx["Sourced By"] !== undefined ? r[idx["Sourced By"]] : "";
-    var exclusiveUntil = idx["Exclusive Until"] !== undefined ? r[idx["Exclusive Until"]] : "";
-    var bizStatus = idx["Biz Tool Status"] !== undefined ? r[idx["Biz Tool Status"]] : "";
-    if (sourcedBy && bizStatus !== "Rejected" && typeof isStillExclusive === "function" && isStillExclusive(exclusiveUntil)) {
-      out.exclusive = true;
-      out.sourcedBy = sourcedBy;
-      out.sourcedByName = idx["Sourced By Name"] !== undefined ? (r[idx["Sourced By Name"]] || "") : "";
-      out.exclusiveUntil = new Date(exclusiveUntil).getTime();
-      out.daysLeft = Math.max(1, Math.ceil((out.exclusiveUntil - Date.now()) / 86400000));
-    }
-  } catch (e) { Logger.log("vmwLeadExclusivityCheck error: " + e.toString()); }
+/* DSAs a lead has been sent to (from pipeline rows; also covers a just-assigned lead) */
+function sentDsaNames(l) {
+  var seen = {}, out = [];
+  function add(n) { n = String(n || '').trim(); if (n && !seen[n]) { seen[n] = true; out.push(n); } }
+  (l.pipeline || []).forEach(function (p) { String(p.assignedDsa || '').split(',').forEach(add); });
+  (l.sentToDsas || []).forEach(add);
   return out;
 }
-function handleGetActiveLenders()     { return jsonResponse({ success:true, lenders: getActiveLendersData() }); }
-function handleGetDsaList()           { return jsonResponse({ success:true, dsas: getDsaListData() }); }
-function handleGetPartnersDirectory() { return jsonResponse({ success:true, partners: getPartnersListData() }); }
 
-function handleUpdateLenderStatus(payload) {
-  var found = false;
-  withLock(function() {
-    var tab = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LENDER_PIPELINE_TAB);
-    var data = tab.getDataRange().getValues();
-    if (data.length < 2) return;
-    var range = tab.getRange(2, 1, data.length - 1, tab.getLastColumn());
-    var values = range.getValues();
-    var isModified = false;
-    for (var i = 0; i < values.length; i++) {
-      if (String(values[i][0]) === String(payload.leadId) && String(values[i][5]) === String(payload.lenderName)) {
-        values[i][6] = payload.status;
-        values[i][7] = new Date();
-        found = true; isModified = true;
-        break;
-      }
-    }
-    if (isModified) range.setValues(values);
-  });
-
-  if (found) {
-    logLeadEvent(payload.leadId, "", "", "Lender status: " + payload.status, "Admin", "", "Admin", payload.lenderName);
-  }
-  CacheService.getScriptCache().removeAll(['vmw_all_leads', 'vmw_all_leads_hidden', 'vmw_lead_last_event']);
-  return found ? jsonResponse({ success:true }) : jsonResponse({ success:false, error:"Pipeline row not found." });
+function leadCardHtml(l) {
+  var idx = ALL_LEADS.indexOf(l);
+  var isDirect = (l.partnerName === 'Direct' || !l.partnerName);
+  var displayName = isDirect ? esc(l.name || '—') : '<span class="cp">' + esc(l.partnerName) + '</span> — ' + esc(l.name || '—');
+  var loc = [l.state, l.pincode].filter(Boolean).join(' · ');
+  var activeClaim = (l.claims || []).find(function (c) { return c.claimStatus === 'Active'; });
+  var dsas = sentDsaNames(l);
+  return '' +
+    '<div class="card">' +
+      '<div class="card-row" onclick="toggleDetail(this); loadLeadHistoryInline(this, \'' + esc(l.leadId) + '\');">' +
+        '<div><div class="name">' + displayName + (l.needsAttention ? ' <span class="tag bad">Needs attention</span>' : '') + (l.pendingParties ? ' <span class="tag warn">' + l.pendingParties + ' awaiting</span>' : '') + '</div>' +
+        '<div class="sub">' + esc(l.product || '—') + ' · ' + inr(l.loanAmount) + (loc ? (' · ' + esc(loc)) : '') + '</div>' +
+        (dsas.length ? '<div class="sub" style="color:var(--info);">Sent to: ' + esc(dsas.join(', ')) + '</div>' : '') + '</div>' +
+        '<span class="caret">▼</span>' +
+      '</div>' +
+      '<div class="card-detail">' +
+        '<div class="meta-line">' +
+          '<span class="tag ' + stageTagClass(l.stage) + '">' + esc(l.stage) + '</span>' +
+          leadStateTags(l) +
+          (l.documentStatus === 'Pending' ? '<span class="tag warn">Docs pending</span>' : (l.documentStatus === 'Submitted' ? '<span class="tag ok">Docs received</span>' : '')) +
+          (l.hidden ? '<span class="tag">Hidden</span>' : '') +
+          (l.processingBank ? '<span class="tag info">' + esc(l.processingBank) + '</span>' : '') +
+          dsas.map(function (n) { return '<span class="tag info">DSA: ' + esc(n) + '</span>'; }).join('') +
+          (activeClaim ? '<span class="tag info">With ' + esc(activeClaim.bankerName) + (activeClaim.dsaName ? (' · DSA ' + esc(activeClaim.dsaName)) : '') + '</span>' : '') +
+          (l.category ? '<span class="tag">Cat ' + esc(l.category) + '</span>' : '') +
+          '<span class="tag' + (l.commissionPercent === 100 ? ' ok' : '') + '">VMW share ' + esc(l.commissionPercent) + '%</span>' +
+          (l.isExclusive ? ('<span class="tag warn">Exclusive to ' + esc(l.sourcedByName || l.sourcedBy) + ' — ' + l.exclusiveDaysLeft + ' day' + (l.exclusiveDaysLeft === 1 ? '' : 's') + ' left</span>') : '') +
+        '</div>' +
+        (l.stateReason ? '<div class="meta-line" style="color:var(--bad,#b42318);">' + esc(l.stateReason) + '</div>' : '') +
+        '<div class="meta-line">' + esc(l.mobile || '') + (l.email ? (' · ' + esc(l.email)) : '') + '</div>' +
+        (l.companyName ? '<div class="meta-line">' + esc(l.companyName) + '</div>' : '') +
+        '<div class="icon-row" style="margin-bottom:10px;">' +
+          (l.mobile ? '<a class="icon-btn" href="tel:' + esc(l.mobile) + '" title="Call">☎</a>' : '') +
+          (l.mobile ? '<a class="icon-btn" href="https://wa.me/91' + esc(String(l.mobile).replace(/\D/g,"")) + '" target="_blank" rel="noopener" title="WhatsApp">✓</a>' : '') +
+          (l.documentsFolderUrl ? '<a class="icon-btn" href="' + esc(l.documentsFolderUrl) + '" target="_blank" rel="noopener" title="Documents">📁</a>' : '') +
+        '</div>' +
+        '<div class="section-label">Full lead history</div>' +
+        '<div class="lead-history-box" id="hist_' + esc(l.leadId) + '"><div class="empty">Loading…</div></div>' +
+        '<button class="btn btn-line btn-block" style="margin-top:8px;" onclick="event.stopPropagation(); openLeadSheet(' + idx + ')">Manage pipeline, claims &amp; DSA</button>' +
+        (leadBucket(l) !== 'sent' ? ('<div style="display:flex;gap:8px;margin-top:8px;">' +
+          '<button class="btn btn-line" style="flex:1;" onclick="event.stopPropagation(); setLeadState(' + idx + ', \'Release\')">Release to DSA</button>' +
+          '<button class="btn btn-line" style="flex:1;" onclick="event.stopPropagation(); setLeadState(' + idx + ', \'Hold\')">Hold</button>' +
+          '<button class="btn btn-line" style="flex:1;" onclick="event.stopPropagation(); setLeadState(' + idx + ', \'Rejected\')">Reject</button></div>') : '') +
+      '</div>' +
+    '</div>';
 }
 
-function handleAddLendersToPipeline(payload) {
-  var excl = vmwLeadExclusivityCheck(payload.leadId, payload.product);
-  if (excl.exclusive) {
-    return jsonResponse({ success: false, error: "This lead is exclusive to " + (excl.sourcedByName || excl.sourcedBy) +
-      " for " + excl.daysLeft + " more day(s) — it can't be allocated to lenders until the exclusivity window ends." });
-  }
-  withLock(function () {
-    var tab = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LENDER_PIPELINE_TAB);
-    var data = tab.getDataRange().getValues();
-    var existing = {};
-    for (var i = 1; i < data.length; i++) {
-      if (String(data[i][0]) === String(payload.leadId)) existing[data[i][5]] = true;
-    }
-    (payload.lenderNames || []).forEach(function (ln) {
-      if (!existing[ln]) {
-        tab.appendRow([payload.leadId, payload.mobile || "", payload.customerName || "",
-          payload.companyName || "", payload.product || "", ln, "In Process", new Date(), ""]);
-      }
-    });
-  });
+function openLeadSheet(idx) {
+  CURRENT_LEAD = ALL_LEADS[idx];
+  if (!CURRENT_LEAD) return;
+  $('sheetName').textContent = CURRENT_LEAD.name || '—';
+  $('sheetSub').textContent = (CURRENT_LEAD.companyName ? CURRENT_LEAD.companyName + ' · ' : '') + CURRENT_LEAD.product + ' · ' + inr(CURRENT_LEAD.loanAmount) + ' · ' + CURRENT_LEAD.mobile + ' · VMW share ' + CURRENT_LEAD.commissionPercent + '%';
+  renderPipelineRows(); renderClaimHistory(); renderLenderSelectList(); renderDsaSelectList();
+  $('hideLeadBtn').textContent = CURRENT_LEAD.hidden ? 'Unhide (show again)' : 'Hide from list';
+  var isVlEl = (CURRENT_LEAD.product === 'VL' || CURRENT_LEAD.product === 'EL');
+  $('processingBankSection').classList.toggle('hidden', !isVlEl);
+  if (isVlEl) $('processingBankInput').value = CURRENT_LEAD.processingBank || '';
 
-  logLeadEvent(payload.leadId, payload.product || "", payload.customerName || "",
-    "Lenders added to pipeline", "Admin", "", "Admin", (payload.lenderNames || []).join(", "));
-  CacheService.getScriptCache().removeAll(['vmw_all_leads', 'vmw_all_leads_hidden', 'vmw_lead_last_event']);
-  return jsonResponse({ success:true });
+  var excl = $('exclusivityBanner');
+  if (CURRENT_LEAD.isExclusive) {
+    excl.textContent = '🔒 Exclusive to ' + (CURRENT_LEAD.sourcedByName || CURRENT_LEAD.sourcedBy) + ' for ' + CURRENT_LEAD.exclusiveDaysLeft + ' more day(s). It can\'t be assigned to lenders or a processing DSA — by anyone, including admin — until the window ends or the subscriber releases it.';
+    excl.classList.remove('hidden');
+    $('addLendersBtn').disabled = true; $('assignDsaBtn').disabled = true;
+  } else {
+    excl.classList.add('hidden');
+    $('addLendersBtn').disabled = false; $('assignDsaBtn').disabled = false;
+  }
+
+  $('sheetHistoryRows').innerHTML = '<div class="empty">Loading…</div>';
+  apiPost({ action: "adminGetLeadHistory", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId }).then(function (r) {
+    LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId] = (r.success ? r.events : []) || [];
+    renderLeadHistoryBox($('sheetHistoryRows'), LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId]), renderFollowUps();
+  }).catch(function () { $('sheetHistoryRows').innerHTML = '<div class="error-box">Could not load history.</div>'; });
+
+  openSheet('leadSheet', 'leadBackdrop');
 }
 
-function handleAssignDsa(payload) {
-  var dsaEmails = payload.dsaEmails || "";
-  if (!dsaEmails) return jsonResponse({ success:false, error:"No DSA email provided." });
-  var excl = vmwLeadExclusivityCheck(payload.leadId, payload.product);
-  if (excl.exclusive) {
-    return jsonResponse({ success: false, error: "This lead is exclusive to " + (excl.sourcedByName || excl.sourcedBy) +
-      " for " + excl.daysLeft + " more day(s) — it can't be allocated to a processing DSA until the exclusivity window ends." });
-  }
-  var folderUrl = getDocumentsFolderUrlForLead(payload.leadId);
-  var subjectName = payload.companyName || payload.customerName || "Applicant";
-  var subject = subjectName + " - " + (payload.product || "") + " - " + (payload.loanAmount || "");
-  var lenderNames = payload.lenderNames || [];
-  var lenderList = lenderNames.join(", ");
-  var attachments = [];
-  var folderId = folderUrl ? extractFolderIdFromUrl(folderUrl) : null;
-  if (folderId) {
-    try {
-      var folder = DriveApp.getFolderById(folderId);
-      var it = folder.getFiles();
-      var totalBytes = 0;
-      while (it.hasNext()) {
-        var f = it.next();
-        var blob = f.getBlob();
-        var size = blob.getBytes().length;
-        if (totalBytes + size > 20 * 1024 * 1024) continue;
-        attachments.push(blob);
-        totalBytes += size;
-      }
-    } catch (driveErr) { Logger.log("assignDsa drive error: " + driveErr); }
-  }
-  var body = "Hi " + (payload.dsaName || "") + ",\n\nA new lead has been assigned to you.\n\n" +
-    "Customer Name: " + (payload.customerName || "") + "\n" +
-    (payload.companyName ? ("Company Name: " + payload.companyName + "\n") : "") +
-    "Mobile: " + (payload.mobile || "") + "\n" +
-    "Loan Type: " + (payload.product || "") + "\n" +
-    "Loan Amount: " + (payload.loanAmount || "") + "\n" +
-    "Lenders to process: " + lenderList + "\n\n" +
-    (vmwLsIsStartup(payload.product, payload.leadId) ? "*** STARTUP LOAN (business under 1 year, max ₹5 lakh) ***\nPlease use ONLY KYC (PAN, Aadhaar) to check eligibility. No income statement, GST or Udyam is required for this case.\n\n" : "") +
-    (attachments.length ? ("Documents attached: " + attachments.length + "\n\n") : "No documents uploaded yet.\n\n") +
-    "— VastMyWealth";
-  try {
-    MailApp.sendEmail({ to: dsaEmails, subject: subject, body: body, attachments: attachments });
-  } catch (mailErr) {
-    return jsonResponse({ success:false, error:"Could not send email: " + mailErr.toString() });
-  }
+$('closeLeadSheet').addEventListener('click', function () { closeSheet('leadSheet', 'leadBackdrop'); });
+$('leadBackdrop').addEventListener('click', function () { closeSheet('leadSheet', 'leadBackdrop'); });
 
-  // ---- Email went out: now record it everywhere ----
-  var recordErr = "";
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    withLock(function () {
-      // 1) Lender Pipeline -> "Assigned DSA(s)" (column I)
-      var pTab = ss.getSheetByName(LENDER_PIPELINE_TAB);
-      if (pTab && pTab.getLastRow() >= 2) {
-        var pData = pTab.getRange(2, 1, pTab.getLastRow() - 1, 9).getValues();
-        for (var i = 0; i < pData.length; i++) {
-          if (String(pData[i][0]) !== String(payload.leadId)) continue;
-          if (lenderNames.length && lenderNames.indexOf(pData[i][5]) === -1) continue;
-          var names = String(pData[i][8] || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
-          if (names.indexOf(payload.dsaName) === -1) names.push(payload.dsaName);
-          pTab.getRange(i + 2, 9).setValue(names.join(", "));
-                    pTab.getRange(i + 2, 8).setValue(new Date());
-        }
-      }
-      // 2) DSA Assignments tab (create it if setup was never run)
-      var aTab = ss.getSheetByName(DSA_ASSIGNMENTS_TAB);
-      if (!aTab) { setupDsaAssignmentsTab(ss); aTab = ss.getSheetByName(DSA_ASSIGNMENTS_TAB); }
-      aTab.appendRow([new Date(), payload.leadId, payload.customerName || "", payload.dsaName || "",
-        dsaEmails, lenderList, payload.assignedBy || "Admin"]);
-    });
-  } catch (e) {
-    recordErr = e.toString();
-    Logger.log("assignDsa record error: " + recordErr);
+function renderPipelineRows() {
+  var el = $('pipelineRows'), pipeline = CURRENT_LEAD.pipeline || [];
+  if (!pipeline.length) {
+    el.innerHTML = '<div class="empty">No lenders assigned by admin yet — add some below.</div>';
+  } else {
+    el.innerHTML = pipeline.map(function (p) {
+      var safe = p.lender.replace(/'/g, "\\'");
+      var options = ["In Process", "Approved", "Disbursed", "Rejected"].map(function (s) { return '<option value="' + s + '" ' + (s === p.status ? 'selected' : '') + '>' + s + '</option>'; }).join('');
+      return '<div class="mini-row"><div class="mini-row-top"><span class="lbl">' + esc(p.lender) + '</span><select onchange="updateStatus(\'' + safe + '\', this.value)">' + options + '</select></div>' +
+        (p.assignedDsa ? ('<div class="sub" style="margin-top:4px;">Sent to: ' + esc(p.assignedDsa) + '</div>') : '') + '</div>';
+    }).join('');
   }
-
-  vmwLsMarkSent(payload.product, payload.leadId, payload.dsaName || "");   // state -> Sent to DSA
-
-  // 3) Lead Lifecycle
-  logLeadEvent(payload.leadId, payload.product, payload.customerName || "",
-    "Assigned to DSA", "Admin", "", payload.assignedBy || "Admin",
-    "DSA: " + (payload.dsaName || "") + " (" + dsaEmails + ") · Lenders: " + lenderList +
-    " · Docs attached: " + attachments.length);
-
-  CacheService.getScriptCache().removeAll(['vmw_all_leads', 'vmw_all_leads_hidden', 'vmw_lead_last_event']);
-  return jsonResponse({ success:true, warning: recordErr || undefined });
+  renderFollowUps();
 }
 
-function handleSetVlElProcessingBank(payload) {
-  var leadId = payload.leadId, product = payload.product, bankName = payload.bankName || "";
-  var tabName = (product === "VL") ? VL_LEADS_TAB : EL_LEADS_TAB;
-  var hit = vmwFindLeadRow(tabName, leadId);
-  if (!hit || hit.idx["Processing Bank"] === undefined) return jsonResponse({ success:false, error:"Field not found." });
-  hit.tab.getRange(hit.row, hit.idx["Processing Bank"] + 1).setValue(bankName);
-  CacheService.getScriptCache().removeAll(['vmw_all_leads', 'vmw_all_leads_hidden']);
-  return jsonResponse({ success:true });
+function renderClaimHistory() {
+  var el = $('claimHistoryRows'), claims = CURRENT_LEAD.claims || [];
+  if (!claims.length) { el.innerHTML = '<div class="empty">No banker has claimed this lead from the pool.</div>'; return; }
+  el.innerHTML = claims.map(function (c) {
+    var cls = c.claimStatus === 'Disbursed' ? 'ok' : c.claimStatus === 'Rejected' ? 'bad' : 'info';
+    return '<div class="mini-row"><div class="mini-row-top"><span class="lbl">' + esc(c.bankerName || c.bankerCode) + '</span><span class="tag ' + cls + '">' + esc(c.claimStatus) + '</span></div>' +
+      '<div class="sub" style="margin-top:4px;">DSA code: ' + esc(c.dsaCodeUsed || '—') + (c.dsaName ? (' (' + esc(c.dsaName) + ')') : '') + ' · Claimed ' + fmtDate(c.claimedAt) +
+      (c.claimStatus === 'Disbursed' ? (' · ' + inr(c.disbursedAmount)) : '') +
+      (c.claimStatus === 'Rejected' && c.rejectionReason ? (' · ' + esc(c.rejectionReason)) : '') + '</div></div>';
+  }).join('');
 }
 
-function extractFolderIdFromUrl(url) {
-  if (!url) return null;
-  var m = String(url).match(/folders\/([a-zA-Z0-9_-]+)/);
-  return m ? m[1] : null;
+function renderLenderSelectList() {
+  var el = $('lenderSelectList'), already = {};
+  (CURRENT_LEAD.pipeline || []).forEach(function (p) { already[p.lender] = true; });
+  var relevant = ACTIVE_LENDERS.filter(function (l) { return l.product === CURRENT_LEAD.product && !already[l.name]; });
+  el.innerHTML = relevant.length ? relevant.map(function (l) { return '<label><input type="checkbox" value="' + esc(l.name) + '" class="lenderCheckbox"> ' + esc(l.name) + ' <span class="sub">(Cat ' + esc(l.category) + ')</span></label>'; }).join('')
+    : '<div class="empty">No more lenders available for this loan type.</div>';
 }
 
-function getDocumentsFolderUrlForLead(leadId) {
-  var cache = CacheService.getScriptCache();
-  var cached = cache.get("folder_" + leadId);
-  if (cached) return cached;
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var tabs = [PORTAL_LEADS_TAB, LAP_HL_LEADS_TAB];
-  if (typeof VL_LEADS_TAB !== "undefined") tabs.push(VL_LEADS_TAB);
-  if (typeof EL_LEADS_TAB !== "undefined") tabs.push(EL_LEADS_TAB);
-  for (var t = 0; t < tabs.length; t++) {
-    var tab = ss.getSheetByName(tabs[t]);
-    if (!tab) continue;
-    var data = tab.getDataRange().getValues();
-    if (data.length < 2) continue;
-    var headers = data[0];
-    var idIdx = headers.indexOf("Lead ID");
-    var folderIdx = headers.indexOf("Documents Folder");
-    if (idIdx === -1 || folderIdx === -1) continue;
-    for (var r = 1; r < data.length; r++) {
-      if (String(data[r][idIdx]) === String(leadId)) {
-        var foundUrl = data[r][folderIdx];
-        if (foundUrl) { try { cache.put("folder_" + leadId, foundUrl, 3600); } catch (e) {} }
-        return foundUrl;
-      }
-    }
-  }
-  return null;
+function renderDsaSelectList() {
+  var el = $('dsaSelectList');
+  el.innerHTML = ACTIVE_DSAS.length ? ACTIVE_DSAS.map(function (d, i) { return '<label><input type="radio" name="dsaPick" value="' + i + '"><span>' + esc(d.name) + '<br><span class="sub">' + esc(d.emails) + '</span></span></label>'; }).join('')
+    : '<div class="empty">No processing DSAs added yet — add rows in the "DSA Partners" sheet tab.</div>';
 }
 
-function migrateHiddenColumn() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  [PORTAL_LEADS_TAB, LAP_HL_LEADS_TAB].forEach(function(tabName) {
-    var tab = ss.getSheetByName(tabName);
-    if (!tab) return;
-    ensureColumnOnTab(tab, "Hidden");
+function updateStatus(lenderName, status) {
+  apiPost({ action: "adminUpdateLenderStatus", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, lenderName: lenderName, status: status }).then(function (r) {
+    if (r.success) { showToast("Status updated"); var row = CURRENT_LEAD.pipeline.find(function (p) { return p.lender === lenderName; }); if (row) row.status = status; renderLeads(); renderPipelineRows(); }
+    else showToast(r.error || "Update failed", true);
+  }).catch(function (err) { showToast("Connection error: " + err.message, true); });
+}
+$('addLendersBtn').addEventListener('click', function () {
+  var checked = Array.prototype.slice.call(document.querySelectorAll('.lenderCheckbox:checked')).map(function (c) { return c.value; });
+  if (!checked.length) { showToast("Select at least one lender"); return; }
+  withBusy(this, 'Adding…', function () {
+    return apiPost({ action: "adminAddLendersToPipeline", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, mobile: CURRENT_LEAD.mobile, customerName: CURRENT_LEAD.name, companyName: CURRENT_LEAD.companyName, product: CURRENT_LEAD.product, lenderNames: checked })
+      .then(function (r) {
+        if (r.success) { showToast("Lenders added"); checked.forEach(function (name) { CURRENT_LEAD.pipeline.push({ lender: name, status: "In Process", assignedDsa: "" }); }); renderPipelineRows(); renderLenderSelectList(); renderLeads(); }
+        else showToast(r.error || "Failed to add lenders", true);
+      });
+  }).catch(function (err) { showToast("Connection error: " + err.message, true); });
+});
+
+$('assignDsaBtn').addEventListener('click', function () {
+  var picked = document.querySelector('input[name="dsaPick"]:checked');
+  if (!picked) { showToast("Select a DSA"); return; }
+  var dsa = ACTIVE_DSAS[picked.value];
+  var lenderNames = (CURRENT_LEAD.pipeline || []).map(function (p) { return p.lender; });
+  if (!lenderNames.length) { showToast("Add lenders to the pipeline first"); return; }
+  withBusy(this, 'Sending…', function () {
+    return apiPost({ action: "adminAssignDsa", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, mobile: CURRENT_LEAD.mobile, customerName: CURRENT_LEAD.name, companyName: CURRENT_LEAD.companyName, product: CURRENT_LEAD.product, loanAmount: CURRENT_LEAD.loanAmount, dsaName: dsa.name, dsaEmails: dsa.emails, lenderNames: lenderNames, assignedBy: "Admin" })
+      .then(function (r) {
+        if (r.success) {
+          showToast("Assigned — documents emailed to " + dsa.name);
+          CURRENT_LEAD.pipeline.forEach(function (p) { var names = p.assignedDsa ? p.assignedDsa.split(",").map(function (s) { return s.trim(); }) : []; if (names.indexOf(dsa.name) === -1) names.push(dsa.name); p.assignedDsa = names.join(", "); });
+          if (!CURRENT_LEAD.sentToDsas) CURRENT_LEAD.sentToDsas = [];
+          if (CURRENT_LEAD.sentToDsas.indexOf(dsa.name) === -1) CURRENT_LEAD.sentToDsas.push(dsa.name);
+          CURRENT_LEAD.isAllocated = true;
+          renderPipelineRows(); renderLeads();
+        } else showToast(r.error || "Assignment failed", true);
+      });
+  }).catch(function (err) { showToast("Connection error: " + err.message, true); });
+});
+
+function fileToBase64(file) {
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function () { resolve(String(reader.result).split(',')[1]); };
+    reader.onerror = function () { reject(new Error('Could not read ' + file.name)); };
+    reader.readAsDataURL(file);
   });
 }
-
-function handleHideLead(payload, hide) {
-  var ok = false;
-  withLock(function() {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var tabName = (payload.product === "LAP" || payload.product === "HL") ? LAP_HL_LEADS_TAB : PORTAL_LEADS_TAB;
-    var tab = ss.getSheetByName(tabName);
-    if (!tab) return;
-    var data = tab.getDataRange().getValues();
-    var headers = data[0];
-    var leadIdCol = headers.indexOf("Lead ID");
-    var hiddenCol = headers.indexOf("Hidden");
-    if (leadIdCol === -1 || hiddenCol === -1) return;
-    for (var i = 1; i < data.length; i++) {
-      if (String(data[i][leadIdCol]) === String(payload.leadId)) {
-        tab.getRange(i + 1, hiddenCol + 1).setValue(hide ? "Yes" : "");
-        ok = true;
-        break;
-      }
-    }
-  });
-  CacheService.getScriptCache().removeAll(['vmw_all_leads', 'vmw_all_leads_hidden']);
-  return ok ? jsonResponse({ success:true }) : jsonResponse({ success:false, error:"Lead not found." });
-}
-
-function handleDeleteLead(payload) {
-  var ok = false;
-  withLock(function() {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var tabName = (payload.product === "LAP" || payload.product === "HL") ? LAP_HL_LEADS_TAB : PORTAL_LEADS_TAB;
-    var tab = ss.getSheetByName(tabName);
-    if (tab) {
-      var data = tab.getDataRange().getValues();
-      var headers = data[0];
-      var leadIdCol = headers.indexOf("Lead ID");
-      if (leadIdCol !== -1) {
-        for (var i = data.length - 1; i >= 1; i--) {
-          if (String(data[i][leadIdCol]) === String(payload.leadId)) { tab.deleteRow(i + 1); ok = true; break; }
-        }
-      }
-    }
-    var pipelineTab = ss.getSheetByName(LENDER_PIPELINE_TAB);
-    if (pipelineTab) {
-      var pdata = pipelineTab.getDataRange().getValues();
-      for (var p = pdata.length - 1; p >= 1; p--) {
-        if (String(pdata[p][0]) === String(payload.leadId)) pipelineTab.deleteRow(p + 1);
-      }
-    }
-  });
-  CacheService.getScriptCache().removeAll(['vmw_all_leads', 'vmw_all_leads_hidden']);
-  return ok ? jsonResponse({ success:true }) : jsonResponse({ success:false, error:"Lead not found." });
-}
-
-// ============================================================
-// ADMIN DOCUMENT UPLOAD — for documents that arrived on WhatsApp (e.g. to
-// the 9594592020 number) instead of through the customer's own upload
-// screen. Drops files straight into that lead's existing Drive folder,
-// exactly as received, with none of the per-field categorization the
-// customer-facing flow does. One file per call, same pattern as the
-// customer's own uploadSingleDocument, so a large batch from WhatsApp
-// doesn't risk one oversized/timing-out request.
-// ============================================================
-function handleAdminUploadDocument(payload) {
-  var leadId = payload.leadId, product = payload.product, file = payload.file;
-  if (!leadId || !file || !file.base64) return jsonResponse({ success: false, error: "Missing file data." });
-
-  try {
-    var folderUrl = vmwFolderUrlForLead(leadId);
-    var folder = null;
-    if (folderUrl) {
-      var folderId = extractFolderIdFromUrl(folderUrl);
-      if (folderId) { try { folder = DriveApp.getFolderById(folderId); } catch (e) { folder = null; } }
-    }
-    if (!folder) {
-      var hit = vmwFindLeadRow(vmwLeadsTabNameForProduct(product), leadId);
-      var label = hit && hit.idx["Name"] !== undefined ? (hit.tab.getRange(hit.row, hit.idx["Name"] + 1).getValue() || "Applicant") : "Applicant";
-      var mobileForName = hit && hit.idx["Mobile"] !== undefined ? hit.tab.getRange(hit.row, hit.idx["Mobile"] + 1).getValue() : "";
-      var customersParent = getNamedSubfolder("Customers");
-      folder = customersParent.createFolder(label + " — " + mobileForName + " — " + product);
-      folderUrl = folder.getUrl();
-      if (hit && hit.idx["Documents Folder"] !== undefined) {
-        withLock(function () { hit.tab.getRange(hit.row, hit.idx["Documents Folder"] + 1).setValue(folderUrl); });
-      }
-      vmwFolderCachePut(leadId, folderUrl);
-      vmwCacheRemove(VMW_LEADS_LIST_CACHE_KEY);
-    }
-
-    var blob = Utilities.newBlob(Utilities.base64Decode(file.base64), file.mimeType || "application/octet-stream", file.name || ("document_" + Date.now()));
-    folder.createFile(blob);
-    return jsonResponse({ success: true });
-  } catch (err) {
-    Logger.log("handleAdminUploadDocument error: " + err.toString());
-    return jsonResponse({ success: false, error: err.toString() });
-  }
-}
-
-// Called once after all files in a batch have uploaded, to flip the
-// lead's Document Status and leave a record of who supplied them.
-function handleAdminFinalizeDocuments(payload) {
-  var leadId = payload.leadId, product = payload.product;
-  if (!leadId) return jsonResponse({ success: false, error: "Missing leadId." });
-  setDocumentStatus(product, leadId, "Submitted");
-  logLeadEvent(leadId, product, "", "Documents uploaded by admin", "Admin", "", "", "Received on WhatsApp (9594592020) and uploaded directly to the customer's Drive folder" + (payload.fileCount ? (" — " + payload.fileCount + " file(s)") : ""));
-  vmwCacheRemove(VMW_LEADS_LIST_CACHE_KEY);
-  return jsonResponse({ success: true });
-}
-
-function handleAdminGetBankers() {
-  return jsonResponse({ success:true, bankers: getCachedOrFetch('vmw_admin_bankers', 60, function () {
-    var s = readSheet(PARTNERS_TAB, true);
-    var idx = idxMap(s.headers);
-    var m = readSheet(DSA_MAPPINGS_TAB, true);
-    var codesByBanker = {};
-    m.rows.forEach(function (r) {
-      var code = r[1]; if (!code) return;
-      if (!codesByBanker[code]) codesByBanker[code] = [];
-      codesByBanker[code].push({ bankName: r[2], loanType: r[3], vmwCode: r[4], status: r[5] });
-    });
-    var list = [];
-    s.rows.forEach(function (r) {
-      if (r[idx["Type"]] !== "Banker") return;
-      list.push({
-        bankerId: r[idx["Partner Code"]], name: r[idx["Name"]], mobile: r[idx["Mobile"]], email: r[idx["Email"]],
-        bankName: r[idx["Employer Bank Name"]] || r[idx["Bank Name"]], accountVerified: String(r[idx["Account Verified"]] || "No").trim().toLowerCase() === "yes",
-        created: r[idx["Created"]] ? new Date(r[idx["Created"]]).getTime() : null,
-        lastLogin: (idx["Last Login"] !== undefined && r[idx["Last Login"]]) ? new Date(r[idx["Last Login"]]).getTime() : null,
-        codes: codesByBanker[r[idx["Partner Code"]]] || []
+$('waDocUploadBtn').addEventListener('click', function () {
+  if (!CURRENT_LEAD) return;
+  var files = Array.prototype.slice.call($('waDocFiles').files || []);
+  var prog = $('waDocProgress');
+  if (!files.length) { showToast("Choose at least one file first", true); return; }
+  prog.classList.remove('hidden');
+  withBusy(this, 'Uploading…', function () {
+    var ok = 0, failed = [];
+    return files.reduce(function (chain, file, i) {
+      return chain.then(function () {
+        prog.textContent = 'Uploading ' + (i + 1) + ' of ' + files.length + ' — ' + file.name;
+        return fileToBase64(file)
+          .then(function (base64) {
+            return apiPost({ action: "adminUploadDocument", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product,
+              file: { name: file.name, mimeType: file.type, base64: base64 } });
+          })
+          .then(function (r) { if (r && r.success) ok++; else failed.push(file.name); })
+          .catch(function () { failed.push(file.name); });
+      });
+    }, Promise.resolve()).then(function () {
+      if (!ok) { prog.textContent = ''; showToast("Upload failed for all file(s)", true); return; }
+      return apiPost({ action: "adminFinalizeDocuments", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product, fileCount: ok }).then(function () {
+        prog.textContent = '';
+        $('waDocFiles').value = '';
+        showToast(failed.length ? (ok + ' uploaded, ' + failed.length + ' failed: ' + failed.join(', ')) : ('All ' + ok + ' file(s) uploaded to the customer folder'), !!failed.length);
+        CURRENT_LEAD.documentStatus = 'Submitted';
+        delete LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId];
+        apiPost({ action: "adminGetLeadHistory", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId }).then(function (r) {
+          LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId] = (r.success ? r.events : []) || [];
+          renderLeadHistoryBox($('sheetHistoryRows'), LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId]);
+        });
+        reloadLeadsOnly();
       });
     });
-    list.sort(function (a, b) { return (b.created || 0) - (a.created || 0); });
-    return list;
-  })});
+  }).catch(function (err) { prog.textContent = ''; showToast("Connection error: " + err.message, true); });
+});
+
+$('hideLeadBtn').addEventListener('click', function () {
+  if (!CURRENT_LEAD) return;
+  var hide = !CURRENT_LEAD.hidden;
+  apiPost({ action: hide ? "adminHideLead" : "adminUnhideLead", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product }).then(function (r) {
+    if (r.success) { showToast(hide ? "Lead hidden" : "Lead unhidden"); closeSheet('leadSheet', 'leadBackdrop'); reloadLeadsOnly(); }
+    else showToast(r.error || "Action failed", true);
+  }).catch(function (err) { showToast("Connection error: " + err.message, true); });
+});
+
+$('deleteLeadBtn').addEventListener('click', function () {
+  if (!CURRENT_LEAD) return;
+  if (!confirm('Permanently delete this lead (' + (CURRENT_LEAD.name || '—') + ')? This cannot be undone.')) return;
+  apiPost({ action: "adminDeleteLead", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product }).then(function (r) {
+    if (r.success) { showToast("Lead deleted"); closeSheet('leadSheet', 'leadBackdrop'); reloadLeadsOnly(); }
+    else showToast(r.error || "Delete failed", true);
+  }).catch(function (err) { showToast("Connection error: " + err.message, true); });
+});
+
+$('saveProcessingBankBtn').addEventListener('click', function () {
+  if (!CURRENT_LEAD) return;
+  var bankName = $('processingBankInput').value.trim();
+  withBusy(this, 'Saving…', function () {
+    return apiPost({ action: "adminSetVlElProcessingBank", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product, bankName: bankName })
+      .then(function (r) { if (r.success) { showToast("Processing bank saved"); CURRENT_LEAD.processingBank = bankName; reloadLeadsOnly(); } else showToast(r.error || "Save failed", true); });
+  }).catch(function (err) { showToast("Connection error: " + err.message, true); });
+});
+/* ================= FOLLOW-UP PANEL ================= */
+var CLAIM_STATUSES = [['Active', 'No update yet'], ['Approved', 'Approved'], ['Rejected', 'Rejected'], ['Disbursed', 'Disbursed']];
+var DSA_STATUSES = ['In Process', 'Approved', 'Disbursed', 'Rejected'];
+
+function escA(s) { return esc(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function digits10(m) { return String(m || '').replace(/\D/g, '').slice(-10); }
+function agoText(ts) {
+  if (!ts) return '';
+  var m = Math.floor((Date.now() - ts) / 60000);
+  if (m < 60) return Math.max(m, 1) + 'm ago';
+  var h = Math.floor(m / 60); if (h < 24) return h + 'h ago';
+  return Math.floor(h / 24) + 'd ago';
 }
 
-function handleAdminAddDsaCodeForBanker(payload) {
-  var bankerId = payload.bankerId, bankName = (payload.bankName || "").trim(), loanType = payload.loanType, code = (payload.vmwCode || "").trim();
-  if (!bankerId || !bankName || !loanType || !code) return jsonResponse({ success:false, error:"All fields required." });
-  var p = bkGetPartnerByCode(bankerId);
-  if (!p) return jsonResponse({ success:false, error:"Banker not found." });
-  withMasterLock(function () {
-    var mappingsTab = getMasterSS().getSheetByName(DSA_MAPPINGS_TAB);
-    mappingsTab.appendRow(["MAP-" + Date.now() + "-" + Math.floor(Math.random() * 1000), bankerId, bankName, loanType, code, "Active", new Date()]);
-    var partnersTab = getMasterSS().getSheetByName(PARTNERS_TAB);
-    var pdata = partnersTab.getDataRange().getValues();
-    var idx = idxMap(pdata[0]);
-    for (var i = 1; i < pdata.length; i++) {
-      if (pdata[i][idx["Partner Code"]] === bankerId) { partnersTab.getRange(i + 1, idx["Account Verified"] + 1).setValue("Yes"); break; }
-    }
-  });
-  bkInvalidate(DSA_MAPPINGS_TAB); bkInvalidate(PARTNERS_TAB);
-  CacheService.getScriptCache().removeAll(['vmw_admin_bankers']);
-  return jsonResponse({ success:true, message:"DSA code added and active." });
-}
-
-function handleGetBlockedBankers() {
-  return jsonResponse({ success:true, bankers: getCachedOrFetch('vmw_admin_blocked', 60, function () {
-    var s = readSheet(PARTNERS_TAB, true);
-    var idx = idxMap(s.headers);
-    var claims = readSheet(BUSINESS_LEADS_TAB, true).rows;
-    var out = [];
-    s.rows.forEach(function (r) {
-      if (r[idx["Type"]] !== "Banker") return;
-      var bankerId = r[idx["Partner Code"]];
-      var verifiedTypes = getBankerVerifiedLoanTypes(bankerId);
-      if (!verifiedTypes.length) return;
-      var count = getRecentRejectionCount(bankerId, claims);
-      out.push({ bankerId: bankerId, name: r[idx["Name"]], mobile: r[idx["Mobile"]], rejectionCount: count,
-        limit: REJECTION_BLOCK_LIMIT, blocked: count >= REJECTION_BLOCK_LIMIT });
-    });
-    out.sort(function (a, b) { return b.rejectionCount - a.rejectionCount; });
-    return out;
-  })});
-}
-
-function handleAdminUpdateBankerStatus(payload) {
-  var p = bkGetPartnerByCode(payload.bankerId);
-  if (!p) return jsonResponse({ success:false, error:"Banker not found." });
-  var status = (payload.status === "Suspended") ? "Suspended" : "Active";
-  withMasterLock(function () { p.sheet.getRange(p.rowNum, p.idx["Status"] + 1).setValue(status); });
-  bkInvalidate(PARTNERS_TAB);
-  CacheService.getScriptCache().removeAll(['vmw_admin_bankers']);
-  return jsonResponse({ success:true });
-}
-
-function resetAdminPassword() {
-  PropertiesService.getScriptProperties().setProperty('ADMIN_PASSWORD', '1976');
-  Logger.log('Password reset to 1976 complete.');
-}
-function backfillPastDsaAssignments() {
-  var WHEN = "2026-11-11T14:00:00";
-  var ENTRIES = [
-    { mobile: "9328406886", dsaName: "Suraj", lenders: [], date: WHEN },  // FlexiLoans
-    { mobile: "7201827319", dsaName: "Suraj", lenders: [], date: WHEN },  // Bhanix Finance
-    { mobile: "9574434725", dsaName: "Suraj", lenders: [], date: WHEN },  // Clix, FlexiLoans, IIFL
-    { mobile: "9228786185", dsaName: "Suraj", lenders: [], date: WHEN },  // Axis, HDFC, ICICI
-    { mobile: "9428834950", dsaName: "Suraj", lenders: [], date: WHEN }   // Clix, FlexiLoans, IIFL
-  ];
-
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var pTab = ss.getSheetByName(LENDER_PIPELINE_TAB);
-  var aTab = ss.getSheetByName(DSA_ASSIGNMENTS_TAB);
-  if (!aTab) { setupDsaAssignmentsTab(ss); aTab = ss.getSheetByName(DSA_ASSIGNMENTS_TAB); }
-  var lcTab = ss.getSheetByName(LEAD_LIFECYCLE_TAB);
-  var dsas = getDsaListData();
-  function d10(m) { return String(m || "").replace(/\D/g, "").slice(-10); }
-
-  ENTRIES.forEach(function (e) {
-    var dsa = dsas.filter(function (d) { return d.name === e.dsaName; })[0];
-    if (!dsa) { Logger.log("SKIPPED " + e.mobile + ": DSA '" + e.dsaName + "' not found (or not Active) in DSA Partners tab"); return; }
-
-    var when = e.date ? new Date(e.date) : new Date();
-    var data = pTab.getRange(2, 1, pTab.getLastRow() - 1, 9).getValues();
-    var byLead = {};
-    for (var i = 0; i < data.length; i++) {
-      if (d10(data[i][1]) !== d10(e.mobile)) continue;
-      if (e.lenders && e.lenders.length && e.lenders.indexOf(data[i][5]) === -1) continue;
-      var lid = String(data[i][0]);
-      if (!byLead[lid]) byLead[lid] = { customer: data[i][2], product: data[i][4], lenders: [] };
-      var names = String(data[i][8] || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
-      if (names.indexOf(e.dsaName) === -1) names.push(e.dsaName);
-      pTab.getRange(i + 2, 9).setValue(names.join(", "));
-      pTab.getRange(i + 2, 8).setValue(when);
-      byLead[lid].lenders.push(data[i][5]);
-    }
-
-    var leadIds = Object.keys(byLead);
-    if (!leadIds.length) { Logger.log("SKIPPED " + e.mobile + ": no Lender Pipeline rows found for this mobile"); return; }
-    if (leadIds.length > 1) Logger.log("NOTE " + e.mobile + ": " + leadIds.length + " leads share this mobile, all recorded: " + leadIds.join(", "));
-
-    leadIds.forEach(function (lid) {
-      var info = byLead[lid], lenderList = info.lenders.join(", ");
-      aTab.appendRow([when, lid, info.customer, e.dsaName, dsa.emails, lenderList, "Admin (backfilled)"]);
-      if (lcTab) {
-        lcTab.appendRow([when, lid, info.customer, info.product, "Assigned to DSA", "Admin", "", "Admin",
-          "DSA: " + e.dsaName + " (" + dsa.emails + ") · Lenders: " + lenderList + " · backfilled", ""]);
-      }
-      Logger.log("Recorded " + lid + " (" + e.mobile + ") → " + e.dsaName);
+function buildFollowUps(lead) {
+  var out = [];
+  (lead.claims || []).forEach(function (c) {
+    var st = c.claimStatus || 'Active';
+    out.push({
+      type: 'Banker', code: c.bankerCode || '', name: c.bankerName || c.bankerCode || 'Banker',
+      mobile: c.bankerMobile || '', email: c.bankerEmail || '', claimId: c.claimId, status: st, pending: st === 'Active',
+      since: c.claimedAt,
+      detail: 'Claimed from pool' + (c.dsaCodeUsed ? ' · DSA code ' + c.dsaCodeUsed : '') +
+        (st === 'Rejected' && c.rejectionReason ? ' · ' + c.rejectionReason : '') +
+        (st === 'Disbursed' && c.disbursedAmount ? ' · ' + inr(c.disbursedAmount) : '')
     });
   });
-  CacheService.getScriptCache().removeAll(['vmw_all_leads', 'vmw_all_leads_hidden', 'vmw_lead_last_event']);
+  var byDsa = {}, order = [];
+  (lead.pipeline || []).forEach(function (p) {
+    String(p.assignedDsa || '').split(',').forEach(function (n) {
+      n = n.trim(); if (!n) return;
+      if (!byDsa[n]) { byDsa[n] = { rows: [], since: null }; order.push(n); }
+      byDsa[n].rows.push({ lender: p.lender, status: p.status });
+      if (p.lastUpdated && (!byDsa[n].since || p.lastUpdated > byDsa[n].since)) byDsa[n].since = p.lastUpdated;
+    });
+  });
+  order.forEach(function (n) {
+    var info = ACTIVE_DSAS.filter(function (d) { return d.name === n; })[0] || {}, d = byDsa[n];
+    var open = d.rows.filter(function (r) { return r.status === 'In Process'; }).length;
+    out.push({
+      type: 'DSA', code: '', name: n, mobile: info.phone || '', email: info.emails || '', rows: d.rows,
+      status: open ? 'In Process' : 'Updated', pending: open > 0, since: d.since,
+      detail: open + ' of ' + d.rows.length + ' lender(s) still open'
+    });
+  });
+  return out;
 }
+
+function lastFollowUp(f) {
+  var events = LEAD_HISTORY_CACHE[CURRENT_LEAD.leadId] || [], best = null;
+  events.forEach(function (e) {
+    if (!/^Follow-up/.test(e.event || '')) return;
+    var match = f.code ? (e.actorCode === f.code) : (e.actorName === f.name);
+    if (match && (!best || e.timestamp > best.timestamp)) best = e;
+  });
+  return best;
+}
+
+function renderFollowUps() {
+  var el = $('followUpRows');
+  if (!el || !CURRENT_LEAD) return;
+  var list = buildFollowUps(CURRENT_LEAD);
+  CURRENT_LEAD._followUps = list;
+  $('remindPendingBtn').disabled = !list.some(function (f) { return f.pending && f.email; });
+  if (!list.length) { el.innerHTML = '<div class="empty">No bankers or DSAs attached to this lead yet.</div>'; return; }
+
+  el.innerHTML = list.map(function (f, i) {
+    var d = digits10(f.mobile), last = lastFollowUp(f);
+    var msg = 'Hi ' + f.name + ', please share the current status of ' + (CURRENT_LEAD.name || 'the') + ' ' +
+      (CURRENT_LEAD.product || '') + ' lead (' + CURRENT_LEAD.leadId + '). — VastMyWealth';
+    var controls = '';
+    if (f.type === 'Banker') {
+      var opts = CLAIM_STATUSES.slice();
+      if (!opts.some(function (o) { return o[0] === f.status; })) opts.unshift([f.status, f.status]);
+      controls = '<div class="mini-row-top" style="margin-top:8px;"><span class="sub">Status</span><select data-claim="' + i + '">' +
+        opts.map(function (o) { return '<option value="' + escA(o[0]) + '"' + (o[0] === f.status ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select></div>';
+    } else {
+      controls = f.rows.map(function (r) {
+        return '<div class="mini-row-top" style="margin-top:8px;"><span class="sub">' + esc(r.lender) + '</span>' +
+          '<select data-dsa="' + i + '" data-lender="' + escA(r.lender) + '">' +
+          DSA_STATUSES.map(function (s) { return '<option value="' + s + '"' + (s === r.status ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></div>';
+      }).join('');
+    }
+    return '<div class="mini-row">' +
+      '<div class="mini-row-top"><span class="lbl">' + esc(f.name) + ' <span class="sub">(' + f.type + ')</span></span>' +
+      '<span class="tag ' + (f.pending ? 'warn' : 'ok') + '">' + (f.pending ? 'Pending' : esc(f.status)) + '</span></div>' +
+           '<div class="sub" style="margin-top:4px;">' + esc(f.detail) + (f.since ? ' · since ' + agoText(f.since) : '') +
+        ((f.pending && f.since && Math.floor((Date.now() - f.since) / 86400000) >= 2)
+          ? ' <span class="tag bad">' + Math.floor((Date.now() - f.since) / 86400000) + ' days no update</span>' : '') + '</div>' +
+      '<div class="sub" style="margin-top:2px;">' + (last ? 'Last follow-up: ' + esc(last.event.replace(/^Follow-up /, '')) + ' · ' + agoText(last.timestamp) : 'No follow-up logged yet') + '</div>' +
+      controls +
+      '<div class="icon-row" style="margin-top:10px;align-items:center;flex-wrap:wrap;">' +
+        (d ? '<a class="icon-btn" data-contact="Call" data-i="' + i + '" href="tel:+91' + d + '" title="Call">☎</a>' +
+             '<a class="icon-btn" data-contact="WhatsApp" data-i="' + i + '" href="https://wa.me/91' + d + '?text=' + encodeURIComponent(msg) + '" target="_blank" rel="noopener" title="WhatsApp">✓</a>'
+           : '<span class="sub">No phone on file</span>') +
+        (f.email ? '<button class="btn btn-line btn-sm" data-remind="' + i + '">✉ Email</button>' : '<span class="sub">No email</span>') +
+        '<button class="btn btn-line btn-sm" data-note="' + i + '">📝 Log note</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+function reloadHistory() {
+  if (!CURRENT_LEAD) return Promise.resolve();
+  var id = CURRENT_LEAD.leadId;
+  return apiPost({ action: "adminGetLeadHistory", password: ADMIN_PASSWORD, leadId: id }).then(function (r) {
+    LEAD_HISTORY_CACHE[id] = (r.success ? r.events : []) || [];
+    if (CURRENT_LEAD && CURRENT_LEAD.leadId === id) {
+      renderLeadHistoryBox($('sheetHistoryRows'), LEAD_HISTORY_CACHE[id]);
+      renderFollowUps();
+    }
+  }).catch(function () {});
+}
+
+function refreshLead() {
+  var id = CURRENT_LEAD.leadId;
+  return apiPost({ action: "adminGetAllLeads", password: ADMIN_PASSWORD, includeHidden: currentIncludeHidden() }).then(function (r) {
+    if (!r.success) return;
+    ALL_LEADS = r.leads || [];
+    var fresh = ALL_LEADS.filter(function (l) { return l.leadId === id; })[0];
+    if (fresh) CURRENT_LEAD = fresh;
+    renderLeads(); renderPipelineRows(); renderClaimHistory();
+  }).then(reloadHistory);
+}
+
+function logContact(f, channel, note) {
+  return apiPost({ action: "adminLogContact", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product,
+    customerName: CURRENT_LEAD.name, type: f.type, code: f.code, name: f.name, channel: channel, note: note || '' }).then(reloadHistory);
+}
+
+function sendReminders(targets, btn) {
+  if (!targets.length) { showToast('No one to email', true); return; }
+  var names = targets.map(function (f) { return f.name; }).join(', ');
+  if (!confirm('Email a status-update reminder to: ' + names + '?')) return;
+  withBusy(btn, 'Sending…', function () {
+    return apiPost({ action: "adminSendFollowUp", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product,
+      customerName: CURRENT_LEAD.name, loanAmount: CURRENT_LEAD.loanAmount,
+      targets: targets.map(function (f) { return { type: f.type, code: f.code, name: f.name }; }) })
+    .then(function (r) {
+      var skipped = (r.skipped && r.skipped.length) ? ' · skipped: ' + r.skipped.join(', ') : '';
+      showToast(r.success ? ('Reminder sent to ' + r.sent + skipped) : (r.error || 'Failed') + skipped, !r.success);
+      return reloadHistory();
+    });
+  }).catch(function (err) { showToast(err.message, true); });
+}
+
+$('followUpRows').addEventListener('click', function (e) {
+  var c = e.target.closest('[data-contact]');
+  if (c) { logContact(CURRENT_LEAD._followUps[+c.getAttribute('data-i')], c.getAttribute('data-contact')); return; } // link still opens normally
+  var r = e.target.closest('[data-remind]');
+  if (r) { sendReminders([CURRENT_LEAD._followUps[+r.getAttribute('data-remind')]], r); return; }
+  var n = e.target.closest('[data-note]');
+  if (n) {
+    var f = CURRENT_LEAD._followUps[+n.getAttribute('data-note')];
+    var note = prompt('Note about ' + f.name + ' (e.g. "Spoke to him, will update tomorrow"):');
+    if (note && note.trim()) logContact(f, 'Note', note.trim()).then(function () { showToast('Note saved'); });
+  }
+});
+
+$('followUpRows').addEventListener('change', function (e) {
+  var sel = e.target, f;
+  if (sel.hasAttribute('data-claim')) {
+    f = CURRENT_LEAD._followUps[+sel.getAttribute('data-claim')];
+    var status = sel.value, reason = '', amount = '';
+    if (status === f.status) return;
+    if (!confirm('Set ' + f.name + ' (banker) to "' + status + '"?')) { renderFollowUps(); return; }
+    if (status === 'Rejected') {
+      reason = prompt('Reason for rejection by ' + f.name + ' (required):');
+      if (reason === null || !reason.trim()) { if (reason !== null) showToast('A reason is required', true); renderFollowUps(); return; }
+      reason = reason.trim();
+    }
+    if (status === 'Disbursed') {
+      amount = prompt('Disbursed amount (₹) by ' + f.name + ':', CURRENT_LEAD.loanAmount || '');
+      if (amount === null || !String(amount).replace(/[^0-9.]/g, '')) { if (amount !== null) showToast('Amount is required', true); renderFollowUps(); return; }
+    }
+    sel.disabled = true;
+    apiPost({ action: "adminSetClaimStatus", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product,
+      customerName: CURRENT_LEAD.name, claimId: f.claimId, status: status, reason: reason, amount: amount })
+    .then(function (r) {
+      if (r.success) { showToast(f.name + ' → ' + status); return refreshLead(); }
+      showToast(r.error || 'Update failed', true); renderFollowUps();
+    }).catch(function (err) { showToast('Connection error: ' + err.message, true); renderFollowUps(); });
+    return;
+  }
+  if (sel.hasAttribute('data-dsa')) {
+    f = CURRENT_LEAD._followUps[+sel.getAttribute('data-dsa')];
+    var lender = sel.getAttribute('data-lender'), st = sel.value, note = '';
+    if (!confirm('Set ' + lender + ' (via DSA ' + f.name + ') to "' + st + '"?')) { renderFollowUps(); return; }
+    if (st === 'Rejected') { var rr = prompt('Rejection reason (optional, saved in lead history):'); note = rr ? rr.trim() : ''; }
+    sel.disabled = true;
+    apiPost({ action: "adminSetDsaStatus", password: ADMIN_PASSWORD, leadId: CURRENT_LEAD.leadId, product: CURRENT_LEAD.product,
+      customerName: CURRENT_LEAD.name, dsaName: f.name, lenderName: lender, status: st, note: note })
+    .then(function (r) {
+      if (r.success) { showToast(lender + ' → ' + st); return refreshLead(); }
+      showToast(r.error || 'Update failed', true); renderFollowUps();
+    }).catch(function (err) { showToast('Connection error: ' + err.message, true); renderFollowUps(); });
+  }
+});
+
+$('remindPendingBtn').addEventListener('click', function () {
+  sendReminders(CURRENT_LEAD._followUps.filter(function (f) { return f.pending && f.email; }), this);
+});
+$('awaitingFilter').addEventListener('change', renderLeads);
+/* ================= BANKERS ================= */
+function loadBankers() {
+  $('bankersContainer').innerHTML = '<div class="empty">Loading bankers…</div>';
+  apiPost({ action: "adminGetBankers", password: ADMIN_PASSWORD }).then(function (r) {
+    if (r.success) { ALL_BANKERS = r.bankers || []; renderBankers(); populateBankerPicker(); }
+    else $('bankersContainer').innerHTML = '<div class="error-box">' + esc(r.error || 'Failed to load bankers') + '</div>';
+  }).catch(function (err) { $('bankersContainer').innerHTML = '<div class="error-box">' + esc(err.message) + '</div>'; });
+}
+
+function activeHolderCodes() {
+  var set = {};
+  ALL_LEADS.forEach(function (l) {
+    var inFlight = (l.stage === 'In process' || l.stage === 'Approved' || l.documentStatus === 'Pending');
+    if (!inFlight) return;
+    if (l.partnerCode) set[l.partnerCode] = true;
+    (l.claims || []).forEach(function (c) { if (c.claimStatus === 'Active') set[c.bankerCode] = true; });
+  });
+  (ALL_SUBS || []).forEach(function (sub) { if (sub.status === 'Active') set[sub.holderCode] = true; });
+  return set;
+}
+
+function renderBankers() {
+  var q = ($('bankerSearchBox').value || '').toLowerCase();
+  var showAll = $('showAllBankers') && $('showAllBankers').checked, activeSet = activeHolderCodes();
+  var list = ALL_BANKERS.filter(function (b) {
+    if (!showAll && !q && !activeSet[b.bankerId]) return false;
+    return !q || String(b.name || '').toLowerCase().indexOf(q) !== -1 || String(b.mobile || '').indexOf(q) !== -1;
+  });
+  $('bankersStats').innerHTML = ['<div class="stat-box"><b>' + ALL_BANKERS.length + '</b><span>Registered bankers</span></div>',
+    '<div class="stat-box"><b>' + ALL_BANKERS.filter(function (b) { return b.accountVerified; }).length + '</b><span>Verified</span></div>'].join('');
+  var el = $('bankersContainer');
+  if (!list.length) { el.innerHTML = '<div class="empty">' + (showAll || q ? 'No bankers found.' : 'No bankers with leads in process right now. Tick “Show all bankers” to see everyone.') + '</div>'; return; }
+  el.innerHTML = list.map(function (b) {
+    var codes = (b.codes || []).map(function (c) { return '<span class="tag ' + (c.status === 'Active' ? 'ok' : 'warn') + '">' + esc(c.bankName) + ' · ' + esc(c.loanType) + (c.status !== 'Active' ? ' (pending)' : '') + '</span>'; }).join(' ');
+    return '<div class="card"><div class="card-row" onclick="toggleDetail(this)"><div><div class="name">' + esc(b.name || '—') + (b.accountVerified ? '' : ' <span class="tag warn">unverified</span>') + '</div><div class="sub">' + esc(b.bankName || '—') + ' · ' + esc(b.mobile || '') + '</div></div><span class="caret">▼</span></div>' +
+      '<div class="card-detail"><div class="meta-line">' + (codes || '<span class="sub">No DSA codes yet</span>') + '</div>' +
+      '<div class="icon-row">' + (b.mobile ? '<a class="icon-btn" href="tel:' + esc(b.mobile) + '" title="Call">☎</a>' : '') + (b.email ? '<a class="icon-btn" href="mailto:' + esc(b.email) + '" title="Email">✉</a>' : '') + '</div></div></div>';
+  }).join('');
+}
+
+function populateBankerPicker() {
+  var sel = $('acBanker');
+  sel.innerHTML = '<option value="">Select a banker…</option>' + ALL_BANKERS.map(function (b) { return '<option value="' + esc(b.bankerId) + '">' + esc(b.name || b.bankerId) + ' — ' + esc(b.mobile || '') + '</option>'; }).join('');
+}
+$('bankerSearchBox').addEventListener('input', renderBankers);
+$('showAllBankers').addEventListener('change', renderBankers);
+
+function loadPendingCodes() {
+  $('pendingCodesContainer').innerHTML = '<div class="empty">Loading…</div>';
+  apiPost({ action: "adminGetPendingDsaCodes", password: ADMIN_PASSWORD }).then(function (r) {
+    var pending = (r.status === 'success' ? r.pending : []) || [];
+    var el = $('pendingCodesContainer');
+    if (!pending.length) { el.innerHTML = '<div class="empty">Nothing waiting on approval.</div>'; return; }
+    el.innerHTML = pending.map(function (p) {
+      var codesTxt = (p.codes || []).map(function (c) { return c.bankName + ' · ' + c.loanType + ' · ' + c.vmwCode; }).join(', ');
+      return '<div class="card"><div class="card-row" style="cursor:default;"><div><div class="name">' + esc(p.name || p.bankerId) + '</div><div class="sub">' + esc(p.mobile || '') + ' · ' + esc(codesTxt) + '</div></div>' +
+        '<button class="btn btn-ok btn-sm" data-approve="' + esc(p.bankerId) + '">Approve</button></div></div>';
+    }).join('');
+  }).catch(function () { $('pendingCodesContainer').innerHTML = '<div class="error-box">Could not load pending codes.</div>'; });
+}
+
+$('pendingCodesContainer').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-approve]'); if (!b) return;
+  withBusy(b, 'Approving…', function () {
+    return apiPost({ action: "adminApproveDsaCode", password: ADMIN_PASSWORD, bankerId: b.getAttribute('data-approve') }).then(function (r) {
+      showToast(r.status === 'success' ? 'Approved' : (r.message || 'Failed'), r.status !== 'success');
+      if (r.status === 'success') { loadPendingCodes(); loadBankers(); }
+    });
+  }).catch(function (err) { showToast(err.message, true); });
+});
+
+function loadBlockedBankers() {
+  $('blockedBankersContainer').innerHTML = '<div class="empty">Loading…</div>';
+  apiPost({ action: "adminGetBlockedBankers", password: ADMIN_PASSWORD }).then(function (r) {
+    var list = (r.bankers || []).filter(function (b) { return b.rejectionCount > 0; });
+    var el = $('blockedBankersContainer');
+    if (!list.length) { el.innerHTML = '<div class="empty">No bankers close to the limit right now.</div>'; return; }
+    el.innerHTML = list.map(function (b) {
+      return '<div class="card"><div class="card-row" style="cursor:default;"><div><div class="name">' + esc(b.name || b.bankerId) + '</div><div class="sub">' + esc(b.mobile || '') + ' · ' + b.rejectionCount + ' of ' + b.limit + ' rejections in 30 days</div></div>' +
+        (b.blocked ? '<button class="btn btn-bad btn-sm" data-unblock="' + esc(b.bankerId) + '">Blocked — Unblock</button>' : '<span class="tag warn">' + b.rejectionCount + '/' + b.limit + '</span>') + '</div></div>';
+    }).join('');
+  }).catch(function () { $('blockedBankersContainer').innerHTML = '<div class="error-box">Could not load.</div>'; });
+}
+
+$('blockedBankersContainer').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-unblock]'); if (!b) return;
+  if (!confirm('Unblock this banker and let them claim leads again?')) return;
+  withBusy(b, 'Unblocking…', function () {
+    return apiPost({ action: "adminUnblockBanker", password: ADMIN_PASSWORD, bankerId: b.getAttribute('data-unblock') }).then(function (r) {
+      showToast(r.status === 'success' ? 'Unblocked' : (r.message || 'Failed'), r.status !== 'success');
+      if (r.status === 'success') loadBlockedBankers();
+    });
+  }).catch(function (err) { showToast(err.message, true); });
+});
+
+$('addBankerCodeBtn').addEventListener('click', function () { $('acResult').classList.add('hidden'); openSheet('addCodeSheet', 'addCodeBackdrop'); });
+$('closeAddCodeSheet').addEventListener('click', function () { closeSheet('addCodeSheet', 'addCodeBackdrop'); });
+$('addCodeBackdrop').addEventListener('click', function () { closeSheet('addCodeSheet', 'addCodeBackdrop'); });
+
+$('acSubmitBtn').addEventListener('click', function () {
+  var bankerId = $('acBanker').value, bank = $('acBank').value.trim(), loanType = $('acLoanType').value, code = $('acCode').value.trim();
+  var box = $('acResult'); box.classList.add('hidden');
+  if (!bankerId || !bank || !code) { box.textContent = 'Banker, bank name and code are all required.'; box.classList.remove('hidden'); return; }
+  withBusy(this, 'Adding…', function () {
+    return apiPost({ action: "adminAddDsaCodeForBanker", password: ADMIN_PASSWORD, bankerId: bankerId, bankName: bank, loanType: loanType, vmwCode: code }).then(function (r) {
+      if (r.success) { showToast('DSA code added and active'); closeSheet('addCodeSheet', 'addCodeBackdrop'); $('acBank').value = ''; $('acCode').value = ''; loadBankers(); }
+      else { box.textContent = r.error || 'Could not add the code.'; box.classList.remove('hidden'); }
+    });
+  }).catch(function (err) { box.textContent = err.message; box.classList.remove('hidden'); });
+});
+
+/* ================= PARTNERS ================= */
+function renderPartners() {
+  var q = ($('partnerSearchBox') ? $('partnerSearchBox').value : '').toLowerCase();
+  var container = $('partnersContainer');
+  var showAllP = $('showAllPartners') && $('showAllPartners').checked, activeSetP = activeHolderCodes();
+  var partners = ALL_PARTNERS.filter(function (p) {
+    if (!showAllP && !q && !activeSetP[p.partnerCode]) return false;
+    return !q || String(p.name || '').toLowerCase().indexOf(q) !== -1 || String(p.mobile || '').indexOf(q) !== -1;
+  });
+  if (!partners.length) { container.innerHTML = '<div class="empty">' + (showAllP || q ? 'No partners found.' : 'No partners with leads in process right now. Tick “Show all partners” to see everyone.') + '</div>'; return; }
+  container.innerHTML = partners.map(function (p, i) {
+    var count = p.last30Count || 0;
+    var rankTag = (i === 0 && count > 0) ? ' 🏆' : '';
+    var inactiveTag = p.inactive ? ' <span class="tag warn">inactive 30d+</span>' : '';
+    var cleanMobile = String(p.mobile || '').replace(/\D/g, '');
+    return '<div class="card"><div class="card-row" onclick="toggleDetail(this)"><div><div class="name">' + esc(p.name || '—') + rankTag + inactiveTag + '</div><div class="sub">' + esc(p.mobile || '') + (p.email ? (' · ' + esc(p.email)) : '') + '</div></div><span class="caret">▼</span></div>' +
+      '<div class="card-detail"><div class="meta-line">' + count + ' application' + (count === 1 ? '' : 's') + ' in the last 30 days</div>' +
+      '<div class="icon-row">' + (p.mobile ? '<a class="icon-btn" href="tel:' + esc(p.mobile) + '" title="Call">☎</a>' : '') + (p.email ? '<a class="icon-btn" href="mailto:' + esc(p.email) + '" title="Email">✉</a>' : '') + (cleanMobile ? '<a class="icon-btn" href="https://wa.me/91' + cleanMobile + '" target="_blank" rel="noopener" title="WhatsApp">✓</a>' : '') + (p.chequeLink ? '<a class="icon-btn" href="' + esc(p.chequeLink) + '" target="_blank" rel="noopener" title="Cancelled cheque">📁</a>' : '') + '</div></div></div>';
+  }).join('');
+}
+
+document.addEventListener('input', function (e) { if (e.target && e.target.id === 'partnerSearchBox') renderPartners(); });
+$('showAllPartners').addEventListener('change', renderPartners);
+
+/* ================= BIZ TOOL SUBSCRIPTIONS ================= */
+function loadSubscriptions() {
+  $('subsContainer').innerHTML = '<div class="empty">Loading…</div>';
+  apiPost({ action: "adminListSubscriptions", password: ADMIN_PASSWORD }).then(function (r) {
+    if (!r.success) { $('subsContainer').innerHTML = '<div class="error-box">' + esc(r.error || 'Failed to load') + '</div>'; return; }
+    ALL_SUBS = r.subscriptions || [];
+    renderSubscriptions();
+    renderBankers(); renderPartners();
+  }).catch(function (err) { $('subsContainer').innerHTML = '<div class="error-box">' + esc(err.message) + '</div>'; });
+}
+
+function subStatusTag(s) {
+  return s === 'Active' ? '<span class="tag ok">Active</span>' : s === 'Pending' ? '<span class="tag warn">Pending payment</span>' : s === 'Cancelled' ? '<span class="tag bad">Cancelled</span>' : '<span class="tag">Expired</span>';
+}
+
+function renderSubscriptions() {
+  var active = ALL_SUBS.filter(function (s) { return s.status === 'Active'; }).length;
+  var pending = ALL_SUBS.filter(function (s) { return s.status === 'Pending'; }).length;
+  $('subsStats').innerHTML = '<div class="stat-box"><b>' + ALL_SUBS.length + '</b><span>Total</span></div>' +
+    '<div class="stat-box"><b>' + active + '</b><span>Active</span></div>' + '<div class="stat-box"><b>' + pending + '</b><span>Pending payment</span></div>';
+  var el = $('subsContainer');
+  if (!ALL_SUBS.length) { el.innerHTML = '<div class="empty">No subscriptions yet.</div>'; return; }
+  el.innerHTML = ALL_SUBS.map(function (s) {
+    return '<div class="card"><div class="card-row" style="cursor:default;"><div>' +
+      '<div class="name">' + esc(s.holderName || s.holderCode) + ' <span class="sub">(' + esc(s.holderType) + ')</span></div>' +
+      '<div class="sub">' + esc(s.plan) + ' · ' + esc(s.states || '') + (s.city ? (' · ' + esc(s.city)) : '') + (s.bankName ? (' · ' + esc(s.bankName)) : '') + '</div>' +
+      '<div class="sub">₹' + esc(s.amountPaid) + ' · ' + esc(s.source) + (s.endDate ? (' · ends ' + fmtDate(s.endDate)) : '') + '</div>' +
+      (s.holderCode ? '<div class="linkbox mt8" style="max-width:340px;"><span>' + esc(refLinkFor(s.holderCode)) + '</span><button class="btn btn-gold btn-sm" data-copylink="' + esc(s.holderCode) + '">Copy</button></div>' : '') +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">' + subStatusTag(s.status) +
+      (s.status === 'Active' || s.status === 'Pending' ? '<button class="btn btn-bad btn-sm" data-cancel="' + esc(s.subscriptionId) + '">Cancel</button>' : '') +
+      '</div></div></div>';
+  }).join('');
+}
+
+$('subsContainer').addEventListener('click', function (e) {
+  var copyBtn = e.target.closest('[data-copylink]');
+  if (copyBtn) { copyText(refLinkFor(copyBtn.getAttribute('data-copylink'))).then(function () { showToast('Link copied'); }).catch(function () { showToast('Could not copy', true); }); return; }
+  var b = e.target.closest('[data-cancel]'); if (!b) return;
+  if (!confirm('Cancel this subscription now?')) return;
+  withBusy(b, 'Cancelling…', function () {
+    return apiPost({ action: "adminCancelSubscription", password: ADMIN_PASSWORD, subscriptionId: b.getAttribute('data-cancel') }).then(function (r) {
+      showToast(r.success ? 'Cancelled' : (r.error || 'Failed'), !r.success);
+      if (r.success) loadSubscriptions();
+    });
+  }).catch(function (err) { showToast(err.message, true); });
+});
+
+$('addSubBtn').addEventListener('click', function () { $('subResult').classList.add('hidden'); openSheet('addSubSheet', 'addSubBackdrop'); });
+$('closeAddSubSheet').addEventListener('click', function () { closeSheet('addSubSheet', 'addSubBackdrop'); });
+$('addSubBackdrop').addEventListener('click', function () { closeSheet('addSubSheet', 'addSubBackdrop'); });
+
+$('subSubmitBtn').addEventListener('click', function () {
+  var box = $('subResult'); box.classList.add('hidden');
+  var states = $('subStates').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+  var holderCode = $('subHolderCode').value.trim();
+  if (!holderCode || !states.length) { box.textContent = 'Holder code and at least one state are required.'; box.classList.remove('hidden'); return; }
+  withBusy(this, 'Creating…', function () {
+    return apiPost({
+      action: "adminCreateSubscription", password: ADMIN_PASSWORD,
+      holderType: $('subHolderType').value, holderCode: holderCode, holderName: $('subHolderName').value.trim(),
+      bankName: $('subBankName').value.trim(), states: states, city: $('subCity').value.trim(), plan: $('subPlan').value,
+      amountPaid: $('subAmount').value.trim(), paymentRef: $('subProof').value.trim(), paymentProof: $('subProof').value.trim()
+    }).then(function (r) {
+      if (r.success) {
+        showToast('Subscription created and active'); closeSheet('addSubSheet', 'addSubBackdrop');
+        ['subHolderCode', 'subHolderName', 'subBankName', 'subStates', 'subCity', 'subAmount', 'subProof'].forEach(function (id) { $(id).value = ''; });
+        loadSubscriptions();
+      } else { box.textContent = r.error || 'Could not create the subscription.'; box.classList.remove('hidden'); }
+    });
+  }).catch(function (err) { box.textContent = err.message; box.classList.remove('hidden'); });
+});
+
+/* ---------------- WIRE UP ---------------- */
+$("loginBtn").addEventListener("click", doLogin);
+$("adminPassword").addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
+$("refreshBtn").addEventListener("click", refreshAll);
+$("logoutBtn").addEventListener("click", function () {
+  localStorage.removeItem('vmw_admin_pin');
+  localStorage.removeItem('vmw_admin_phone');
+  localStorage.removeItem('vmw_admin_cache');
+  location.reload();
+});
+$("productFilter").addEventListener("change", renderLeads);
+$("stageFilter").addEventListener("change", renderLeads);
+$("docFilter").addEventListener("change", renderLeads);
+$("stateFilter").addEventListener("input", renderLeads);
+$("attentionFilter").addEventListener("change", renderLeads);
+$("showHiddenCheckbox").addEventListener("change", reloadLeadsOnly);
+</script>
+</body>
+</html>
