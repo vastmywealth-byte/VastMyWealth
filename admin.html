@@ -659,16 +659,47 @@ function renderLeads() {
   }).join('');
     if (!leads.length) { container.innerHTML = '<div class="empty">No leads match your filters.</div>'; return; }
 
-  var notSent = [], sent = [];
-  leads.forEach(function (l) { (sentDsaNames(l).length ? sent : notSent).push(l); });
+  var sent = [], pending = [], hold = [];
+  leads.forEach(function (l) {
+    var b = leadBucket(l);
+    (b === 'sent' ? sent : b === 'hold' ? hold : pending).push(l);
+  });
 
   function section(title, list, emptyMsg) {
     return '<div class="section-label" style="margin-top:18px;font-size:12.5px;">' + title + ' (' + list.length + ')</div>' +
       (list.length ? list.map(leadCardHtml).join('') : '<div class="empty">' + emptyMsg + '</div>');
   }
   container.innerHTML =
-    section('Not yet sent to DSA', notSent, 'No leads in this section.') +
-    section('Sent to DSA', sent, 'No leads in this section.');
+    section('Sent to DSA', sent, 'No leads in this section.') +
+    section('Pending documents', pending, 'No leads in this section.') +
+    section('Hold / Reject', hold, 'No leads in this section.');
+}
+
+/* Which of the 3 sections a lead belongs to (state comes from the backend rules engine) */
+function leadBucket(l) {
+  if (l.leadState === 'Sent to DSA' || sentDsaNames(l).length) return 'sent';
+  if (l.leadState === 'Hold' || l.leadState === 'Rejected') return 'hold';
+  return 'pending';   // Pending Documents, Ready (goes at the next 9 AM run) and older leads with no state
+}
+function leadStateTags(l) {
+  var t = '';
+  if (l.leadState === 'Pending Documents') t += '<span class="tag warn">Pending documents</span>';
+  else if (l.leadState === 'Ready') t += '<span class="tag ok">Ready — sends at next 9 AM run</span>';
+  else if (l.leadState === 'Hold') t += '<span class="tag bad">Hold</span>';
+  else if (l.leadState === 'Rejected') t += '<span class="tag bad">Rejected</span>';
+  else if (l.leadState === 'Sent to DSA') t += '<span class="tag info">Sent to DSA</span>';
+  else if (!l.leadState && leadBucket(l) === 'pending') t += '<span class="tag">Older lead — send manually</span>';
+  if (l.startup) t += '<span class="tag info">Startup</span>';
+  return t;
+}
+function setLeadState(idx, state) {
+  var l = ALL_LEADS[idx]; if (!l) return;
+  var note = '';
+  if (state === 'Hold' || state === 'Rejected') { note = window.prompt('Reason (optional):', '') || ''; }
+  else if (!window.confirm('Release this lead? It will be sent to the DSA at the next 9 AM run even if a rule failed.')) return;
+  apiPost({ action: 'adminSetLeadState', password: ADMIN_PASSWORD, leadId: l.leadId, product: l.product, state: state, note: note }).then(function (r) {
+    if (r && r.success) { showToast('Lead updated'); reloadLeadsOnly(); } else { showToast((r && r.error) || 'Could not update.', true); }
+  }).catch(function (e) { showToast('Connection error: ' + e.message, true); });
 }
 
 /* DSAs a lead has been sent to (from pipeline rows; also covers a just-assigned lead) */
@@ -698,6 +729,7 @@ function leadCardHtml(l) {
       '<div class="card-detail">' +
         '<div class="meta-line">' +
           '<span class="tag ' + stageTagClass(l.stage) + '">' + esc(l.stage) + '</span>' +
+          leadStateTags(l) +
           (l.documentStatus === 'Pending' ? '<span class="tag warn">Docs pending</span>' : (l.documentStatus === 'Submitted' ? '<span class="tag ok">Docs received</span>' : '')) +
           (l.hidden ? '<span class="tag">Hidden</span>' : '') +
           (l.processingBank ? '<span class="tag info">' + esc(l.processingBank) + '</span>' : '') +
@@ -707,6 +739,7 @@ function leadCardHtml(l) {
           '<span class="tag' + (l.commissionPercent === 100 ? ' ok' : '') + '">VMW share ' + esc(l.commissionPercent) + '%</span>' +
           (l.isExclusive ? ('<span class="tag warn">Exclusive to ' + esc(l.sourcedByName || l.sourcedBy) + ' — ' + l.exclusiveDaysLeft + ' day' + (l.exclusiveDaysLeft === 1 ? '' : 's') + ' left</span>') : '') +
         '</div>' +
+        (l.stateReason ? '<div class="meta-line" style="color:var(--bad,#b42318);">' + esc(l.stateReason) + '</div>' : '') +
         '<div class="meta-line">' + esc(l.mobile || '') + (l.email ? (' · ' + esc(l.email)) : '') + '</div>' +
         (l.companyName ? '<div class="meta-line">' + esc(l.companyName) + '</div>' : '') +
         '<div class="icon-row" style="margin-bottom:10px;">' +
@@ -717,6 +750,10 @@ function leadCardHtml(l) {
         '<div class="section-label">Full lead history</div>' +
         '<div class="lead-history-box" id="hist_' + esc(l.leadId) + '"><div class="empty">Loading…</div></div>' +
         '<button class="btn btn-line btn-block" style="margin-top:8px;" onclick="event.stopPropagation(); openLeadSheet(' + idx + ')">Manage pipeline, claims &amp; DSA</button>' +
+        (leadBucket(l) !== 'sent' ? ('<div style="display:flex;gap:8px;margin-top:8px;">' +
+          '<button class="btn btn-line" style="flex:1;" onclick="event.stopPropagation(); setLeadState(' + idx + ', \'Release\')">Release to DSA</button>' +
+          '<button class="btn btn-line" style="flex:1;" onclick="event.stopPropagation(); setLeadState(' + idx + ', \'Hold\')">Hold</button>' +
+          '<button class="btn btn-line" style="flex:1;" onclick="event.stopPropagation(); setLeadState(' + idx + ', \'Rejected\')">Reject</button></div>') : '') +
       '</div>' +
     '</div>';
 }
