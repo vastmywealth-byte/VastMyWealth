@@ -25,7 +25,7 @@ BACKEND_URL: "https://vmw-portal-api.vastmywealth.workers.dev/",
     APPLY_URL: base + "apply.html",
     VL_EL_URL: base + "vl-el-application.html",
 
-    WHATSAPP_NUMBER: "919594592020",
+    WHATSAPP_NUMBER: "919405088782",
     SUPPORT_MOBILE: "9594592020",
     PARTNER_TERMS_URL: "https://loan.vastmywealth.com/partner-terms.pdf",
 
