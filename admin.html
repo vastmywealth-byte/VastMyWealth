@@ -132,6 +132,7 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
     <button class="tab-btn" data-tab="tabBankers">Bankers</button>
     <button class="tab-btn" data-tab="tabPartners">Partners</button>
     <button class="tab-btn" data-tab="tabSubs">Biz Tool</button>
+    <button class="tab-btn" data-tab="tabTeam">Team</button>
   </nav>
   <main>
     <!-- ============ LEADS ============ -->
@@ -185,6 +186,14 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
       <div class="toolbar"><input type="text" id="partnerSearchBox" placeholder="Search partner name or mobile…">
         <label><input type="checkbox" id="showAllPartners"> Show all partners (incl. inactive)</label></div>
       <div id="partnersContainer"><div class="empty">Loading partners…</div></div>
+    </div>
+    <!-- ============ TEAM (EMPLOYEE LOGINS) ============ -->
+    <div id="tabTeam" class="tab-pane hidden">
+      <div class="toolbar">
+        <button class="btn btn-gold btn-sm" id="addTeamBtn">+ Add employee</button>
+        <span class="sub" id="teamLinkNote" style="align-self:center;"></span>
+      </div>
+      <div id="teamContainer"><div class="empty">Loading…</div></div>
     </div>
     <!-- ============ BIZ TOOL SUBSCRIPTIONS ============ -->
     <div id="tabSubs" class="tab-pane hidden">
@@ -258,6 +267,17 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
   <div id="acResult" class="err-msg hidden"></div>
 </div>
 <div class="toast" id="toast"></div>
+
+<!-- ===================== ADD EMPLOYEE SHEET ===================== -->
+<div class="backdrop" id="addTeamBackdrop"></div>
+<div class="sheet" id="addTeamSheet">
+  <div class="sheet-head"><h3>Add employee</h3><button class="close-x" id="closeAddTeamSheet">✕</button></div>
+  <div class="field"><label for="teamName">Name</label><input type="text" id="teamName"></div>
+  <div class="field"><label for="teamMobile">Mobile number</label><input type="text" id="teamMobile" inputmode="numeric" maxlength="10"></div>
+  <div class="field"><label for="teamEmail">Email (PIN and login link are sent here)</label><input type="email" id="teamEmail"></div>
+  <button class="btn btn-gold btn-block" id="teamSubmitBtn">Create &amp; email PIN</button>
+  <div id="teamResult" class="err-msg hidden"></div>
+</div>
 
 <!-- ===================== NEW SUBSCRIPTION SHEET ===================== -->
 <div class="backdrop" id="addSubBackdrop"></div>
@@ -604,6 +624,7 @@ document.querySelectorAll('.tab-btn').forEach(function (b) {
     window.scrollTo(0, 0);
     window.history.pushState({ tab: b.dataset.tab }, "");
     if (b.dataset.tab === 'tabSubs' && !SUBS_LOADED) { SUBS_LOADED = true; loadSubscriptions(); }
+    if (b.dataset.tab === 'tabTeam') loadTeam();
   });
 });
 
@@ -1286,6 +1307,57 @@ function renderPartners() {
 
 document.addEventListener('input', function (e) { if (e.target && e.target.id === 'partnerSearchBox') renderPartners(); });
 $('showAllPartners').addEventListener('change', renderPartners);
+
+/* ================= TEAM (EMPLOYEE LOGINS) ================= */
+function loadTeam() {
+  $('teamContainer').innerHTML = '<div class="empty">Loading…</div>';
+  apiPost({ action: "adminListTeamUsers", password: ADMIN_PASSWORD }).then(function (r) {
+    if (!r.success) { $('teamContainer').innerHTML = '<div class="error-box">' + esc(r.error || 'Failed to load') + '</div>'; return; }
+    $('teamLinkNote').textContent = 'Employee login page: ' + (r.loginUrl || '');
+    var users = r.users || [];
+    if (!users.length) { $('teamContainer').innerHTML = '<div class="empty">No employees yet. Tap “Add employee”.</div>'; return; }
+    $('teamContainer').innerHTML = users.map(function (u) {
+      var locked = u.status === 'Locked';
+      return '<div class="card"><div class="card-row" style="cursor:default;"><div>' +
+        '<div class="name">' + esc(u.name) + ' ' + (locked ? '<span class="tag bad">Locked</span>' : '<span class="tag ok">Active</span>') + '</div>' +
+        '<div class="sub">' + esc(u.mobile) + ' · ' + esc(u.email) + '</div>' +
+        '<div class="sub">' + (u.lastLogin ? 'Last login ' + fmtDate(u.lastLogin) : 'Never logged in') + '</div></div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">' +
+        (locked ? '<button class="btn btn-ok btn-sm" data-tunlock="' + escA(u.mobile) + '">Unlock</button>' : '') +
+        '<button class="btn btn-line btn-sm" data-treset="' + escA(u.mobile) + '">Reset PIN</button>' +
+        '<button class="btn btn-bad btn-sm" data-tdel="' + escA(u.mobile) + '" data-tname="' + escA(u.name) + '">Delete</button>' +
+        '</div></div></div>';
+    }).join('');
+  }).catch(function (err) { $('teamContainer').innerHTML = '<div class="error-box">' + esc(err.message) + '</div>'; });
+}
+$('teamContainer').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-tdel],[data-treset],[data-tunlock]'); if (!b) return;
+  var act, mob, msg = null;
+  if (b.hasAttribute('data-tdel')) { act = 'adminDeleteTeamUser'; mob = b.getAttribute('data-tdel'); msg = 'Delete ' + b.getAttribute('data-tname') + '? Their access stops immediately.'; }
+  else if (b.hasAttribute('data-treset')) { act = 'adminResetTeamPin'; mob = b.getAttribute('data-treset'); msg = 'Generate a new PIN and email it to this employee?'; }
+  else { act = 'adminUnlockTeamUser'; mob = b.getAttribute('data-tunlock'); }
+  if (msg && !confirm(msg)) return;
+  withBusy(b, 'Please wait…', function () {
+    return apiPost({ action: act, password: ADMIN_PASSWORD, userMobile: mob }).then(function (r) {
+      showToast(r.success ? (r.message || 'Done') : (r.error || 'Failed'), !r.success);
+      if (r.success) loadTeam();
+    });
+  }).catch(function (err) { showToast(err.message, true); });
+});
+$('addTeamBtn').addEventListener('click', function () { $('teamResult').classList.add('hidden'); openSheet('addTeamSheet', 'addTeamBackdrop'); });
+$('closeAddTeamSheet').addEventListener('click', function () { closeSheet('addTeamSheet', 'addTeamBackdrop'); });
+$('addTeamBackdrop').addEventListener('click', function () { closeSheet('addTeamSheet', 'addTeamBackdrop'); });
+$('teamSubmitBtn').addEventListener('click', function () {
+  var box = $('teamResult'); box.classList.add('hidden');
+  withBusy($('teamSubmitBtn'), 'Creating…', function () {
+    return apiPost({ action: "adminAddTeamUser", password: ADMIN_PASSWORD, name: $('teamName').value.trim(), userMobile: $('teamMobile').value.trim(), email: $('teamEmail').value.trim() }).then(function (r) {
+      if (!r.success) { box.textContent = r.error || 'Failed'; box.classList.remove('hidden'); return; }
+      showToast(r.message || 'Added');
+      $('teamName').value = ''; $('teamMobile').value = ''; $('teamEmail').value = '';
+      closeSheet('addTeamSheet', 'addTeamBackdrop'); loadTeam();
+    });
+  }).catch(function (err) { box.textContent = err.message; box.classList.remove('hidden'); });
+});
 
 /* ================= BIZ TOOL SUBSCRIPTIONS ================= */
 function loadSubscriptions() {
