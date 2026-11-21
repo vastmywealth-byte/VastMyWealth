@@ -771,6 +771,8 @@ $('bounceAdvice').addEventListener('click', function (e) {
         if (String(res.documentStatus || '').toLowerCase() === 'submitted') { runTrack(S.trackedMobile, false); return; }
         goToDocuments();
       } else if (res && res.allocated) {
+        // Already with our team: show the same status screen as "Track my application" (not a dead-end message).
+        if (res.mobile && VMW.mobile10(res.mobile).length === 10) { runTrack(VMW.mobile10(res.mobile), false); return; }
         $('blockedText').textContent = res.error || 'This application is already being processed by our team.';
         $('blockedWa').href = waTeam('Hi, I need help with my application ' + leadId);
         show(['blockedWrap']);
