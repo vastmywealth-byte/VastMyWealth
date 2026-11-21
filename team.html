@@ -114,7 +114,7 @@ main{padding:14px 12px 60px;max-width:900px;margin:0 auto}
 
 <script>
 var API_URL = "https://vmw-portal-api.vastmywealth.workers.dev/";
-var SESS = null, LEADS = [], BUCKET = "pending", CUR = null;
+var OTHERS = {}, SESS = null, LEADS = [], BUCKET = "pending", CUR = null;
 var $ = function (id) { return document.getElementById(id); };
 function esc(s) { var d = document.createElement('div'); d.textContent = (s === undefined || s === null) ? '' : s; return d.innerHTML; }
 function toast(m, bad) { var t = $('toast'); t.textContent = m; t.className = 'toast' + (bad ? ' error' : ''); t.style.display = 'block'; setTimeout(function () { t.style.display = 'none'; }, 3200); }
@@ -160,7 +160,7 @@ function loadLeads() {
   $('list').innerHTML = '<div class="empty">Loading…</div>';
   api({ action: "teamGetLeads" }).then(function (r) {
     if (!r.success) { $('list').innerHTML = '<div class="empty">' + esc(r.error || 'Failed to load') + '</div>'; return; }
-    LEADS = r.leads || []; render();
+    LEADS = r.leads || []; OTHERS = r.others || {}; render();
   }).catch(function (e) { $('list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
 }
 document.querySelectorAll('.tab').forEach(function (b) {
@@ -184,7 +184,11 @@ function render() {
     if (l.bucket !== BUCKET) return false;
     return !q || (String(l.name) + ' ' + l.mobile + ' ' + l.leadId).toLowerCase().indexOf(q) !== -1;
   });
-  if (!rows.length) { $('list').innerHTML = '<div class="empty">Nothing here right now.</div>'; return; }
+  if (!rows.length) {
+    var oth = Object.keys(OTHERS).map(function (k) { return k + ': ' + OTHERS[k]; }).join(' · ');
+    $('list').innerHTML = '<div class="empty">Nothing here right now.' + (!LEADS.length && oth ? '<div class="sub" style="margin-top:8px">Only Pending documents, Hold and Rejected leads appear here. Other leads: ' + esc(oth) + '</div>' : '') + '</div>';
+    return;
+  }
   $('list').innerHTML = rows.map(function (l) {
     function chip(ok, label) { return '<span class="tag ' + (ok ? 'ok' : 'bad') + '">' + (ok ? '✓ ' : '✗ ') + label + '</span>'; }
     var m = String(l.mobile).replace(/\D/g, '').slice(-10);
@@ -245,7 +249,7 @@ function openDocs() {
     var el = $('files'); if (!el) return;
     if (!r.success) { el.innerHTML = '<div class="sub">' + esc(r.error || 'Failed') + '</div>'; return; }
     var f = r.files || [];
-    if (!f.length) { el.innerHTML = '<div class="sub">No documents uploaded yet.</div>'; return; }
+    if (!f.length) { el.innerHTML = '<div class="sub">' + esc(r.message || 'No documents uploaded yet.') + '</div>'; return; }
     el.innerHTML = f.map(function (x, i) { return '<div class="file"><span>' + esc(x.name) + ' <small style="color:var(--muted)">(' + Math.max(1, Math.round(x.size / 1024)) + ' KB)</small></span><button class="btn btn-info" data-f="' + esc(x.id) + '">View</button></div>'; }).join('');
     el.querySelectorAll('[data-f]').forEach(function (b) {
       b.addEventListener('click', function () { viewFile(b); });
