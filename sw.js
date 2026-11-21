@@ -28,6 +28,7 @@ const CORE = [
   './hl.png',
   './pl.png',
    './terms.html',
+   './team.html',
   './bl.png'
 ];
 
