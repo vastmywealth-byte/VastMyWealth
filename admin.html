@@ -133,6 +133,7 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
     <button class="tab-btn" data-tab="tabPartners">Partners</button>
     <button class="tab-btn" data-tab="tabSubs">Biz Tool</button>
     <button class="tab-btn" data-tab="tabTeam">Team</button>
+    <button class="tab-btn" data-tab="tabFb">DSA Feedback</button>
   </nav>
   <main>
     <!-- ============ LEADS ============ -->
@@ -186,6 +187,35 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
       <div class="toolbar"><input type="text" id="partnerSearchBox" placeholder="Search partner name or mobile…">
         <label><input type="checkbox" id="showAllPartners"> Show all partners (incl. inactive)</label></div>
       <div id="partnersContainer"><div class="empty">Loading partners…</div></div>
+    </div>
+    <!-- ============ DSA FEEDBACK IMPORT ============ -->
+    <div id="tabFb" class="tab-pane hidden">
+      <div class="card">
+        <div class="name">Import DSA feedback</div>
+        <div class="sub" style="margin-bottom:10px;">Pick the DSA, choose their sheet (CSV or Excel), check the column mapping once, then import. The mapping is remembered for next time.</div>
+        <div class="field"><label for="fbDsa">DSA</label><select id="fbDsa"></select></div>
+        <div class="field"><label for="fbFile">Sheet (.csv, .xlsx, .xls)</label><input type="file" id="fbFile" accept=".csv,.xlsx,.xls"></div>
+      </div>
+      <div id="fbMap" class="hidden">
+        <div class="card">
+          <div class="name">1. Which column is what?</div>
+          <div class="field"><label for="fbColMobile">Mobile number column *</label><select id="fbColMobile"></select></div>
+          <div class="field"><label for="fbColStatus">Status column *</label><select id="fbColStatus"></select></div>
+          <div class="field"><label for="fbColBank">Bank / lender column (optional)</label><select id="fbColBank"></select></div>
+          <div class="field"><label for="fbColRemark">Remark column (optional)</label><select id="fbColRemark"></select></div>
+          <div class="field"><label for="fbColName">Customer name column (optional)</label><select id="fbColName"></select></div>
+        </div>
+        <div class="card">
+          <div class="name">2. What does each status mean?</div>
+          <div class="sub" style="margin-bottom:8px;"><b>Rejected</b> = lead is marked Rejected here, the customer still sees “in process”, and it stays in the banker pool.</div>
+          <div id="fbStatusTable"></div>
+        </div>
+        <div class="toolbar">
+          <button class="btn btn-line" id="fbPreview">Preview</button>
+          <button class="btn btn-gold" id="fbImport">Import now</button>
+        </div>
+        <div id="fbResult"></div>
+      </div>
     </div>
     <!-- ============ TEAM (EMPLOYEE LOGINS) ============ -->
     <div id="tabTeam" class="tab-pane hidden">
@@ -625,6 +655,7 @@ document.querySelectorAll('.tab-btn').forEach(function (b) {
     window.history.pushState({ tab: b.dataset.tab }, "");
     if (b.dataset.tab === 'tabSubs' && !SUBS_LOADED) { SUBS_LOADED = true; loadSubscriptions(); }
     if (b.dataset.tab === 'tabTeam') loadTeam();
+    if (b.dataset.tab === 'tabFb') fbInit();
   });
 });
 
@@ -1307,6 +1338,123 @@ function renderPartners() {
 
 document.addEventListener('input', function (e) { if (e.target && e.target.id === 'partnerSearchBox') renderPartners(); });
 $('showAllPartners').addEventListener('change', renderPartners);
+
+/* ================= DSA FEEDBACK IMPORT ================= */
+var FB = { headers: [], rows: [], saved: null, inited: false, cats: ['Processing', 'Follow-up', 'Rejected', 'Disbursed', 'Ignore'] };
+function fbNorm(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+function fbGuessCat(s) {
+  var n = fbNorm(s);
+  if (!n) return 'Ignore';
+  if (/disburs/.test(n)) return 'Disbursed';
+  if (/not elig|^ne$|^ni$|cibil|not income|startup|reject|declin|not interested|negative/.test(n)) return 'Rejected';
+  if (/login|process|approv|sanction|logged|file sent|under/.test(n)) return 'Processing';
+  return 'Follow-up';
+}
+function fbInit() {
+  if (FB.inited) return; FB.inited = true;
+  apiPost({ action: "adminGetDsaList", password: ADMIN_PASSWORD }).then(function (r) {
+    var l = (r && r.dsas) || [];
+    $('fbDsa').innerHTML = '<option value="">— select DSA —</option>' + l.map(function (d) { return '<option value="' + escA(d.name) + '">' + esc(d.name) + '</option>'; }).join('');
+  }).catch(function () { showToast('Could not load DSA list', true); });
+}
+function fbLoadScript(cb) {
+  if (window.XLSX) return cb();
+  var sc = document.createElement('script');
+  sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  sc.onload = cb; sc.onerror = function () { showToast('Could not load the Excel reader. Save the sheet as CSV and try again.', true); };
+  document.head.appendChild(sc);
+}
+$('fbDsa').addEventListener('change', function () { FB.saved = null; if ($('fbFile').files.length) fbReadFile(); });
+$('fbFile').addEventListener('change', fbReadFile);
+function fbReadFile() {
+  var f = $('fbFile').files[0], dsa = $('fbDsa').value;
+  if (!f) return;
+  if (!dsa) { showToast('Pick the DSA first', true); return; }
+  fbLoadScript(function () {
+    var rd = new FileReader();
+    rd.onload = function (ev) {
+      try {
+        var wb = XLSX.read(ev.target.result, { type: 'array' });
+        var ws = wb.Sheets[wb.SheetNames[0]];
+        var all = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+        var hi = 0; while (hi < all.length && all[hi].filter(function (x) { return String(x).trim(); }).length < 2) hi++;
+        FB.headers = (all[hi] || []).map(function (h, i) { return String(h).trim() || ('Column ' + (i + 1)); });
+        FB.rows = all.slice(hi + 1).filter(function (r) { return r.some(function (x) { return String(x).trim(); }); });
+        apiPost({ action: "adminDsaFbGetMap", password: ADMIN_PASSWORD, dsa: dsa }).then(function (r) { FB.saved = (r && r.config) || null; fbBuildMap(); })
+          .catch(function () { FB.saved = null; fbBuildMap(); });
+      } catch (e) { showToast('Could not read this file: ' + e.message, true); }
+    };
+    rd.readAsArrayBuffer(f);
+  });
+}
+function fbPick(sel, keys, saved) {
+  var opts = '<option value="">— none —</option>' + FB.headers.map(function (h, i) { return '<option value="' + i + '">' + esc(h) + '</option>'; }).join('');
+  $(sel).innerHTML = opts;
+  var pick = -1;
+  if (saved) { pick = FB.headers.indexOf(saved); }
+  if (pick < 0) FB.headers.forEach(function (h, i) { if (pick < 0 && keys.test(fbNorm(h))) pick = i; });
+  $(sel).value = pick >= 0 ? String(pick) : '';
+}
+function fbBuildMap() {
+  var sv = FB.saved || {}, c = sv.columns || {};
+  fbPick('fbColMobile', /mobile|number|phone|contact/, c.mobile);
+  fbPick('fbColStatus', /status|feedback|update/, c.status);
+  fbPick('fbColBank', /bank|lender|login/, c.bank);
+  fbPick('fbColRemark', /remark|comment|note/, c.remark);
+  fbPick('fbColName', /^name|customer/, c.name);
+  $('fbMap').classList.remove('hidden');
+  fbStatusTable();
+}
+$('fbColStatus').addEventListener('change', fbStatusTable);
+function fbStatusTable() {
+  var si = $('fbColStatus').value;
+  var box = $('fbStatusTable');
+  if (si === '') { box.innerHTML = '<div class="sub">Pick the status column above.</div>'; return; }
+  var counts = {}, order = [];
+  FB.rows.forEach(function (r) { var v = String(r[Number(si)] || '').trim(); var k = fbNorm(v); if (!(k in counts)) { counts[k] = { label: v, n: 0 }; order.push(k); } counts[k].n++; });
+  var saved = (FB.saved && FB.saved.statusMap) || {};
+  box.innerHTML = order.map(function (k) {
+    var cat = saved[k] || fbGuessCat(counts[k].label);
+    return '<div class="card-row" style="cursor:default;margin-bottom:8px;"><div><div class="name">' + esc(counts[k].label || '(blank)') + '</div><div class="sub">' + counts[k].n + ' rows</div></div>' +
+      '<select data-fbk="' + escA(k) + '" style="padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:#fff;">' +
+      FB.cats.map(function (x) { return '<option' + (x === cat ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></div>';
+  }).join('');
+}
+function fbPayload(dry) {
+  var ci = { mobile: $('fbColMobile').value, status: $('fbColStatus').value, bank: $('fbColBank').value, remark: $('fbColRemark').value, name: $('fbColName').value };
+  if (ci.mobile === '' || ci.status === '') { showToast('Pick the mobile and status columns', true); return null; }
+  function cell(r, k) { return ci[k] === '' ? '' : String(r[Number(ci[k])] === undefined ? '' : r[Number(ci[k])]).trim(); }
+  var statusMap = {};
+  document.querySelectorAll('[data-fbk]').forEach(function (sel) { statusMap[sel.getAttribute('data-fbk')] = sel.value; });
+  var colNames = {}; Object.keys(ci).forEach(function (k) { colNames[k] = ci[k] === '' ? '' : FB.headers[Number(ci[k])]; });
+  return { action: "adminDsaFbImport", password: ADMIN_PASSWORD, dsa: $('fbDsa').value, dryRun: dry,
+    config: { columns: colNames, statusMap: statusMap },
+    rows: FB.rows.map(function (r) { return { name: cell(r, 'name'), mobile: cell(r, 'mobile'), status: cell(r, 'status'), bank: cell(r, 'bank'), remark: cell(r, 'remark') }; }) };
+}
+function fbRun(dry, btn) {
+  var p = fbPayload(dry); if (!p) return;
+  withBusy(btn, dry ? 'Checking…' : 'Importing…', function () {
+    return apiPost(p).then(function (r) {
+      if (!r.success) { $('fbResult').innerHTML = '<div class="error-box">' + esc(r.error || 'Failed') + '</div>'; return; }
+      var unk = Object.keys(r.unknown || {});
+      $('fbResult').innerHTML = '<div class="card"><div class="name">' + (dry ? 'Preview (nothing saved)' : 'Import done') + '</div>' +
+        '<div class="stats-row" style="margin-top:10px;">' +
+        '<div class="stat-box"><b>' + r.total + '</b><span>Rows</span></div><div class="stat-box"><b>' + r.matched + '</b><span>Matched</span></div>' +
+        '<div class="stat-box"><b>' + r.updated + '</b><span>' + (dry ? 'Will update' : 'Updated') + '</span></div><div class="stat-box"><b>' + r.rejected + '</b><span>Rejected</span></div>' +
+        '<div class="stat-box"><b>' + r.unchanged + '</b><span>Unchanged</span></div><div class="stat-box"><b>' + ((r.unmatched || []).length) + '</b><span>Not matched</span></div></div>' +
+        (r.noMobile ? '<div class="sub">' + r.noMobile + ' rows have no mobile number.</div>' : '') +
+        (unk.length ? '<div class="error-box" style="margin-top:8px;">Status not mapped (skipped): ' + unk.map(esc).join(', ') + '</div>' : '') +
+        ((r.unmatched || []).length ? '<div class="sub" style="margin-top:10px;"><b>Not found in our leads:</b><br>' + r.unmatched.map(function (u) { return esc((u.name || '—') + ' · ' + (u.mobile || 'no mobile') + ' · ' + u.status); }).join('<br>') + '</div>' : '') +
+        '</div>';
+      if (!dry) { showToast('Imported'); FB.saved = p.config; }
+    });
+  }).catch(function (e) { showToast(e.message, true); });
+}
+$('fbPreview').addEventListener('click', function () { fbRun(true, $('fbPreview')); });
+$('fbImport').addEventListener('click', function () {
+  if (!confirm('Import this sheet now? Rows marked Rejected will be rejected in the admin.')) return;
+  fbRun(false, $('fbImport'));
+});
 
 /* ================= TEAM (EMPLOYEE LOGINS) ================= */
 function loadTeam() {
