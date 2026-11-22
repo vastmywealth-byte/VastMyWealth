@@ -120,7 +120,7 @@ main{padding:14px 12px 60px;max-width:900px;margin:0 auto}
 
 <script>
 var API_URL = "https://vmw-portal-api.vastmywealth.workers.dev/";
-var OPEN = {}, OTHERS = {}, SESS = null, LEADS = [], BUCKET = "verify", CUR = null;
+var WA_TEXT = '', OPEN = {}, OTHERS = {}, SESS = null, LEADS = [], BUCKET = "verify", CUR = null;
 var $ = function (id) { return document.getElementById(id); };
 function esc(s) { var d = document.createElement('div'); d.textContent = (s === undefined || s === null) ? '' : s; return d.innerHTML; }
 function toast(m, bad) { var t = $('toast'); t.textContent = m; t.className = 'toast' + (bad ? ' error' : ''); t.style.display = 'block'; setTimeout(function () { t.style.display = 'none'; }, 3200); }
@@ -178,6 +178,15 @@ document.querySelectorAll('.tab').forEach(function (b) {
 });
 $('search').addEventListener('input', render);
 
+// WhatsApp opened from the employee's own phone, always with a ready message.
+function waHref(l, m10) {
+  var first = String(l.name || '').split(' ')[0] || 'there';
+  var me = SESS && SESS.name ? SESS.name : 'the team';
+  var t = l.state === 'Hold' || l.state === 'Rejected'
+    ? 'Hi ' + first + ', this is ' + me + ' from Vast My Wealth about your ' + l.product + ' loan application (Ref ' + l.leadId + '). Could we have a quick chat about it? Please let me know a good time.'
+    : 'Hi ' + first + ', this is ' + me + ' from Vast My Wealth about your ' + l.product + ' loan application (Ref ' + l.leadId + '). We need a few documents to move your file forward. Please send them here on WhatsApp, or upload them securely: ' + (l.link || '');
+  return 'https://wa.me/91' + m10 + '?text=' + encodeURIComponent(t);
+}
 function fmtAmt(a) { var n = Number(String(a).replace(/[^\d.]/g, '')); if (!n) return esc(a || ''); return n >= 10000000 ? '₹' + (n / 10000000).toFixed(2).replace(/\.?0+$/, '') + ' Cr' : n >= 100000 ? '₹' + (n / 100000).toFixed(2).replace(/\.?0+$/, '') + ' L' : '₹' + n.toLocaleString('en-IN'); }
 function ago(ts) { if (!ts) return ''; var d = Math.floor((Date.now() - ts) / 86400000); return d <= 0 ? 'today' : d === 1 ? '1 day ago' : d + ' days ago'; }
 
@@ -211,7 +220,7 @@ function render() {
       '<div class="actions">' +
       (l.state === 'Needs Verification' ? '<button class="btn btn-ok" data-a="verify" data-i="' + l._i + '">✅ Documents OK — release</button>' : '') +
       '<a class="btn btn-ok" href="tel:+91' + m + '">📞 Call</a>' +
-      '<a class="btn btn-ok" target="_blank" rel="noopener" href="https://wa.me/91' + m + '">WhatsApp</a>' +
+      '<a class="btn btn-ok" target="_blank" rel="noopener" href="' + esc(waHref(l, m)) + '">WhatsApp</a>' +
       '<button class="btn btn-line" data-a="notes" data-i="' + l._i + '">📝 Notes</button>' +
       '<button class="btn btn-info" data-a="docs" data-i="' + l._i + '">📄 View documents</button>' +
       '<button class="btn btn-gold" data-a="req" data-i="' + l._i + '">Request documents</button></div></div></div>';
@@ -356,12 +365,22 @@ function openReq() {
       .then(function (r) {
         if (!r.success) { toast(r.error || 'Failed', true); return; }
         var wa = r.waMobile ? 'https://wa.me/91' + encodeURIComponent(r.waMobile) + '?text=' + encodeURIComponent(r.waText) : '';
+        WA_TEXT = r.waText || '';
         $('reqSend').classList.add('hidden');
         if (r.sentBack) { setTimeout(loadLeads, 300); }
         $('reqDone').innerHTML = '<div class="reason" style="background:var(--ok-bg);color:var(--ok)">' + (r.sentBack ? '↩ Lead sent back to “Pending documents” until the customer re-sends. ' : '') + (r.email ? '✓ Email sent to the customer.' : '⚠ No email on file for this customer — send the WhatsApp message.') + '</div>' +
-          (wa ? '<a class="btn btn-ok btn-block" style="margin-top:10px" target="_blank" rel="noopener" href="' + wa + '">💬 Open WhatsApp and send the message</a>' : '') +
+          (wa ? '<a class="btn btn-ok btn-block" style="margin-top:10px" target="_blank" rel="noopener" href="' + esc(wa) + '">💬 Open WhatsApp and send the message</a>' +
+            '<div class="sub" style="margin-top:10px">If WhatsApp opens empty, tap Copy and paste the message:</div>' +
+            '<div class="pitch" style="white-space:pre-wrap;user-select:all">' + esc(r.waText || '') + '</div>' +
+            '<button class="btn btn-line btn-block" style="margin-top:8px" id="copyWa">Copy message</button>' : '') +
           '<button class="btn btn-line btn-block" style="margin-top:8px" data-close2>Close</button>';
         $('reqDone').querySelector('[data-close2]').addEventListener('click', closeSheet);
+        var cp = $('copyWa');
+        if (cp) cp.addEventListener('click', function () {
+          var done = function () { toast('Message copied'); };
+          try { navigator.clipboard.writeText(WA_TEXT).then(done, function () { toast('Press and hold the text above to copy', true); }); }
+          catch (e) { toast('Press and hold the text above to copy', true); }
+        });
       }).catch(function (e) { toast(e.message, true); });
   });
 }
