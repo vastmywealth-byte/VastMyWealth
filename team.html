@@ -57,7 +57,7 @@ main{padding:14px 12px 60px;max-width:900px;margin:0 auto}
 .lead.open{border-color:var(--gold)}
 .actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
 .empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:14px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .stat b{display:block;font-size:20px}.stat span{font-size:11px;color:var(--muted)}
 .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:none}
@@ -103,11 +103,12 @@ main{padding:14px 12px 60px;max-width:900px;margin:0 auto}
     <button class="btn btn-line" id="outBtn">Logout</button>
   </header>
   <nav>
-    <button class="tab active" data-b="pending" id="tPending">Pending documents</button>
+    <button class="tab active" data-b="verify" id="tVerify">Needs verification</button>
+    <button class="tab" data-b="pending" id="tPending">Pending documents</button>
     <button class="tab" data-b="hold" id="tHold">Hold / Rejected</button>
   </nav>
   <main>
-    <div class="stats"><div class="stat"><b id="sPending">0</b><span>Pending documents</span></div><div class="stat"><b id="sHold">0</b><span>On hold</span></div><div class="stat"><b id="sRej">0</b><span>Rejected</span></div></div>
+    <div class="stats"><div class="stat"><b id="sVerify">0</b><span>To verify</span></div><div class="stat"><b id="sPending">0</b><span>Pending documents</span></div><div class="stat"><b id="sHold">0</b><span>On hold</span></div><div class="stat"><b id="sRej">0</b><span>Rejected</span></div></div>
     <input class="search" id="search" placeholder="Search name, mobile or lead ID">
     <div id="list"><div class="empty">Loading…</div></div>
   </main>
@@ -119,7 +120,7 @@ main{padding:14px 12px 60px;max-width:900px;margin:0 auto}
 
 <script>
 var API_URL = "https://vmw-portal-api.vastmywealth.workers.dev/";
-var OPEN = {}, OTHERS = {}, SESS = null, LEADS = [], BUCKET = "pending", CUR = null;
+var OPEN = {}, OTHERS = {}, SESS = null, LEADS = [], BUCKET = "verify", CUR = null;
 var $ = function (id) { return document.getElementById(id); };
 function esc(s) { var d = document.createElement('div'); d.textContent = (s === undefined || s === null) ? '' : s; return d.innerHTML; }
 function toast(m, bad) { var t = $('toast'); t.textContent = m; t.className = 'toast' + (bad ? ' error' : ''); t.style.display = 'block'; setTimeout(function () { t.style.display = 'none'; }, 3200); }
@@ -181,6 +182,7 @@ function fmtAmt(a) { var n = Number(String(a).replace(/[^\d.]/g, '')); if (!n) r
 function ago(ts) { if (!ts) return ''; var d = Math.floor((Date.now() - ts) / 86400000); return d <= 0 ? 'today' : d === 1 ? '1 day ago' : d + ' days ago'; }
 
 function render() {
+  $('sVerify').textContent = LEADS.filter(function (l) { return l.state === 'Needs Verification'; }).length;
   $('sPending').textContent = LEADS.filter(function (l) { return l.state === 'Pending Documents'; }).length;
   $('sHold').textContent = LEADS.filter(function (l) { return l.state === 'Hold'; }).length;
   $('sRej').textContent = LEADS.filter(function (l) { return l.state === 'Rejected'; }).length;
@@ -195,19 +197,19 @@ function render() {
     return;
   }
   $('list').innerHTML = rows.map(function (l) {
-    function chip(ok, label) { return '<span class="tag ' + (ok ? 'ok' : 'bad') + '">' + (ok ? '✓ ' : '✗ ') + label + '</span>'; }
     var m = String(l.mobile).replace(/\D/g, '').slice(-10);
     var open = !!OPEN[l.leadId];
     return '<div class="card lead' + (open ? ' open' : '') + '"><div class="lead-head" data-t="' + l._i + '"><div><div class="name">' + esc(l.name || 'Customer') + '</div>' +
       '<div class="sub">' + esc(l.product) + ' loan · ' + fmtAmt(l.loanAmount) + '</div></div>' +
-      '<div class="head-r"><span class="tag ' + (l.state === 'Pending Documents' ? 'warn' : l.state === 'Hold' ? 'bad' : 'info') + '">' + esc(l.state) + '</span><span class="chev">›</span></div></div>' +
+      '<div class="head-r"><span class="tag ' + (l.state === 'Pending Documents' || l.state === 'Needs Verification' ? 'warn' : l.state === 'Hold' ? 'bad' : 'info') + '">' + esc(l.state) + '</span><span class="chev">›</span></div></div>' +
       '<div class="lead-body' + (open ? '' : ' hidden') + '">' +
       '<div class="sub" style="margin-top:10px">' + esc(l.mobile) + ' · ' + esc(l.leadId) + ' · applied ' + ago(l.timestamp) + (l.city ? ' · ' + esc(l.city) : '') + '</div>' +
-      '<div>' + chip(l.docs.pan, 'PAN') + chip(l.docs.aadhaar, 'Aadhaar') + chip(l.docs.bank, 'Bank statement') +
+      '<div>' +
       (l.startup ? '<span class="tag info">Startup</span>' : '') + (l.cibil ? '<span class="tag info">CIBIL ' + esc(l.cibil) + '</span>' : '') + '</div>' +
       (l.state !== 'Pending Documents' && l.reason ? '<div class="reason"><b>Why held:</b> ' + esc(l.reason) + '</div>' : '') +
       '<div class="pitch"><b>What to say</b><ul>' + (l.pitch || []).map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></div>' +
       '<div class="actions">' +
+      (l.state === 'Needs Verification' ? '<button class="btn btn-ok" data-a="verify" data-i="' + l._i + '">✅ Documents OK — release</button>' : '') +
       '<a class="btn btn-ok" href="tel:+91' + m + '">📞 Call</a>' +
       '<a class="btn btn-ok" target="_blank" rel="noopener" href="https://wa.me/91' + m + '">WhatsApp</a>' +
       '<button class="btn btn-line" data-a="notes" data-i="' + l._i + '">📝 Notes</button>' +
@@ -227,8 +229,19 @@ $('list').addEventListener('click', function (e) {
   var b = e.target.closest('[data-a]'); if (!b) return;
   CUR = LEADS[Number(b.getAttribute('data-i'))]; if (!CUR) return;
   var a = b.getAttribute('data-a');
-  if (a === 'notes') openNotes(); else if (a === 'docs') openDocs(); else openReq();
+  if (a === 'notes') openNotes(); else if (a === 'docs') openDocs(); else if (a === 'verify') doVerify(b); else openReq();
 });
+
+/* ---------- verify & release ---------- */
+function doVerify(btn) {
+  if (!confirm('Confirm: PAN, Aadhaar and bank statement of ' + (CUR.name || 'this customer') + ' are the correct documents?\nYour name will be recorded against this release.')) return;
+  var lead = CUR;
+  busy(btn, 'Releasing…', function () { return api({ action: "teamVerifyLead", leadId: lead.leadId }); })
+    .then(function (r) {
+      if (r.success) { toast(r.state === 'Ready' ? 'Verified — will go out at the next send time' : 'Verified. Lead status: ' + (r.state || 'updated')); loadLeads(); }
+      else toast(r.error || 'Failed', true);
+    }).catch(function (e) { toast(e.message, true); });
+}
 
 /* ---------- sheet helpers ---------- */
 function openSheet(html) { $('sheet').innerHTML = html; $('bd').style.display = 'block'; $('sheet').style.display = 'block'; var c = $('sheet').querySelector('[data-close]'); if (c) c.addEventListener('click', closeSheet); }
@@ -256,10 +269,51 @@ function loadHist() {
   }).catch(function () {});
 }
 
+/* ---------- the customer's own document checklist (same list the customer sees on the application page) ---------- */
+function docChecklist(l) {
+  var G = [], id = 'Identity', IMGS = [];
+  var p = String(l.product || '').toUpperCase(), emp = String(l.employment || ''), ct = String(l.companyType || '');
+  if (p === 'VL') {
+    var vc = String(l.vehicleCondition || '');
+    G.push({ t: 'Applicant', i: ['PAN card', 'Aadhaar card', 'Selfie / photo', 'Bank statement — last 6 months'] });
+    G.push({ t: 'Vehicle', i: vc === 'New' ? ['Vehicle quotation / proforma invoice'] : vc === 'Used' ? ['Vehicle RC (registration certificate)'] : ['Vehicle quotation (new) or RC (used)'] });
+    return G;
+  }
+  if (p === 'EL') {
+    G.push({ t: 'Student', i: ['Student PAN / ID proof', 'Student Aadhaar card', 'Admission letter', 'Fee structure'] });
+    G.push({ t: 'Co-applicant', i: ['Co-applicant PAN card', 'Co-applicant Aadhaar card', 'Co-applicant bank statement — last 6 months'] });
+    return G;
+  }
+  var SE = /self/i.test(emp);
+  if (!SE) {
+    G.push({ t: 'Identity', i: ['PAN card', 'Aadhaar card', 'Selfie / photo'] });
+    G.push({ t: 'Income proof', i: ['Salary slips — last 3 months', 'Bank statement — last 6 months'] });
+    G.push({ t: 'Residence proof', i: ['Residence proof (utility bill or rent agreement)'] });
+  } else if (ct === 'Partnership' || ct === 'LLP' || ct === 'Pvt Ltd') {
+    var n = Math.min(10, Math.max(1, Number(l.personCount) || 2)), noun = ct === 'Pvt Ltd' ? 'Director' : 'Partner';
+    for (var k = 1; k <= n; k++) G.push({ t: noun + ' ' + k, i: [noun + ' ' + k + ' — PAN card', noun + ' ' + k + ' — Aadhaar card', noun + ' ' + k + ' — selfie / photo'] });
+    G.push({ t: 'Business documents', i: ['GST certificate', 'Current account statement — last 6 months'] });
+  } else {
+    G.push({ t: 'Applicant', i: ['Applicant PAN card', 'Applicant Aadhaar card', 'Applicant selfie / photo'] });
+    G.push({ t: 'Co-applicant', i: ['Co-applicant PAN card', 'Co-applicant Aadhaar card', 'Co-applicant selfie / photo'] });
+    G.push({ t: 'Business documents', i: ['GST certificate', 'Current account statement — last 6 months'] });
+  }
+  return G;
+}
+function checklistHtml(l) {
+  return docChecklist(l).map(function (g) {
+    return '<div class="sub" style="margin-top:8px"><b style="color:var(--text)">' + esc(g.t) + '</b></div><ul style="padding-left:18px;font-size:13px;line-height:1.7">' +
+      g.i.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
+  }).join('');
+}
+
 /* ---------- documents ---------- */
 var BLOB_URL = null;
 function openDocs() {
-  openSheet(head('Documents — ' + (CUR.name || '')) + '<div id="files"><div class="sub">Loading…</div></div><div id="viewer"></div>');
+  openSheet(head('Documents — ' + (CUR.name || '')) + '<div class="sub"><b style="color:var(--text)">Uploaded files</b></div><div id="files"><div class="sub">Loading…</div></div><div id="viewer"></div>' +
+    '<div class="reason" style="background:var(--info-bg);color:var(--text);margin-top:14px"><b>What the customer is asked to upload</b> — compare with the files above' + checklistHtml(CUR) + '</div>' +
+    '<button class="btn btn-gold btn-block" style="margin-top:12px" id="docsReq">Request missing documents</button>');
+  $('docsReq').addEventListener('click', function () { openReq(); });
   api({ action: "teamListDocs", leadId: CUR.leadId }).then(function (r) {
     var el = $('files'); if (!el) return;
     if (!r.success) { el.innerHTML = '<div class="sub">' + esc(r.error || 'Failed') + '</div>'; return; }
@@ -286,11 +340,14 @@ function viewFile(btn) {
 
 /* ---------- request documents ---------- */
 function openReq() {
-  var opts = ['PAN Card', 'Aadhaar', 'Bank Statement', 'CIBIL report', 'Property papers', 'GST / ITR'];
-  var pre = (CUR.missing || []);
+  var groups = docChecklist(CUR).concat([{ t: 'Other', i: ['CIBIL report', 'Property papers', 'ITR'] }]);
   openSheet(head('Request documents — ' + (CUR.name || '')) +
     '<div class="sub" style="margin-bottom:6px">The customer gets an email with the upload link. Then you send the WhatsApp message from your own phone — one tap.</div>' +
-    opts.map(function (o, i) { return '<label class="chk"><input type="checkbox" data-d="' + esc(o) + '"' + (pre.indexOf(o) !== -1 ? ' checked' : '') + '> ' + esc(o) + '</label>'; }).join('') +
+    '<div class="sub">Tick what is still missing.</div>' +
+    groups.map(function (g) {
+      return '<div class="sub" style="margin-top:10px"><b style="color:var(--text)">' + esc(g.t) + '</b></div>' +
+        g.i.map(function (o) { return '<label class="chk"><input type="checkbox" data-d="' + esc(o) + '"> ' + esc(o) + '</label>'; }).join('');
+    }).join('') +
     '<input type="text" id="reqExtra" placeholder="Anything else (optional)" style="margin-top:8px">' +
     '<button class="btn btn-gold btn-block" id="reqSend">Send email request</button><div id="reqDone"></div>');
   $('reqSend').addEventListener('click', function () {
@@ -300,7 +357,8 @@ function openReq() {
         if (!r.success) { toast(r.error || 'Failed', true); return; }
         var wa = r.waMobile ? 'https://wa.me/91' + encodeURIComponent(r.waMobile) + '?text=' + encodeURIComponent(r.waText) : '';
         $('reqSend').classList.add('hidden');
-        $('reqDone').innerHTML = '<div class="reason" style="background:var(--ok-bg);color:var(--ok)">' + (r.email ? '✓ Email sent to the customer.' : '⚠ No email on file for this customer — send the WhatsApp message.') + '</div>' +
+        if (r.sentBack) { setTimeout(loadLeads, 300); }
+        $('reqDone').innerHTML = '<div class="reason" style="background:var(--ok-bg);color:var(--ok)">' + (r.sentBack ? '↩ Lead sent back to “Pending documents” until the customer re-sends. ' : '') + (r.email ? '✓ Email sent to the customer.' : '⚠ No email on file for this customer — send the WhatsApp message.') + '</div>' +
           (wa ? '<a class="btn btn-ok btn-block" style="margin-top:10px" target="_blank" rel="noopener" href="' + wa + '">💬 Open WhatsApp and send the message</a>' : '') +
           '<button class="btn btn-line btn-block" style="margin-top:8px" data-close2>Close</button>';
         $('reqDone').querySelector('[data-close2]').addEventListener('click', closeSheet);
