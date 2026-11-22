@@ -711,13 +711,14 @@ function renderLeads() {
   }).join('');
     if (!leads.length) { container.innerHTML = '<div class="empty">No leads match your filters.</div>'; return; }
 
-  var sent = [], pending = [], hold = [];
+  var sent = [], pending = [], hold = [], verify = [];
   leads.forEach(function (l) {
     var b = leadBucket(l);
-    (b === 'sent' ? sent : b === 'hold' ? hold : pending).push(l);
+    (b === 'sent' ? sent : b === 'hold' ? hold : b === 'verify' ? verify : pending).push(l);
   });
 
   var buckets = [
+    { key: 'verify', label: 'Verify documents', list: verify },
     { key: 'sent', label: 'Sent to DSA', list: sent },
     { key: 'pending', label: 'Pending documents', list: pending },
     { key: 'hold', label: 'Hold / Reject', list: hold }
@@ -739,11 +740,13 @@ function setLeadBucket(k) { LEAD_BUCKET = k; renderLeads(); }
 function leadBucket(l) {
   if (l.leadState === 'Sent to DSA' || sentDsaNames(l).length) return 'sent';
   if (l.leadState === 'Hold' || l.leadState === 'Rejected') return 'hold';
+  if (l.leadState === 'Needs Verification') return 'verify';
   return 'pending';   // Pending Documents, Ready (goes at the next 9 AM run) and older leads with no state
 }
 function leadStateTags(l) {
   var t = '';
   if (l.leadState === 'Pending Documents') t += '<span class="tag warn">Pending documents</span>';
+  else if (l.leadState === 'Needs Verification') t += '<span class="tag warn">Needs verification</span>';
   else if (l.leadState === 'Ready') t += '<span class="tag ok">Ready — sends at next 9 AM run</span>';
   else if (l.leadState === 'Hold') t += '<span class="tag bad">Hold</span>';
   else if (l.leadState === 'Rejected') t += '<span class="tag bad">Rejected</span>';
@@ -751,6 +754,15 @@ function leadStateTags(l) {
   else if (!l.leadState && leadBucket(l) === 'pending') t += '<span class="tag">Older lead — send manually</span>';
   if (l.startup) t += '<span class="tag info">Startup</span>';
   return t;
+}
+function verifyLead(idx, ok) {
+  var l = ALL_LEADS[idx]; if (!l) return;
+  var note = '';
+  if (ok) { if (!window.confirm('Confirm PAN, Aadhaar and bank statement are the correct documents? The lead will go to the DSA at the next 9 AM run.')) return; }
+  else { note = window.prompt('Which documents must the customer re-send?', '') || ''; if (!note.trim()) return; }
+  apiPost({ action: 'adminVerifyLead', password: ADMIN_PASSWORD, leadId: l.leadId, product: l.product, ok: ok, note: note }).then(function (r) {
+    if (r && r.success) { showToast(ok ? 'Verified — state: ' + (r.state || 'updated') : 'Sent back to customer'); reloadLeadsOnly(); } else { showToast((r && r.error) || 'Could not update.', true); }
+  }).catch(function (e) { showToast('Connection error: ' + e.message, true); });
 }
 function setLeadState(idx, state) {
   var l = ALL_LEADS[idx]; if (!l) return;
@@ -810,6 +822,9 @@ function leadCardHtml(l) {
         '<div class="section-label">Full lead history</div>' +
         '<div class="lead-history-box" id="hist_' + esc(l.leadId) + '"><div class="empty">Loading…</div></div>' +
         '<button class="btn btn-line btn-block" style="margin-top:8px;" onclick="event.stopPropagation(); openLeadSheet(' + idx + ')">Manage pipeline, claims &amp; DSA</button>' +
+        (l.leadState === 'Needs Verification' ? ('<div style="display:flex;gap:8px;margin-top:8px;">' +
+          '<button class="btn btn-line" style="flex:1;" onclick="event.stopPropagation(); verifyLead(' + idx + ', true)">✅ Documents OK — release</button>' +
+          '<button class="btn btn-line" style="flex:1;" onclick="event.stopPropagation(); verifyLead(' + idx + ', false)">Documents not OK</button></div>') : '') +
         (leadBucket(l) !== 'sent' ? ('<div style="display:flex;gap:8px;margin-top:8px;">' +
           '<button class="btn btn-line" style="flex:1;" onclick="event.stopPropagation(); setLeadState(' + idx + ', \'Release\')">Release to DSA</button>' +
           '<button class="btn btn-line" style="flex:1;" onclick="event.stopPropagation(); setLeadState(' + idx + ', \'Hold\')">Hold</button>' +
