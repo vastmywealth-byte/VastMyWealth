@@ -50,6 +50,11 @@ main{padding:14px 12px 60px;max-width:900px;margin:0 auto}
 .pitch{margin-top:10px;padding:9px 11px;border-radius:8px;background:var(--info-bg);font-size:12.5px;line-height:1.5}
 .pitch b{color:var(--info)}
 .pitch ul{padding-left:18px;margin-top:4px}
+.lead-head{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer}
+.head-r{display:flex;align-items:center;gap:8px}
+.chev{font-size:22px;color:var(--muted);transition:transform .15s;line-height:1}
+.lead.open .chev{transform:rotate(90deg)}
+.lead.open{border-color:var(--gold)}
 .actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
 .empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:14px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
@@ -114,7 +119,7 @@ main{padding:14px 12px 60px;max-width:900px;margin:0 auto}
 
 <script>
 var API_URL = "https://vmw-portal-api.vastmywealth.workers.dev/";
-var OTHERS = {}, SESS = null, LEADS = [], BUCKET = "pending", CUR = null;
+var OPEN = {}, OTHERS = {}, SESS = null, LEADS = [], BUCKET = "pending", CUR = null;
 var $ = function (id) { return document.getElementById(id); };
 function esc(s) { var d = document.createElement('div'); d.textContent = (s === undefined || s === null) ? '' : s; return d.innerHTML; }
 function toast(m, bad) { var t = $('toast'); t.textContent = m; t.className = 'toast' + (bad ? ' error' : ''); t.style.display = 'block'; setTimeout(function () { t.style.display = 'none'; }, 3200); }
@@ -192,10 +197,12 @@ function render() {
   $('list').innerHTML = rows.map(function (l) {
     function chip(ok, label) { return '<span class="tag ' + (ok ? 'ok' : 'bad') + '">' + (ok ? '✓ ' : '✗ ') + label + '</span>'; }
     var m = String(l.mobile).replace(/\D/g, '').slice(-10);
-    return '<div class="card"><div class="row"><div><div class="name">' + esc(l.name || 'Customer') + '</div>' +
-      '<div class="sub">' + esc(l.product) + ' · ' + fmtAmt(l.loanAmount) + ' · ' + esc(l.mobile) + '</div>' +
-      '<div class="sub">' + esc(l.leadId) + ' · applied ' + ago(l.timestamp) + (l.city ? ' · ' + esc(l.city) : '') + '</div></div>' +
-      '<div><span class="tag ' + (l.state === 'Pending Documents' ? 'warn' : l.state === 'Hold' ? 'bad' : 'info') + '">' + esc(l.state) + '</span></div></div>' +
+    var open = !!OPEN[l.leadId];
+    return '<div class="card lead' + (open ? ' open' : '') + '"><div class="lead-head" data-t="' + l._i + '"><div><div class="name">' + esc(l.name || 'Customer') + '</div>' +
+      '<div class="sub">' + esc(l.product) + ' loan · ' + fmtAmt(l.loanAmount) + '</div></div>' +
+      '<div class="head-r"><span class="tag ' + (l.state === 'Pending Documents' ? 'warn' : l.state === 'Hold' ? 'bad' : 'info') + '">' + esc(l.state) + '</span><span class="chev">›</span></div></div>' +
+      '<div class="lead-body' + (open ? '' : ' hidden') + '">' +
+      '<div class="sub" style="margin-top:10px">' + esc(l.mobile) + ' · ' + esc(l.leadId) + ' · applied ' + ago(l.timestamp) + (l.city ? ' · ' + esc(l.city) : '') + '</div>' +
       '<div>' + chip(l.docs.pan, 'PAN') + chip(l.docs.aadhaar, 'Aadhaar') + chip(l.docs.bank, 'Bank statement') +
       (l.startup ? '<span class="tag info">Startup</span>' : '') + (l.cibil ? '<span class="tag info">CIBIL ' + esc(l.cibil) + '</span>' : '') + '</div>' +
       (l.state !== 'Pending Documents' && l.reason ? '<div class="reason"><b>Why held:</b> ' + esc(l.reason) + '</div>' : '') +
@@ -205,10 +212,18 @@ function render() {
       '<a class="btn btn-ok" target="_blank" rel="noopener" href="https://wa.me/91' + m + '">WhatsApp</a>' +
       '<button class="btn btn-line" data-a="notes" data-i="' + l._i + '">📝 Notes</button>' +
       '<button class="btn btn-info" data-a="docs" data-i="' + l._i + '">📄 View documents</button>' +
-      '<button class="btn btn-gold" data-a="req" data-i="' + l._i + '">Request documents</button></div></div>';
+      '<button class="btn btn-gold" data-a="req" data-i="' + l._i + '">Request documents</button></div></div></div>';
   }).join('');
 }
 $('list').addEventListener('click', function (e) {
+  var h = e.target.closest('[data-t]');
+  if (h && !e.target.closest('[data-a]')) {
+    var L = LEADS[Number(h.getAttribute('data-t'))]; if (!L) return;
+    var card = h.closest('.lead'), body = card.querySelector('.lead-body');
+    OPEN[L.leadId] = !OPEN[L.leadId];
+    card.classList.toggle('open', OPEN[L.leadId]); body.classList.toggle('hidden', !OPEN[L.leadId]);
+    return;
+  }
   var b = e.target.closest('[data-a]'); if (!b) return;
   CUR = LEADS[Number(b.getAttribute('data-i'))]; if (!CUR) return;
   var a = b.getAttribute('data-a');
@@ -274,16 +289,21 @@ function openReq() {
   var opts = ['PAN Card', 'Aadhaar', 'Bank Statement', 'CIBIL report', 'Property papers', 'GST / ITR'];
   var pre = (CUR.missing || []);
   openSheet(head('Request documents — ' + (CUR.name || '')) +
-    '<div class="sub" style="margin-bottom:6px">The customer gets a WhatsApp message and an email with the upload link.</div>' +
+    '<div class="sub" style="margin-bottom:6px">The customer gets an email with the upload link. Then you send the WhatsApp message from your own phone — one tap.</div>' +
     opts.map(function (o, i) { return '<label class="chk"><input type="checkbox" data-d="' + esc(o) + '"' + (pre.indexOf(o) !== -1 ? ' checked' : '') + '> ' + esc(o) + '</label>'; }).join('') +
     '<input type="text" id="reqExtra" placeholder="Anything else (optional)" style="margin-top:8px">' +
-    '<button class="btn btn-gold btn-block" id="reqSend">Send request</button>');
+    '<button class="btn btn-gold btn-block" id="reqSend">Send email request</button><div id="reqDone"></div>');
   $('reqSend').addEventListener('click', function () {
     var docs = Array.prototype.slice.call($('sheet').querySelectorAll('[data-d]')).filter(function (c) { return c.checked; }).map(function (c) { return c.getAttribute('data-d'); });
     busy($('reqSend'), 'Sending…', function () { return api({ action: "teamRequestDocs", leadId: CUR.leadId, docs: docs, extra: $('reqExtra').value.trim() }); })
       .then(function (r) {
         if (!r.success) { toast(r.error || 'Failed', true); return; }
-        toast('Sent' + (r.whatsapp ? ' · WhatsApp' : '') + (r.email ? ' · Email' : '')); closeSheet();
+        var wa = r.waMobile ? 'https://wa.me/91' + encodeURIComponent(r.waMobile) + '?text=' + encodeURIComponent(r.waText) : '';
+        $('reqSend').classList.add('hidden');
+        $('reqDone').innerHTML = '<div class="reason" style="background:var(--ok-bg);color:var(--ok)">' + (r.email ? '✓ Email sent to the customer.' : '⚠ No email on file for this customer — send the WhatsApp message.') + '</div>' +
+          (wa ? '<a class="btn btn-ok btn-block" style="margin-top:10px" target="_blank" rel="noopener" href="' + wa + '">💬 Open WhatsApp and send the message</a>' : '') +
+          '<button class="btn btn-line btn-block" style="margin-top:8px" data-close2>Close</button>';
+        $('reqDone').querySelector('[data-close2]').addEventListener('click', closeSheet);
       }).catch(function (e) { toast(e.message, true); });
   });
 }
