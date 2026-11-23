@@ -134,6 +134,7 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
     <button class="tab-btn" data-tab="tabSubs">Biz Tool</button>
     <button class="tab-btn" data-tab="tabTeam">Team</button>
     <button class="tab-btn" data-tab="tabFb">DSA Feedback</button>
+    <button class="tab-btn" data-tab="tabOrg">Organisation</button>
   </nav>
   <main>
     <!-- ============ LEADS ============ -->
@@ -226,6 +227,86 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
         <span class="sub" id="teamLinkNote" style="align-self:center;"></span>
       </div>
       <div id="teamContainer"><div class="empty">Loading…</div></div>
+    </div>
+    <!-- ============ ORGANISATION ============ -->
+    <div id="tabOrg" class="tab-pane hidden">
+      <div class="toolbar" style="flex-wrap:wrap;gap:6px;">
+        <button class="btn btn-gold btn-sm" data-orgsec="orgSeats">Seats</button>
+        <button class="btn btn-line btn-sm" data-orgsec="orgAppr">Approvals</button>
+        <button class="btn btn-line btn-sm" data-orgsec="orgComm">Commission</button>
+        <button class="btn btn-line btn-sm" data-orgsec="orgStmt">Statements</button>
+        <button class="btn btn-line btn-sm" data-orgsec="orgMis">MIS</button>
+      </div>
+      <div class="sub" id="orgLoginNote" style="margin-bottom:8px;"></div>
+
+      <div id="orgSeats" class="org-sec">
+        <div class="toolbar"><button class="btn btn-gold btn-sm" id="orgNewSeat">+ New seat</button></div>
+        <div class="card hidden" id="orgForm">
+          <div class="name" id="orgFormTitle">New seat</div>
+          <div class="field"><label>Seat code</label><input id="orgfCode" readonly placeholder="(created automatically)"></div>
+          <div class="field"><label>Role</label><select id="orgfRole"><option>Regional</option><option>City</option><option>RM</option><option>Partner</option><option>Support</option></select></div>
+          <div class="field"><label>Parent seat</label><select id="orgfParent"></select></div>
+          <div class="field"><label>State (Regional) / City (City)</label><input id="orgfTerr" placeholder="e.g. Maharashtra or Mumbai"></div>
+          <div class="field"><label>Name</label><input id="orgfName"></div>
+          <div class="field"><label>Mobile (10 digits)</label><input id="orgfMobile" inputmode="numeric" maxlength="10"></div>
+          <div class="field"><label>Email (PIN is sent here)</label><input id="orgfEmail" type="email"></div>
+          <div class="field"><label>PAN available?</label><select id="orgfPan"><option>No</option><option>Yes</option></select></div>
+          <div class="field"><label>GST registered?</label><select id="orgfGst"><option>No</option><option>Yes</option></select></div>
+          <div class="field"><label>Send-as e-mail alias (optional)</label><input id="orgfAlias" placeholder="west.ref@mail.vastmywealth.com"></div>
+          <div class="field"><label>Link an existing Partner / Banker code (optional)</label><input id="orgfPcode"></div>
+          <div class="field"><label>Notes</label><input id="orgfNotes"></div>
+          <div id="orgfErr" class="error-box hidden"></div>
+          <div style="display:flex;gap:8px;"><button class="btn btn-gold" id="orgfSave">Save</button><button class="btn btn-line" id="orgfCancel">Cancel</button></div>
+        </div>
+        <div id="orgSeatList"><div class="empty">Loading…</div></div>
+      </div>
+
+      <div id="orgAppr" class="org-sec hidden">
+        <div class="section-label">Move requests</div><div id="orgMoves"></div>
+        <div class="section-label" style="margin-top:14px;">Commission shares recommended by managers</div>
+        <div class="sub" style="margin-bottom:6px;">Share % = the part of the commission received on a lead that this seat earns. Along any chain the approved shares must total 100% or less; the rest stays with the company.</div>
+        <div id="orgShares"></div>
+      </div>
+
+      <div id="orgComm" class="org-sec hidden">
+        <div class="card">
+          <div class="name">Record commission received from a lender</div>
+          <div class="field"><label>Lead ID</label><input id="ocLead"></div>
+          <div class="field"><label>Commission received (₹)</label><input id="ocAmt" inputmode="decimal"></div>
+          <div class="field"><label>Received on (optional, dd/mm/yyyy)</label><input id="ocDate"></div>
+          <div class="field"><label>Lender / channel (optional)</label><input id="ocChan"></div>
+          <div class="field"><label>Note (optional)</label><input id="ocNote"></div>
+          <button class="btn btn-gold" id="ocSave">Record and split</button>
+          <div id="ocRes" class="sub" style="margin-top:8px;"></div>
+        </div>
+        <div class="card">
+          <div class="name">Lender took commission back (clawback)</div>
+          <div class="field"><label>Lead ID</label><input id="cbLead"></div>
+          <div class="field"><label>Amount reversed by the lender (₹)</label><input id="cbAmt" inputmode="decimal"></div>
+          <div class="field"><label>Note (optional)</label><input id="cbNote"></div>
+          <button class="btn btn-bad" id="cbSave">Record clawback</button>
+          <div id="cbRes" class="sub" style="margin-top:8px;"></div>
+        </div>
+        <div class="section-label">Ledger (latest 100)</div><div id="orgLedger"></div>
+      </div>
+
+      <div id="orgStmt" class="org-sec hidden">
+        <div class="card">
+          <div class="name">Monthly statement</div>
+          <div class="sub" style="margin-bottom:8px;">Run once on the fixed payout day. Preview first. A seat whose net for the period is negative is carried forward.</div>
+          <div class="field"><label>Month (yyyy-mm)</label><input id="osMonth"></div>
+          <div style="display:flex;gap:8px;"><button class="btn btn-line" id="osPreview">Preview</button><button class="btn btn-gold" id="osCreate">Create statements</button></div>
+          <div id="osRes" style="margin-top:8px;"></div>
+        </div>
+        <div class="section-label">Statements</div><div id="orgStmtList"></div>
+      </div>
+
+      <div id="orgMis" class="org-sec hidden">
+        <div class="field"><label>View</label><select id="omScope"></select></div>
+        <div class="field"><label>Period</label><select id="omMonths"><option value="0">All live leads</option><option value="3">Last 3 months</option><option value="6">Last 6 months</option><option value="14">Last 14 months</option></select></div>
+        <button class="btn btn-gold" id="omLoad">Show</button>
+        <div id="omOut" style="margin-top:10px;"></div>
+      </div>
     </div>
     <!-- ============ BIZ TOOL SUBSCRIPTIONS ============ -->
     <div id="tabSubs" class="tab-pane hidden">
@@ -658,6 +739,7 @@ document.querySelectorAll('.tab-btn').forEach(function (b) {
     if (b.dataset.tab === 'tabSubs' && !SUBS_LOADED) { SUBS_LOADED = true; loadSubscriptions(); }
     if (b.dataset.tab === 'tabTeam') loadTeam();
     if (b.dataset.tab === 'tabFb') fbInit();
+    if (b.dataset.tab === 'tabOrg') orgInit();
   });
 });
 
@@ -1524,6 +1606,211 @@ $('teamSubmitBtn').addEventListener('click', function () {
       closeSheet('addTeamSheet', 'addTeamBackdrop'); loadTeam();
     });
   }).catch(function (err) { box.textContent = err.message; box.classList.remove('hidden'); });
+});
+
+
+/* ================= ORGANISATION ================= */
+var ORG = { seats: [], loaded: false, sec: 'orgSeats' };
+function orgCall(action, extra) { var p = { action: action, password: ADMIN_PASSWORD }; Object.keys(extra || {}).forEach(function (k) { p[k] = extra[k]; }); return apiPost(p); }
+function orgInr(n) { var v = Number(n) || 0; return '₹' + v.toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
+function orgInit() { if (!ORG.loaded) { ORG.loaded = true; orgShow('orgSeats'); } }
+function orgShow(id) {
+  ORG.sec = id;
+  document.querySelectorAll('.org-sec').forEach(function (e) { e.classList.toggle('hidden', e.id !== id); });
+  document.querySelectorAll('[data-orgsec]').forEach(function (b) { b.className = 'btn btn-sm ' + (b.dataset.orgsec === id ? 'btn-gold' : 'btn-line'); });
+  if (id === 'orgSeats' || id === 'orgAppr' || id === 'orgMis') orgLoadSeats();
+  if (id === 'orgComm') orgLoadLedger();
+  if (id === 'orgStmt') { if (!$('osMonth').value) $('osMonth').value = new Date().toISOString().slice(0, 7); orgLoadStmts(); }
+}
+document.querySelectorAll('[data-orgsec]').forEach(function (b) { b.addEventListener('click', function () { orgShow(b.dataset.orgsec); }); });
+
+function orgLoadSeats() {
+  return orgCall('adminOrgListSeats').then(function (r) {
+    if (!r.success) { $('orgSeatList').innerHTML = '<div class="error-box">' + esc(r.error || 'Failed') + '</div>'; return; }
+    ORG.seats = r.seats || []; ORG.moves = r.moves || [];
+    $('orgLoginNote').textContent = 'Organisation app link: ' + (r.loginUrl || '');
+    orgRenderSeats(); orgRenderAppr(); orgFillSelects();
+  }).catch(function (e) { $('orgSeatList').innerHTML = '<div class="error-box">' + esc(e.message) + '</div>'; });
+}
+function orgDepth(code) { var d = 0, c = code, seen = {}; for (;;) { var s = ORG.seats.filter(function (x) { return x.code === c; })[0]; if (!s || !s.parent || seen[c]) break; seen[c] = 1; d++; c = s.parent; } return d; }
+function orgOrdered() {
+  var kids = {}; ORG.seats.forEach(function (s) { (kids[s.parent || ''] = kids[s.parent || ''] || []).push(s); });
+  var out = []; (function walk(code) { (kids[code] || []).forEach(function (s) { out.push(s); walk(s.code); }); })('');
+  return out;
+}
+function orgRenderSeats() {
+  var list = orgOrdered();
+  $('orgSeatList').innerHTML = list.map(function (s) {
+    var d = orgDepth(s.code), vac = s.status === 'Vacant';
+    var tag = s.status === 'Active' ? '<span class="tag ok">Active</span>' : vac ? '<span class="tag warn">Vacant</span>' : '<span class="tag bad">' + esc(s.status) + '</span>';
+    var share = s.shareStatus === 'Approved' ? 'Share ' + s.share + '% (approved)' : s.shareStatus === 'Recommended' ? 'Recommended ' + s.recommended + '% (awaiting approval)' : 'No share set';
+    return '<div class="card" style="margin-left:' + Math.min(d, 5) * 10 + 'px;"><div class="card-row" style="cursor:default;"><div>' +
+      '<div class="name">' + esc(s.code) + ' · ' + esc(s.role) + (s.territory ? ' · ' + esc(s.territory) : '') + ' ' + tag + (s.locked ? ' <span class="tag bad">Locked</span>' : '') + '</div>' +
+      '<div class="sub">' + (vac ? 'No one assigned' : esc(s.name) + ' · ' + esc(s.mobile) + ' · ' + esc(s.email)) + '</div>' +
+      '<div class="sub">' + esc(s.zone) + ' · ' + esc(share) + ' · PAN ' + esc(s.pan || 'No') + ' · GST ' + esc(s.gst || 'No') + (s.alias ? ' · ' + esc(s.alias) : '') + '</div></div>' +
+      '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">' +
+      (s.code !== 'HQ' ? '<button class="btn btn-line btn-sm" data-oedit="' + escA(s.code) + '">' + (vac ? 'Assign person' : 'Edit') + '</button>' : '') +
+      (!vac && s.code !== 'HQ' ? '<button class="btn btn-line btn-sm" data-oreset="' + escA(s.code) + '">Reset PIN</button>' : '') +
+      (s.locked ? '<button class="btn btn-ok btn-sm" data-ounlock="' + escA(s.code) + '">Unlock</button>' : '') +
+      (!vac && s.code !== 'HQ' ? '<button class="btn btn-bad btn-sm" data-ovac="' + escA(s.code) + '">Person left</button>' : '') +
+      '</div></div></div>';
+  }).join('') || '<div class="empty">No seats.</div>';
+}
+function orgFillSelects() {
+  var opts = orgOrdered().map(function (s) { return '<option value="' + escA(s.code) + '">' + esc(s.code + ' — ' + (s.name || 'vacant') + ' (' + s.role + ')') + '</option>'; }).join('');
+  var cur = $('orgfParent').value; $('orgfParent').innerHTML = opts; if (cur) $('orgfParent').value = cur;
+  var sc = $('omScope'), cv = sc.value;
+  sc.innerHTML = '<option value="">Whole company</option>' + orgOrdered().filter(function (s) { return s.code !== 'HQ'; }).map(function (s) { return '<option value="' + escA(s.code) + '">' + esc(s.code + ' — ' + (s.name || 'vacant')) + '</option>'; }).join('');
+  if (cv) sc.value = cv;
+}
+function orgOpenForm(code) {
+  var s = code ? ORG.seats.filter(function (x) { return x.code === code; })[0] : null;
+  $('orgfErr').classList.add('hidden');
+  $('orgFormTitle').textContent = s ? (s.status === 'Vacant' ? 'Assign a person to ' + s.code : 'Edit ' + s.code) : 'New seat';
+  $('orgfCode').value = s ? s.code : '';
+  $('orgfRole').value = s ? s.role : 'Regional'; $('orgfRole').disabled = !!s;
+  $('orgfParent').value = s ? s.parent : 'W-Z'; $('orgfParent').disabled = !!s;
+  $('orgfTerr').value = s ? s.territory : ''; $('orgfName').value = s ? s.name : ''; $('orgfMobile').value = s ? s.mobile : ''; $('orgfEmail').value = s ? s.email : '';
+  $('orgfPan').value = s && s.pan === 'Yes' ? 'Yes' : 'No'; $('orgfGst').value = s && s.gst === 'Yes' ? 'Yes' : 'No';
+  $('orgfAlias').value = s ? s.alias : ''; $('orgfPcode').value = s ? s.partnerCode : ''; $('orgfNotes').value = s ? s.notes : '';
+  $('orgForm').classList.remove('hidden'); $('orgForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+$('orgNewSeat').addEventListener('click', function () { orgOpenForm(''); });
+$('orgfCancel').addEventListener('click', function () { $('orgForm').classList.add('hidden'); });
+$('orgfSave').addEventListener('click', function () {
+  var code = $('orgfCode').value.trim();
+  var p = { code: code, role: $('orgfRole').value, parent: $('orgfParent').value, territory: $('orgfTerr').value.trim(), name: $('orgfName').value.trim(), seatMobile: $('orgfMobile').value.trim(),
+    email: $('orgfEmail').value.trim(), pan: $('orgfPan').value, gst: $('orgfGst').value, alias: $('orgfAlias').value.trim(), partnerCode: $('orgfPcode').value.trim(), notes: $('orgfNotes').value.trim() };
+  withBusy($('orgfSave'), 'Saving…', function () {
+    return orgCall('adminOrgSaveSeat', p).then(function (r) {
+      if (!r.success) { $('orgfErr').textContent = r.error || 'Failed'; $('orgfErr').classList.remove('hidden'); return; }
+      showToast(r.message || 'Saved'); $('orgForm').classList.add('hidden'); orgLoadSeats();
+    });
+  }).catch(function (e) { $('orgfErr').textContent = e.message; $('orgfErr').classList.remove('hidden'); });
+});
+$('orgSeatList').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-oedit],[data-oreset],[data-ounlock],[data-ovac]'); if (!b) return;
+  if (b.hasAttribute('data-oedit')) { orgOpenForm(b.getAttribute('data-oedit')); return; }
+  var act, code, msg = null;
+  if (b.hasAttribute('data-oreset')) { act = 'adminOrgResetPin'; code = b.getAttribute('data-oreset'); msg = 'Generate a new PIN and email it to this seat holder?'; }
+  else if (b.hasAttribute('data-ounlock')) { act = 'adminOrgUnlock'; code = b.getAttribute('data-ounlock'); }
+  else { act = 'adminOrgVacate'; code = b.getAttribute('data-ovac'); msg = 'Remove the person from ' + code + '? The seat, its team and history stay; access stops now.'; }
+  if (msg && !confirm(msg)) return;
+  withBusy(b, 'Please wait…', function () { return orgCall(act, { code: code }).then(function (r) { showToast(r.success ? (r.message || 'Done') : (r.error || 'Failed'), !r.success); if (r.success) orgLoadSeats(); }); }).catch(function (er) { showToast(er.message, true); });
+});
+
+function orgRenderAppr() {
+  $('orgMoves').innerHTML = (ORG.moves || []).map(function (m) {
+    return '<div class="card"><div class="name">' + esc(m.seat) + ': ' + esc(m.from) + ' → ' + esc(m.to) + '</div><div class="sub">Requested by ' + esc(m.by) + (m.on ? ' · ' + fmtDate(m.on) : '') + (m.note ? ' · ' + esc(m.note) : '') + '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px;"><button class="btn btn-ok btn-sm" data-omv="' + escA(m.id) + '" data-ok="1">Approve</button><button class="btn btn-bad btn-sm" data-omv="' + escA(m.id) + '" data-ok="0">Decline</button></div></div>';
+  }).join('') || '<div class="sub">No pending move requests.</div>';
+  var rec = ORG.seats.filter(function (s) { return s.code !== 'HQ' && (s.shareStatus === 'Recommended' || s.shareStatus === 'Approved' || s.status === 'Active'); });
+  $('orgShares').innerHTML = rec.map(function (s) {
+    var pre = s.shareStatus === 'Recommended' ? s.recommended : s.share;
+    return '<div class="card"><div class="card-row" style="cursor:default;"><div><div class="name">' + esc(s.code) + ' · ' + esc(s.name || 'vacant') + '</div><div class="sub">' + esc(s.role) + ' · ' +
+      (s.shareStatus === 'Approved' ? 'approved ' + s.share + '%' : s.shareStatus === 'Recommended' ? 'recommended ' + s.recommended + '%' : 'no share yet') + '</div></div>' +
+      '<div style="display:flex;gap:6px;align-items:center;"><input style="width:70px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:#fff;" inputmode="decimal" value="' + escA(pre || '') + '" data-ospct="' + escA(s.code) + '">' +
+      '<button class="btn btn-gold btn-sm" data-osapp="' + escA(s.code) + '">Approve %</button></div></div></div>';
+  }).join('');
+}
+$('orgMoves').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-omv]'); if (!b) return;
+  withBusy(b, 'Please wait…', function () { return orgCall('adminOrgDecideMove', { requestId: b.getAttribute('data-omv'), approve: b.getAttribute('data-ok') === '1' }).then(function (r) { showToast(r.success ? (r.message || 'Done') : (r.error || 'Failed'), !r.success); if (r.success) orgLoadSeats(); }); }).catch(function (er) { showToast(er.message, true); });
+});
+$('orgShares').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-osapp]'); if (!b) return;
+  var code = b.getAttribute('data-osapp'), inp = document.querySelector('[data-ospct="' + code + '"]');
+  withBusy(b, 'Please wait…', function () { return orgCall('adminOrgApproveShare', { code: code, percent: inp.value }).then(function (r) { showToast(r.success ? (r.message || 'Approved') : (r.error || 'Failed'), !r.success); if (r.success) orgLoadSeats(); }); }).catch(function (er) { showToast(er.message, true); });
+});
+
+function orgLoadLedger() {
+  orgCall('adminOrgLedger').then(function (r) {
+    if (!r.success) { $('orgLedger').innerHTML = '<div class="error-box">' + esc(r.error || 'Failed') + '</div>'; return; }
+    var rows = (r.entries || []).slice(0, 100);
+    $('orgLedger').innerHTML = rows.length ? rows.map(function (x) {
+      return '<div class="card"><div class="card-row" style="cursor:default;"><div><div class="name">' + esc(x['Type']) + ' · ' + esc(x['Lead ID']) + ' · ' + esc(x['Seat Code']) + ' ' + esc(x['Payee']) + '</div>' +
+        '<div class="sub">Base ' + orgInr(x['Base']) + ' · GST ' + orgInr(x['GST']) + ' · TDS ' + orgInr(x['TDS']) + ' · <b>Net ' + orgInr(x['Net']) + '</b></div>' +
+        '<div class="sub">' + esc(x['Status']) + (x['Statement ID'] ? ' · ' + esc(x['Statement ID']) : '') + '</div></div></div></div>';
+    }).join('') : '<div class="sub">No entries yet.</div>';
+  }).catch(function (e) { $('orgLedger').innerHTML = '<div class="error-box">' + esc(e.message) + '</div>'; });
+}
+$('ocSave').addEventListener('click', function () {
+  withBusy($('ocSave'), 'Recording…', function () {
+    return orgCall('adminOrgRecordCommission', { leadId: $('ocLead').value.trim(), commission: $('ocAmt').value.trim(), receivedOn: $('ocDate').value.trim(), channel: $('ocChan').value.trim(), note: $('ocNote').value.trim() }).then(function (r) {
+      if (!r.success) { $('ocRes').innerHTML = '<span style="color:var(--bad)">' + esc(r.error || 'Failed') + '</span>'; return; }
+      $('ocRes').innerHTML = 'Recorded ' + orgInr(r.commission) + '. Paid out to seats: ' + orgInr(r.distributed) + ' · kept by the company: ' + orgInr(r.keptByHq) +
+        (r.entries || []).map(function (x) { return '<br>' + esc(x.seat) + ' ' + esc(x.payee) + ' (' + x.share + '%): base ' + orgInr(x.base) + ', GST ' + orgInr(x.gst) + ', TDS ' + orgInr(x.tds) + ', net ' + orgInr(x.net); }).join('') +
+        ((r.notes || []).length ? '<br><i>' + esc(r.notes.join('; ')) + '</i>' : '');
+      orgLoadLedger();
+    });
+  }).catch(function (e) { $('ocRes').textContent = e.message; });
+});
+$('cbSave').addEventListener('click', function () {
+  if (!confirm('Record this clawback? It will be deducted from the same seats in their next statement.')) return;
+  withBusy($('cbSave'), 'Recording…', function () {
+    return orgCall('adminOrgClawback', { leadId: $('cbLead').value.trim(), amount: $('cbAmt').value.trim(), note: $('cbNote').value.trim() }).then(function (r) {
+      $('cbRes').innerHTML = r.success ? 'Clawback recorded on ' + r.entries + ' seat(s). Still recoverable on this lead: ' + orgInr(r.recoverable) : '<span style="color:var(--bad)">' + esc(r.error || 'Failed') + '</span>';
+      if (r.success) orgLoadLedger();
+    });
+  }).catch(function (e) { $('cbRes').textContent = e.message; });
+});
+
+function orgStmtRun(dry, btn) {
+  withBusy(btn, dry ? 'Checking…' : 'Creating…', function () {
+    return orgCall('adminOrgBuildStatement', { month: $('osMonth').value.trim(), dryRun: dry }).then(function (r) {
+      if (!r.success) { $('osRes').innerHTML = '<div class="error-box">' + esc(r.error || 'Failed') + '</div>'; return; }
+      $('osRes').innerHTML = '<div class="sub"><b>' + (r.dryRun ? 'Preview (nothing saved)' : 'Created') + '</b></div>' +
+        (r.statements || []).map(function (s) { return '<div class="sub">' + esc(s.seat) + ' ' + esc(s.payee) + ' · ' + s.entries + ' entries · base ' + orgInr(s.base) + ' · GST ' + orgInr(s.gst) + ' · TDS ' + orgInr(s.tds) + ' · <b>net ' + orgInr(s.net) + '</b></div>'; }).join('') +
+        ((r.carried || []).length ? '<div class="sub" style="margin-top:6px;">Carried forward: ' + r.carried.map(function (c) { return esc(c.seat) + ' (' + esc(c.reason) + ')'; }).join('; ') + '</div>' : '') +
+        (!(r.statements || []).length ? '<div class="sub">Nothing to pay this time.</div>' : '');
+      if (!dry) orgLoadStmts();
+    });
+  }).catch(function (e) { $('osRes').innerHTML = '<div class="error-box">' + esc(e.message) + '</div>'; });
+}
+$('osPreview').addEventListener('click', function () { orgStmtRun(true, $('osPreview')); });
+$('osCreate').addEventListener('click', function () { if (confirm('Create the statements for ' + $('osMonth').value + '? Entries are locked into them.')) orgStmtRun(false, $('osCreate')); });
+function orgLoadStmts() {
+  orgCall('adminOrgListStatements').then(function (r) {
+    if (!r.success) { $('orgStmtList').innerHTML = '<div class="error-box">' + esc(r.error || 'Failed') + '</div>'; return; }
+    $('orgStmtList').innerHTML = (r.statements || []).map(function (s) {
+      var paid = s['Status'] === 'Paid';
+      return '<div class="card"><div class="card-row" style="cursor:default;"><div><div class="name">' + esc(s['Statement ID']) + ' ' + (paid ? '<span class="tag ok">Paid</span>' : '<span class="tag warn">Due</span>') + '</div>' +
+        '<div class="sub">' + esc(s['Payee']) + ' · base ' + orgInr(s['Base']) + ' · GST ' + orgInr(s['GST']) + ' · TDS ' + orgInr(s['TDS']) + ' · <b>net ' + orgInr(s['Net Payable']) + '</b></div>' +
+        '<div class="sub">' + (s['GST Registered'] === 'Yes' ? 'GST invoice needed from payee · ' : '') + (paid ? 'Paid ' + fmtDate(s['Paid On']) + (s['Paid Ref'] ? ' · ref ' + esc(s['Paid Ref']) : '') : '') + '</div></div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;"><button class="btn btn-line btn-sm" data-osem="' + escA(s['Statement ID']) + '">Email statement</button>' +
+        (paid ? '' : '<button class="btn btn-ok btn-sm" data-ospaid="' + escA(s['Statement ID']) + '">Mark paid</button>') + '</div></div></div>';
+    }).join('') || '<div class="sub">No statements yet.</div>';
+  }).catch(function (e) { $('orgStmtList').innerHTML = '<div class="error-box">' + esc(e.message) + '</div>'; });
+}
+$('orgStmtList').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-osem],[data-ospaid]'); if (!b) return;
+  if (b.hasAttribute('data-osem')) {
+    withBusy(b, 'Sending…', function () { return orgCall('adminOrgEmailStatement', { statementId: b.getAttribute('data-osem') }).then(function (r) { showToast(r.success ? 'Emailed' : (r.error || 'Failed'), !r.success); }); }).catch(function (er) { showToast(er.message, true); });
+    return;
+  }
+  var ref = prompt('Payment reference (UTR / cheque no.):'); if (ref === null) return;
+  withBusy(b, 'Saving…', function () { return orgCall('adminOrgMarkPaid', { statementId: b.getAttribute('data-ospaid'), reference: ref }).then(function (r) { showToast(r.success ? 'Marked paid' : (r.error || 'Failed'), !r.success); if (r.success) orgLoadStmts(); }); }).catch(function (er) { showToast(er.message, true); });
+});
+
+function orgMisRender(r) {
+  var t = r.totals, pct = function (a, b) { return b ? Math.round(a * 100 / b) + '%' : '—'; };
+  function box(v, l) { return '<div class="stat-box"><b>' + v + '</b><span>' + l + '</span></div>'; }
+  var h = '<div class="stats-row">' + box(t.leads, 'Leads') + box(t.needsVerification + t.pending, 'Waiting on documents') + box(t.sent, 'Sent to DSA') + box(t.disbursed, 'Disbursed') + box(orgInr(t.disbursedAmount), 'Disbursed amount') + '</div>' +
+    '<div class="stats-row" style="margin-top:8px;">' + box(pct(t.sent + t.disbursed, t.leads), 'Reached DSA') + box(pct(t.disbursed, t.sent + t.disbursed), 'Disbursed of sent') + box(t.stalePending, 'Pending over 3 days') + box(t.hold, 'On hold') + box(t.dsaRejected + t.rejected, 'Rejected') + '</div>';
+  h += '<div class="section-label" style="margin-top:12px;">By team</div>' + (r.children || []).map(function (c) {
+    return '<div class="card"><div class="name">' + esc(c.code) + ' ' + esc(c.name || '') + '</div><div class="sub">' + c.leads + ' leads · ' + c.pending + ' waiting on documents · ' + c.sent + ' sent · ' + c.disbursed + ' disbursed (' + orgInr(c.amount) + ')</div></div>';
+  }).join('');
+  h += '<div class="section-label" style="margin-top:12px;">By product</div>' + Object.keys(r.byProduct || {}).map(function (k) { var p = r.byProduct[k]; return '<div class="sub">' + esc(k) + ': ' + p.leads + ' leads · ' + p.sent + ' sent · ' + p.disbursed + ' disbursed (' + orgInr(p.amount) + ')</div>'; }).join('');
+  h += '<div class="section-label" style="margin-top:12px;">By month</div>' + (r.byMonth || []).map(function (m) { return '<div class="sub">' + esc(m.month) + ': ' + m.leads + ' leads · ' + m.disbursed + ' disbursed (' + orgInr(m.amount) + ')</div>'; }).join('');
+  h += '<div class="section-label" style="margin-top:12px;">Banks with disbursals</div>' + ((r.banks || []).map(function (b) { return '<div class="sub">' + esc(b.bank) + ': ' + b.n + ' · ' + orgInr(b.amount) + '</div>'; }).join('') || '<div class="sub">None yet.</div>');
+  h += '<div class="section-label" style="margin-top:12px;">Why leads are on hold</div>' + ((r.holdReasons || []).map(function (b) { return '<div class="sub">' + esc(b.reason) + ': ' + b.n + '</div>'; }).join('') || '<div class="sub">None.</div>');
+  h += '<div class="section-label" style="margin-top:12px;">Seats filled</div>' + Object.keys(r.seatFill || {}).map(function (k) { var f = r.seatFill[k]; return '<div class="sub">' + esc(k) + ': ' + f.active + ' active · ' + f.vacant + ' vacant' + (f.inactive ? ' · ' + f.inactive + ' inactive' : '') + '</div>'; }).join('');
+  return h;
+}
+$('omLoad').addEventListener('click', function () {
+  withBusy($('omLoad'), 'Loading…', function () {
+    return orgCall('adminOrgMis', { scope: $('omScope').value, months: $('omMonths').value }).then(function (r) { $('omOut').innerHTML = r.success ? orgMisRender(r) : '<div class="error-box">' + esc(r.error || 'Failed') + '</div>'; });
+  }).catch(function (e) { $('omOut').innerHTML = '<div class="error-box">' + esc(e.message) + '</div>'; });
 });
 
 /* ================= BIZ TOOL SUBSCRIPTIONS ================= */
