@@ -204,6 +204,8 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
           <div class="field"><label for="fbColBank">Bank / lender column (optional)</label><select id="fbColBank"></select></div>
           <div class="field"><label for="fbColRemark">Remark column (optional)</label><select id="fbColRemark"></select></div>
           <div class="field"><label for="fbColName">Customer name column (optional)</label><select id="fbColName"></select></div>
+          <div class="field"><label for="fbColAmount">Disbursed amount column (optional)</label><select id="fbColAmount"></select></div>
+          <div class="field"><label for="fbColDisbDate">Disbursal date column (optional)</label><select id="fbColDisbDate"></select></div>
         </div>
         <div class="card">
           <div class="name">2. What does each status mean?</div>
@@ -1417,6 +1419,8 @@ function fbBuildMap() {
   fbPick('fbColBank', /bank|lender|login/, c.bank);
   fbPick('fbColRemark', /remark|comment|note/, c.remark);
   fbPick('fbColName', /^name|customer/, c.name);
+  fbPick('fbColAmount', /disb.*(amount|amt)|sanction|loan amount|amount/, c.amount);
+  fbPick('fbColDisbDate', /disb.*date|date.*disb|disbursal|disbursement date/, c.disbDate);
   $('fbMap').classList.remove('hidden');
   fbStatusTable();
 }
@@ -1436,7 +1440,7 @@ function fbStatusTable() {
   }).join('');
 }
 function fbPayload(dry) {
-  var ci = { mobile: $('fbColMobile').value, status: $('fbColStatus').value, bank: $('fbColBank').value, remark: $('fbColRemark').value, name: $('fbColName').value };
+  var ci = { mobile: $('fbColMobile').value, status: $('fbColStatus').value, bank: $('fbColBank').value, remark: $('fbColRemark').value, name: $('fbColName').value, amount: $('fbColAmount').value, disbDate: $('fbColDisbDate').value };
   if (ci.mobile === '' || ci.status === '') { showToast('Pick the mobile and status columns', true); return null; }
   function cell(r, k) { return ci[k] === '' ? '' : String(r[Number(ci[k])] === undefined ? '' : r[Number(ci[k])]).trim(); }
   var statusMap = {};
@@ -1444,7 +1448,7 @@ function fbPayload(dry) {
   var colNames = {}; Object.keys(ci).forEach(function (k) { colNames[k] = ci[k] === '' ? '' : FB.headers[Number(ci[k])]; });
   return { action: "adminDsaFbImport", password: ADMIN_PASSWORD, dsa: $('fbDsa').value, dryRun: dry,
     config: { columns: colNames, statusMap: statusMap },
-    rows: FB.rows.map(function (r) { return { name: cell(r, 'name'), mobile: cell(r, 'mobile'), status: cell(r, 'status'), bank: cell(r, 'bank'), remark: cell(r, 'remark') }; }) };
+    rows: FB.rows.map(function (r) { return { name: cell(r, 'name'), mobile: cell(r, 'mobile'), status: cell(r, 'status'), bank: cell(r, 'bank'), remark: cell(r, 'remark'), amount: cell(r, 'amount'), disbDate: cell(r, 'disbDate') }; }) };
 }
 function fbRun(dry, btn) {
   var p = fbPayload(dry); if (!p) return;
