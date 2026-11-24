@@ -133,6 +133,7 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
     <button class="tab-btn" data-tab="tabPartners">Partners</button>
     <button class="tab-btn" data-tab="tabSubs">Biz Tool</button>
     <button class="tab-btn" data-tab="tabTeam">Team</button>
+    <button class="tab-btn" data-tab="tabDsaU">DSA Logins</button>
     <button class="tab-btn" data-tab="tabFb">DSA Feedback</button>
     <button class="tab-btn" data-tab="tabOrg">Organisation</button>
   </nav>
@@ -227,6 +228,14 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
         <span class="sub" id="teamLinkNote" style="align-self:center;"></span>
       </div>
       <div id="teamContainer"><div class="empty">Loading…</div></div>
+    </div>
+    <!-- ============ DSA LOGINS ============ -->
+    <div id="tabDsaU" class="tab-pane hidden">
+      <div class="toolbar">
+        <button class="btn btn-gold btn-sm" id="addDsaUBtn">+ Add DSA login</button>
+        <span class="sub" id="dsaULinkNote" style="align-self:center;"></span>
+      </div>
+      <div id="dsaUContainer"><div class="empty">Loading…</div></div>
     </div>
     <!-- ============ ORGANISATION ============ -->
     <div id="tabOrg" class="tab-pane hidden">
@@ -390,6 +399,18 @@ main{padding:14px 12px 60px;max-width:1180px;margin:0 auto}
   <div class="field"><label for="teamEmail">Email (PIN and login link are sent here)</label><input type="email" id="teamEmail"></div>
   <button class="btn btn-gold btn-block" id="teamSubmitBtn">Create &amp; email PIN</button>
   <div id="teamResult" class="err-msg hidden"></div>
+</div>
+
+<!-- ===================== ADD DSA LOGIN SHEET ===================== -->
+<div class="backdrop" id="addDsaUBackdrop"></div>
+<div class="sheet" id="addDsaUSheet">
+  <div class="sheet-head"><h3>Add DSA login</h3><button class="close-x" id="closeAddDsaUSheet">✕</button></div>
+  <div class="field"><label for="dsaUDsa">DSA (as in the DSA Partners tab)</label><select id="dsaUDsa"></select></div>
+  <div class="field"><label for="dsaUName">Person's name</label><input type="text" id="dsaUName"></div>
+  <div class="field"><label for="dsaUMobile">Mobile number</label><input type="text" id="dsaUMobile" inputmode="numeric" maxlength="10"></div>
+  <div class="field"><label for="dsaUEmail">Email (PIN and login link are sent here)</label><input type="email" id="dsaUEmail"></div>
+  <button class="btn btn-gold btn-block" id="dsaUSubmitBtn">Create &amp; email PIN</button>
+  <div id="dsaUResult" class="err-msg hidden"></div>
 </div>
 
 <!-- ===================== NEW SUBSCRIPTION SHEET ===================== -->
@@ -738,6 +759,7 @@ document.querySelectorAll('.tab-btn').forEach(function (b) {
     window.history.pushState({ tab: b.dataset.tab }, "");
     if (b.dataset.tab === 'tabSubs' && !SUBS_LOADED) { SUBS_LOADED = true; loadSubscriptions(); }
     if (b.dataset.tab === 'tabTeam') loadTeam();
+    if (b.dataset.tab === 'tabDsaU') loadDsaU();
     if (b.dataset.tab === 'tabFb') fbInit();
     if (b.dataset.tab === 'tabOrg') orgInit();
   });
@@ -1604,6 +1626,60 @@ $('teamSubmitBtn').addEventListener('click', function () {
       showToast(r.message || 'Added');
       $('teamName').value = ''; $('teamMobile').value = ''; $('teamEmail').value = '';
       closeSheet('addTeamSheet', 'addTeamBackdrop'); loadTeam();
+    });
+  }).catch(function (err) { box.textContent = err.message; box.classList.remove('hidden'); });
+});
+
+
+/* ================= DSA LOGINS ================= */
+function loadDsaU() {
+  $('dsaUContainer').innerHTML = '<div class="empty">Loading…</div>';
+  apiPost({ action: "adminListDsaUsers", password: ADMIN_PASSWORD }).then(function (r) {
+    if (!r.success) { $('dsaUContainer').innerHTML = '<div class="error-box">' + esc(r.error || 'Failed to load') + '</div>'; return; }
+    $('dsaULinkNote').textContent = 'DSA login page: ' + (r.loginUrl || '');
+    $('dsaUDsa').innerHTML = (r.dsaNames || []).map(function (n) { return '<option value="' + escA(n) + '">' + esc(n) + '</option>'; }).join('');
+    var users = r.users || [];
+    if (!users.length) { $('dsaUContainer').innerHTML = '<div class="empty">No DSA logins yet. Tap “Add DSA login”.</div>'; return; }
+    $('dsaUContainer').innerHTML = users.map(function (u) {
+      var locked = u.status === 'Locked';
+      return '<div class="card"><div class="card-row" style="cursor:default;"><div>' +
+        '<div class="name">' + esc(u.name) + ' ' + (locked ? '<span class="tag bad">Locked</span>' : '<span class="tag ok">Active</span>') + '</div>' +
+        '<div class="sub">' + esc(u.dsaName) + '</div>' +
+        '<div class="sub">' + esc(u.mobile) + ' · ' + esc(u.email) + '</div>' +
+        '<div class="sub">' + (u.lastLogin ? 'Last login ' + fmtDate(u.lastLogin) : 'Never logged in') + '</div></div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">' +
+        (locked ? '<button class="btn btn-ok btn-sm" data-dunlock="' + escA(u.mobile) + '">Unlock</button>' : '') +
+        '<button class="btn btn-line btn-sm" data-dreset="' + escA(u.mobile) + '">Reset PIN</button>' +
+        '<button class="btn btn-bad btn-sm" data-ddel="' + escA(u.mobile) + '" data-dname="' + escA(u.name) + '">Delete</button>' +
+        '</div></div></div>';
+    }).join('');
+  }).catch(function (err) { $('dsaUContainer').innerHTML = '<div class="error-box">' + esc(err.message) + '</div>'; });
+}
+$('dsaUContainer').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-ddel],[data-dreset],[data-dunlock]'); if (!b) return;
+  var act, mob, msg = null;
+  if (b.hasAttribute('data-ddel')) { act = 'adminDeleteDsaUser'; mob = b.getAttribute('data-ddel'); msg = 'Delete ' + b.getAttribute('data-dname') + '? Their access stops immediately.'; }
+  else if (b.hasAttribute('data-dreset')) { act = 'adminResetDsaPin'; mob = b.getAttribute('data-dreset'); msg = 'Generate a new PIN and email it?'; }
+  else { act = 'adminUnlockDsaUser'; mob = b.getAttribute('data-dunlock'); }
+  if (msg && !confirm(msg)) return;
+  withBusy(b, 'Please wait…', function () {
+    return apiPost({ action: act, password: ADMIN_PASSWORD, userMobile: mob }).then(function (r) {
+      showToast(r.success ? (r.message || 'Done') : (r.error || 'Failed'), !r.success);
+      if (r.success) loadDsaU();
+    });
+  }).catch(function (err) { showToast(err.message, true); });
+});
+$('addDsaUBtn').addEventListener('click', function () { $('dsaUResult').classList.add('hidden'); openSheet('addDsaUSheet', 'addDsaUBackdrop'); });
+$('closeAddDsaUSheet').addEventListener('click', function () { closeSheet('addDsaUSheet', 'addDsaUBackdrop'); });
+$('addDsaUBackdrop').addEventListener('click', function () { closeSheet('addDsaUSheet', 'addDsaUBackdrop'); });
+$('dsaUSubmitBtn').addEventListener('click', function () {
+  var box = $('dsaUResult'); box.classList.add('hidden');
+  withBusy($('dsaUSubmitBtn'), 'Creating…', function () {
+    return apiPost({ action: "adminAddDsaUser", password: ADMIN_PASSWORD, dsaName: $('dsaUDsa').value, name: $('dsaUName').value.trim(), userMobile: $('dsaUMobile').value.trim(), email: $('dsaUEmail').value.trim() }).then(function (r) {
+      if (!r.success) { box.textContent = r.error || 'Failed'; box.classList.remove('hidden'); return; }
+      showToast(r.message || 'Added');
+      $('dsaUName').value = ''; $('dsaUMobile').value = ''; $('dsaUEmail').value = '';
+      closeSheet('addDsaUSheet', 'addDsaUBackdrop'); loadDsaU();
     });
   }).catch(function (err) { box.textContent = err.message; box.classList.remove('hidden'); });
 });
