@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VastMyWealth — DSA Partner Dashboard</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B1220;--panel:#111A2E;--panel-2:#16223A;--line:#233251;--gold:#D4A741;--ink:#0F1E3D;--text:#EAF0FC;--muted:#8FA0C4;
+--ok:#34D399;--ok-bg:rgba(52,211,153,.14);--warn:#F0B94B;--warn-bg:rgba(240,185,75,.14);--bad:#F0665E;--bad-bg:rgba(240,102,94,.14);--info:#7FB0FF;--info-bg:rgba(127,176,255,.14);--wa:#25D366}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+button{cursor:pointer;border:none;font-family:inherit;background:none;color:inherit}
+input,select,textarea{font-family:inherit}
+a{color:inherit;text-decoration:none}
+.hidden{display:none!important}
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:32px 26px}
+.login-logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--gold),#B8863B);display:flex;align-items:center;justify-content:center;color:var(--ink);font-weight:800;font-size:15px;margin:0 auto 14px}
+.login-card h1{text-align:center;font-size:19px;font-weight:800}
+.login-card p{text-align:center;color:var(--muted);font-size:13px;margin:6px 0 22px}
+input[type=text],input[type=password],input[type=tel],input[type=number],input[type=date],textarea,select{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);color:#fff;font-size:15px;margin-bottom:10px}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--gold);outline-offset:1px}
+textarea{min-height:70px;resize:vertical}
+label.l{display:block;font-size:12px;color:var(--muted);margin:2px 0 4px;font-weight:600}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border-radius:9px;font-weight:700;font-size:13px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-block{width:100%}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#B8863B);color:var(--ink)}
+.btn-line{background:var(--panel-2);border:1px solid var(--line);color:var(--text)}
+.btn-ok{background:var(--ok-bg);color:var(--ok)}
+.btn-info{background:var(--info-bg);color:var(--info)}
+.btn-wa{background:rgba(37,211,102,.16);color:var(--wa)}
+.err-msg{color:#FCA5A5;font-size:12.5px;text-align:center;margin-top:8px}
+header{position:sticky;top:0;z-index:20;background:rgba(11,18,32,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:14.5px;display:flex;align-items:center;gap:8px}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--gold);display:inline-block}
+.spacer{flex:1}
+.who{font-size:12px;color:var(--muted)}
+main{padding:14px 12px 70px;max-width:960px;margin:0 auto}
+.search{width:100%;padding:11px 13px;border-radius:9px;border:1px solid var(--line);background:var(--panel-2);color:#fff;font-size:14px;margin-bottom:10px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px}
+.chip{flex:none;padding:8px 12px;border-radius:99px;border:1px solid var(--line);background:var(--panel);font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+.chip b{color:var(--text);margin-left:4px}
+.chip.active{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.chip.active b{color:var(--ink)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px}
+.name{font-weight:800;font-size:15px}
+.sub{font-size:12px;color:var(--muted);margin-top:2px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;margin:6px 6px 0 0}
+.ok{background:var(--ok-bg);color:var(--ok)}.warn{background:var(--warn-bg);color:var(--warn)}.bad{background:var(--bad-bg);color:var(--bad)}.info{background:var(--info-bg);color:var(--info)}.mute{background:rgba(143,160,196,.14);color:var(--muted)}
+.lead-head{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer}
+.chev{font-size:22px;color:var(--muted);transition:transform .15s;line-height:1}
+.lead.open .chev{transform:rotate(90deg)}
+.lead.open{border-color:var(--gold)}
+.body{display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.lead.open .body{display:block}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;font-size:13px}
+.grid span{color:var(--muted);font-size:11.5px;display:block}
+.remark{margin-top:10px;padding:9px 11px;border-radius:8px;background:var(--panel-2);font-size:12.5px;line-height:1.5}
+.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:14px}
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:none}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;background:var(--panel);border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding:16px;z-index:41;display:none;max-width:960px;margin:0 auto}
+.sheet h3{font-size:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.x{font-size:18px;color:var(--muted);padding:4px 8px}
+.stbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.stbtn{padding:12px 8px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);font-weight:700;font-size:13px;text-align:center}
+.stbtn.sel{border-color:var(--gold);background:rgba(212,167,65,.16);color:var(--gold)}
+.file{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+.file span{word-break:break-all}
+.viewer{margin-top:12px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#000}
+.viewer img{width:100%;display:block}
+.viewer iframe{width:100%;height:70vh;border:0;background:#fff}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:var(--panel-2);border:1px solid var(--line);padding:10px 16px;border-radius:10px;font-size:13px;z-index:60;display:none;max-width:90vw}
+.toast.error{border-color:var(--bad);color:#FCA5A5}
+.spin{width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(max-width:520px){.grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">VMW</div>
+    <h1>DSA partner login</h1>
+    <p>Vast My Wealth — your assigned leads</p>
+    <input type="tel" id="loginMobile" placeholder="Mobile number" inputmode="numeric" maxlength="10" autocomplete="username">
+    <input type="password" id="loginPin" placeholder="PIN" inputmode="numeric" autocomplete="current-password">
+    <button class="btn btn-gold btn-block" id="loginBtn">Login</button>
+    <div class="err-msg" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <div class="brand"><i></i>Vast My Wealth</div>
+    <span class="who" id="who"></span>
+    <span class="spacer"></span>
+    <button class="btn btn-line" id="refreshBtn">Refresh</button>
+    <button class="btn btn-line" id="pinBtn">Change PIN</button>
+    <button class="btn btn-line" id="logoutBtn">Logout</button>
+  </header>
+  <main>
+    <input class="search" id="search" placeholder="Search name, mobile or lead ID">
+    <div class="chips" id="chips"></div>
+    <div id="list"><div class="empty">Loading…</div></div>
+  </main>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" async></script>
+<script>
+var API_URL = "https://vmw-portal-api.vastmywealth.workers.dev/";
+var SESS = null, LEADS = [], STATUSES = [], FILTER = "all", QUERY = "", CUR = null, OPEN = {};
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { var d = document.createElement('div'); d.textContent = (s === undefined || s === null) ? '' : s; return d.innerHTML; }
+function escA(s) { return esc(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function toast(m, bad) { var t = $('toast'); t.textContent = m; t.className = 'toast' + (bad ? ' error' : ''); t.style.display = 'block'; setTimeout(function () { t.style.display = 'none'; }, 3200); }
+function store(k, v) { try { if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
+function load(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+function fmtDate(ts) { return ts ? new Date(ts).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'; }
+function inr(n) { var v = Number(String(n).replace(/[^\d.]/g, '')); return v ? '₹' + v.toLocaleString('en-IN') : (n || '—'); }
+
+function api(payload) {
+  if (SESS) { payload.mobile = SESS.mobile; payload.token = SESS.token; }
+  return fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
+    .then(function (r) { return r.text(); })
+    .then(function (raw) {
+      var j; try { j = JSON.parse(raw); } catch (e) { throw new Error("Server returned an unexpected response."); }
+      if (j && j.authExpired) { logout(true); throw new Error("Session expired. Please log in again."); }
+      return j;
+    });
+}
+function busy(btn, label, fn) {
+  var o = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span> ' + esc(label);
+  return fn().then(function (r) { btn.disabled = false; btn.innerHTML = o; return r; }, function (e) { btn.disabled = false; btn.innerHTML = o; throw e; });
+}
+
+/* ---------- login ---------- */
+function showApp() { $('loginScreen').classList.add('hidden'); $('app').classList.remove('hidden'); $('who').textContent = SESS.name + ' · ' + SESS.dsaName; refresh(); }
+function logout(silent) {
+  if (SESS) { try { api({ action: "dsaLogout" }).catch(function () {}); } catch (e) {} }
+  SESS = null; store('dsa_sess', null); LEADS = [];
+  $('app').classList.add('hidden'); $('loginScreen').classList.remove('hidden');
+  if (silent) $('loginErr').textContent = 'Session expired. Please log in again.';
+}
+$('loginBtn').addEventListener('click', function () {
+  var m = $('loginMobile').value.replace(/\D/g, ''), p = $('loginPin').value.trim();
+  $('loginErr').textContent = '';
+  if (m.length !== 10 || !p) { $('loginErr').textContent = 'Enter your 10-digit mobile number and PIN.'; return; }
+  busy($('loginBtn'), 'Logging in…', function () { return api({ action: "dsaLogin", mobile: m, pin: p }); }).then(function (r) {
+    if (!r.success) { $('loginErr').textContent = r.error || 'Login failed.'; return; }
+    SESS = { mobile: r.mobile, token: r.token, name: r.name, dsaName: r.dsaName };
+    store('dsa_sess', JSON.stringify(SESS)); $('loginPin').value = ''; showApp();
+  }).catch(function (e) { $('loginErr').textContent = e.message; });
+});
+$('loginPin').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('loginBtn').click(); });
+$('logoutBtn').addEventListener('click', function () { logout(false); });
+$('refreshBtn').addEventListener('click', function () { refresh(); });
+
+/* ---------- leads ---------- */
+function refresh() {
+  if (!LEADS.length) $('list').innerHTML = '<div class="empty">Loading…</div>';
+  return api({ action: "dsaGetLeads" }).then(function (r) {
+    if (!r.success) { $('list').innerHTML = '<div class="empty">' + esc(r.error || 'Could not load leads.') + '</div>'; return; }
+    LEADS = r.leads || []; STATUSES = r.statuses || [];
+    render();
+  }).catch(function (e) { $('list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
+}
+function bucket(l) {
+  var s = (l.status || '').toLowerCase();
+  if (!l.status) return 'new';
+  if (l.category === 'Disbursed') return 'disbursed';
+  if (l.category === 'Rejected') return 'rejected';
+  if (s.indexOf('document') !== -1) return 'docs';
+  if (s.indexOf('not picking') !== -1) return 'nopick';
+  return 'process';
+}
+var FILTERS = [['all', 'All'], ['new', 'New'], ['process', 'In process'], ['docs', 'Document pending'], ['nopick', 'Not picking up'], ['rejected', 'Rejected'], ['disbursed', 'Disbursed']];
+function render() {
+  var counts = { all: LEADS.length };
+  LEADS.forEach(function (l) { var b = bucket(l); counts[b] = (counts[b] || 0) + 1; });
+  $('chips').innerHTML = FILTERS.map(function (f) {
+    return '<button class="chip' + (FILTER === f[0] ? ' active' : '') + '" data-f="' + f[0] + '">' + f[1] + '<b>' + (counts[f[0]] || 0) + '</b></button>';
+  }).join('');
+  var q = QUERY.toLowerCase();
+  var rows = LEADS.filter(function (l) {
+    if (FILTER !== 'all' && bucket(l) !== FILTER) return false;
+    if (!q) return true;
+    return (l.name + ' ' + l.mobile + ' ' + l.leadId + ' ' + l.product).toLowerCase().indexOf(q) !== -1;
+  });
+  if (!rows.length) { $('list').innerHTML = '<div class="empty">' + (LEADS.length ? 'No leads match.' : 'No leads have been assigned to you yet.') + '</div>'; return; }
+  $('list').innerHTML = rows.map(card).join('');
+}
+function stTag(l) {
+  if (!l.status) return '<span class="tag info">New</span>';
+  var b = bucket(l), c = b === 'disbursed' ? 'ok' : b === 'rejected' ? 'bad' : b === 'process' ? 'info' : 'warn';
+  return '<span class="tag ' + c + '">' + esc(l.status) + '</span>';
+}
+function card(l) {
+  var open = OPEN[l.leadId] ? ' open' : '';
+  var docs = '<span class="tag ' + (l.docs.pan ? 'ok' : 'bad') + '">PAN</span><span class="tag ' + (l.docs.aadhaar ? 'ok' : 'bad') + '">Aadhaar</span><span class="tag ' + (l.docs.bank ? 'ok' : 'bad') + '">Bank stmt</span>';
+  return '<div class="card lead' + open + '" data-id="' + escA(l.leadId) + '">' +
+    '<div class="lead-head" data-toggle="1"><div><div class="name">' + esc(l.name || '(no name)') + '</div>' +
+    '<div class="sub">' + esc(l.product) + ' · ' + inr(l.loanAmount) + ' · sent ' + fmtDate(l.sentOn || l.timestamp) + '</div>' +
+    '<div>' + stTag(l) + docs + '</div></div><span class="chev">›</span></div>' +
+    '<div class="body">' +
+    '<div class="grid"><div><span>Mobile</span>' + esc(l.mobile) + '</div><div><span>Lead ID</span>' + esc(l.leadId) + '</div>' +
+    '<div><span>Employment</span>' + esc(l.employment || '—') + '</div><div><span>CIBIL</span>' + esc(l.cibil || '—') + '</div>' +
+    '<div><span>City / State</span>' + esc(l.city || '—') + '</div><div><span>Last update</span>' + fmtDate(l.updatedOn) + '</div>' +
+    (l.bank ? '<div><span>Bank</span>' + esc(l.bank) + '</div>' : '') +
+    (l.disbursedAmount ? '<div><span>Disbursed</span>' + inr(l.disbursedAmount) + '</div>' : '') + '</div>' +
+    (l.missing && l.missing.length ? '<div class="remark">Documents still missing: <b>' + esc(l.missing.join(', ')) + '</b></div>' : '') +
+    (l.remark ? '<div class="remark">Your remark: ' + esc(l.remark) + '</div>' : '') +
+    '<div class="actions">' +
+    '<a class="btn btn-info" href="tel:+91' + escA(l.mobile) + '" data-call="1">Call</a>' +
+    '<button class="btn btn-wa" data-wa="1">WhatsApp</button>' +
+    '<button class="btn btn-line" data-docs="1">Documents</button>' +
+    '<button class="btn btn-gold" data-status="1">Update status</button>' +
+    '<button class="btn btn-line" data-note="1">Add note</button></div></div></div>';
+}
+$('chips').addEventListener('click', function (e) { var b = e.target.closest('[data-f]'); if (!b) return; FILTER = b.getAttribute('data-f'); render(); });
+$('search').addEventListener('input', function () { QUERY = this.value.trim(); render(); });
+$('list').addEventListener('click', function (e) {
+  var c = e.target.closest('.lead'); if (!c) return;
+  var id = c.getAttribute('data-id');
+  CUR = LEADS.filter(function (x) { return x.leadId === id; })[0];
+  if (e.target.closest('[data-call]')) { api({ action: "dsaContacted", leadId: id, via: "call" }).catch(function () {}); return; }
+  if (e.target.closest('[data-wa]')) return openWa();
+  if (e.target.closest('[data-docs]')) return openDocs();
+  if (e.target.closest('[data-status]')) return openStatus();
+  if (e.target.closest('[data-note]')) return openNote();
+  if (e.target.closest('[data-toggle]')) { OPEN[id] = !OPEN[id]; c.classList.toggle('open', !!OPEN[id]); }
+});
+
+/* ---------- sheet helpers ---------- */
+function openSheet(html) { $('sheet').innerHTML = html; $('sheet').style.display = 'block'; $('backdrop').style.display = 'block'; }
+function closeSheet() { $('sheet').style.display = 'none'; $('backdrop').style.display = 'none'; $('sheet').innerHTML = ''; }
+$('backdrop').addEventListener('click', closeSheet);
+$('sheet').addEventListener('click', function (e) { if (e.target.closest('[data-close]')) closeSheet(); });
+function head(t) { return '<h3><span>' + esc(t) + '</span><button class="x" data-close="1">✕</button></h3>'; }
+
+/* ---------- WhatsApp (opens the DSA's own WhatsApp with the message ready) ---------- */
+function waText(l) {
+  var first = (l.name || '').split(' ')[0] || 'there';
+  var me = SESS.name + ' from ' + SESS.dsaName + ' (Vast My Wealth partner)';
+  var s = (l.status || '').toLowerCase();
+  if (s.indexOf('not picking') !== -1) return 'Hi ' + first + ', this is ' + me + '. I tried calling you about your ' + l.product + ' loan. Please let me know a good time to talk, or reply here.';
+  if ((l.missing && l.missing.length) || s.indexOf('document') !== -1) {
+    var m = (l.missing && l.missing.length) ? l.missing.join(', ') : 'a few documents';
+    return 'Hi ' + first + ', this is ' + me + '. To move your ' + l.product + ' loan forward we still need: ' + m + '. Please send them here on WhatsApp, or upload securely: ' + l.link;
+  }
+  return 'Hi ' + first + ', this is ' + me + ' regarding your ' + l.product + ' loan application. Please reply here if you have any questions.';
+}
+function openWa() {
+  var l = CUR;
+  openSheet(head('WhatsApp ' + (l.name || '')) +
+    '<label class="l">Message (you can edit it)</label><textarea id="waMsg" style="min-height:130px">' + esc(waText(l)) + '</textarea>' +
+    '<button class="btn btn-wa btn-block" id="waGo">Open WhatsApp</button>' +
+    '<div class="sub" style="margin-top:8px">Opens WhatsApp on this device with the message ready. You press Send.</div>');
+  $('waGo').addEventListener('click', function () {
+    var url = 'https://wa.me/91' + l.mobile + '?text=' + encodeURIComponent($('waMsg').value);
+    api({ action: "dsaContacted", leadId: l.leadId, via: "whatsapp" }).catch(function () {});
+    window.open(url, '_blank'); closeSheet();
+  });
+}
+
+/* ---------- status ---------- */
+var PICK = '';
+function openStatus() {
+  var l = CUR; PICK = l.status || '';
+  openSheet(head('Status — ' + (l.name || '')) +
+    '<div class="stbtns" id="stBtns">' + STATUSES.map(function (s) { return '<button class="stbtn' + (s === PICK ? ' sel' : '') + '" data-s="' + escA(s) + '">' + esc(s) + '</button>'; }).join('') + '</div>' +
+    '<div id="stExtra"></div>' +
+    '<label class="l">Remark (optional; required for Rejected)</label><textarea id="stRemark" placeholder="e.g. waiting for ITR, customer asked to call after 6 PM">' + esc(l.remark || '') + '</textarea>' +
+    '<label class="l">Bank / NBFC (optional)</label><input type="text" id="stBank" value="' + escA(l.bank || '') + '">' +
+    '<button class="btn btn-gold btn-block" id="stSave">Save status</button><div class="err-msg" id="stErr"></div>');
+  extra();
+  $('stBtns').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-s]'); if (!b) return; PICK = b.getAttribute('data-s');
+    Array.prototype.forEach.call($('stBtns').children, function (x) { x.classList.toggle('sel', x === b); }); extra();
+  });
+  $('stSave').addEventListener('click', saveStatus);
+}
+function extra() {
+  var h = '';
+  if (PICK === 'Disbursed') h = '<label class="l">Disbursed amount (₹)</label><input type="number" id="stAmt" inputmode="numeric" placeholder="e.g. 850000"><label class="l">Disbursal date</label><input type="date" id="stDate">';
+  if (PICK === 'Document pending') h = '<div class="remark" style="margin:0 0 10px">The customer gets an automatic reminder from Vast My Wealth asking for the documents.</div>';
+  if (PICK === 'Customer not picking up call') h = '<div class="remark" style="margin:0 0 10px">The customer gets an automatic message asking them to take your call.</div>';
+  $('stExtra').innerHTML = h;
+}
+function saveStatus() {
+  var l = CUR; $('stErr').textContent = '';
+  if (!PICK) { $('stErr').textContent = 'Pick a status.'; return; }
+  var p = { action: "dsaUpdateStatus", leadId: l.leadId, status: PICK, remark: $('stRemark').value.trim(), bank: $('stBank').value.trim() };
+  if (PICK === 'Disbursed') { p.amount = $('stAmt').value; p.disbDate = $('stDate').value ? $('stDate').value.split('-').reverse().join('/') : ''; }
+  busy($('stSave'), 'Saving…', function () { return api(p); }).then(function (r) {
+    if (!r.success) { $('stErr').textContent = r.error || 'Could not save.'; return; }
+    l.status = PICK; l.remark = p.remark; l.bank = p.bank; l.updatedOn = Date.now();
+    l.category = PICK === 'Disbursed' ? 'Disbursed' : PICK === 'Rejected' ? 'Rejected' : PICK === 'In process' ? 'Processing' : 'Follow-up';
+    if (PICK === 'Disbursed') l.disbursedAmount = Number(p.amount) || 0;
+    toast('Status saved'); closeSheet(); render();
+  }).catch(function (e) { $('stErr').textContent = e.message; });
+}
+
+/* ---------- note ---------- */
+function openNote() {
+  var l = CUR;
+  openSheet(head('Note — ' + (l.name || '')) + '<textarea id="ntText" placeholder="Call outcome, promised date, anything useful"></textarea>' +
+    '<button class="btn btn-gold btn-block" id="ntSave">Save note</button><div class="err-msg" id="ntErr"></div>');
+  $('ntSave').addEventListener('click', function () {
+    busy($('ntSave'), 'Saving…', function () { return api({ action: "dsaAddNote", leadId: l.leadId, note: $('ntText').value }); }).then(function (r) {
+      if (!r.success) { $('ntErr').textContent = r.error || 'Could not save.'; return; }
+      toast('Note saved'); closeSheet();
+    }).catch(function (e) { $('ntErr').textContent = e.message; });
+  });
+}
+
+/* ---------- documents ---------- */
+var FILES = [];
+function b64blob(b64, type) {
+  var bin = atob(b64), n = bin.length, u = new Uint8Array(n);
+  for (var i = 0; i < n; i++) u[i] = bin.charCodeAt(i);
+  return new Blob([u], { type: type || 'application/octet-stream' });
+}
+function saveBlob(blob, name) {
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+}
+function fetchDoc(f) { return api({ action: "dsaGetDocFile", leadId: CUR.leadId, fileId: f.id }); }
+function openDocs() {
+  var l = CUR;
+  openSheet(head('Documents — ' + (l.name || '')) + '<div id="dcBody" class="empty">Loading…</div><div id="dcView"></div>');
+  api({ action: "dsaListDocs", leadId: l.leadId }).then(function (r) {
+    if (!r.success) { $('dcBody').innerHTML = esc(r.error || 'Could not load documents.'); return; }
+    FILES = r.files || [];
+    if (!FILES.length) { $('dcBody').innerHTML = esc(r.message || 'No documents uploaded yet.'); return; }
+    $('dcBody').className = '';
+    $('dcBody').innerHTML = '<button class="btn btn-gold btn-block" id="dcAll" style="margin-bottom:6px">Download all (' + FILES.length + ')</button>' +
+      FILES.map(function (f, i) {
+        return '<div class="file"><span>' + esc(f.name) + '<br><small style="color:var(--muted)">' + Math.max(1, Math.round(f.size / 1024)) + ' KB</small></span>' +
+          '<span style="display:flex;gap:6px"><button class="btn btn-info" data-view="' + i + '">View</button><button class="btn btn-line" data-dl="' + i + '">Download</button></span></div>';
+      }).join('');
+    $('dcAll').addEventListener('click', downloadAll);
+    $('dcBody').addEventListener('click', function (e) {
+      var v = e.target.closest('[data-view]'), d = e.target.closest('[data-dl]');
+      if (v) viewDoc(FILES[+v.getAttribute('data-view')], v);
+      if (d) dlDoc(FILES[+d.getAttribute('data-dl')], d);
+    });
+  }).catch(function (e) { $('dcBody').innerHTML = esc(e.message); });
+}
+function viewDoc(f, btn) {
+  busy(btn, '…', function () { return fetchDoc(f); }).then(function (r) {
+    if (!r.success) { toast(r.error || 'Could not open the file.', true); return; }
+    var blob = b64blob(r.data, r.type), url = URL.createObjectURL(blob);
+    $('dcView').innerHTML = '<div class="viewer">' + (/^image\//.test(r.type) ? '<img src="' + url + '">' : '<iframe src="' + url + '"></iframe>') + '</div>';
+    $('dcView').scrollIntoView({ behavior: 'smooth' });
+  }).catch(function (e) { toast(e.message, true); });
+}
+function dlDoc(f, btn) {
+  busy(btn, '…', function () { return fetchDoc(f); }).then(function (r) {
+    if (!r.success) { toast(r.error || 'Could not download.', true); return; }
+    saveBlob(b64blob(r.data, r.type), r.name);
+  }).catch(function (e) { toast(e.message, true); });
+}
+function downloadAll() {
+  var btn = $('dcAll'), l = CUR, zip = (typeof JSZip !== 'undefined') ? new JSZip() : null, done = 0, skipped = [];
+  btn.disabled = true;
+  var chain = Promise.resolve();
+  FILES.forEach(function (f) {
+    chain = chain.then(function () {
+      btn.innerHTML = '<span class="spin"></span> ' + (++done) + ' of ' + FILES.length;
+      return fetchDoc(f).then(function (r) {
+        if (!r.success) { skipped.push(f.name); return; }
+        if (zip) zip.file(r.name, r.data, { base64: true }); else saveBlob(b64blob(r.data, r.type), r.name);
+      });
+    });
+  });
+  chain.then(function () {
+    if (zip) return zip.generateAsync({ type: 'blob' }).then(function (b) { saveBlob(b, (l.name || 'customer').replace(/[^\w]+/g, '_') + '_' + l.leadId + '.zip'); });
+  }).then(function () {
+    toast(skipped.length ? 'Done. Could not fetch: ' + skipped.join(', ') : 'Downloaded');
+  }).catch(function (e) { toast(e.message, true); }).then(function () { btn.disabled = false; btn.innerHTML = 'Download all (' + FILES.length + ')'; });
+}
+
+/* ---------- change PIN ---------- */
+$('pinBtn').addEventListener('click', function () {
+  openSheet(head('Change PIN') + '<input type="password" id="pnCur" placeholder="Current PIN" inputmode="numeric"><input type="password" id="pnNew" placeholder="New PIN (4 to 8 digits)" inputmode="numeric">' +
+    '<button class="btn btn-gold btn-block" id="pnSave">Change PIN</button><div class="err-msg" id="pnErr"></div>');
+  $('pnSave').addEventListener('click', function () {
+    busy($('pnSave'), 'Saving…', function () { return api({ action: "dsaChangePin", currentPin: $('pnCur').value, newPin: $('pnNew').value }); }).then(function (r) {
+      if (!r.success) { $('pnErr').textContent = r.error || 'Could not change PIN.'; return; }
+      toast('PIN changed'); closeSheet();
+    }).catch(function (e) { $('pnErr').textContent = e.message; });
+  });
+});
+
+/* ---------- start ---------- */
+(function () { var s = load('dsa_sess'); if (s) { try { SESS = JSON.parse(s); showApp(); } catch (e) { store('dsa_sess', null); } } })();
+</script>
+</body>
+</html>
