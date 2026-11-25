@@ -100,6 +100,7 @@ main{padding:14px 12px 70px;max-width:960px;margin:0 auto}
     <span class="who" id="who"></span>
     <span class="spacer"></span>
     <button class="btn btn-line" id="refreshBtn">Refresh</button>
+    <button class="btn btn-line" id="cardBtn">My card</button>
     <button class="btn btn-line" id="pinBtn">Change PIN</button>
     <button class="btn btn-line" id="logoutBtn">Logout</button>
   </header>
@@ -401,6 +402,76 @@ $('pinBtn').addEventListener('click', function () {
   });
 });
 
+/* ===== Digital visiting card (shared snippet) =====
+   VMWCard.open({ name, mobile, designation, subtitle, logo })  — draws the card as an image the person can SHARE as a picture (not a link). */
+var VMWCard = (function () {
+  var CO = "Vast Wealth Advisors Pvt Ltd", ADDR = "4/794 A, Kochi, Kerala - 682002", OPS = "India  |  Canada";
+  var W = 1200, H = 700;
+  function fit(ctx, text, maxW, size, weight) {
+    var s = size; do { ctx.font = weight + " " + s + "px Inter, 'Segoe UI', Arial, sans-serif"; s -= 2; } while (ctx.measureText(text).width > maxW && s > 22);
+  }
+  function loadImg(src) { return new Promise(function (res) { if (!src) return res(null); var i = new Image(); i.onload = function () { res(i); }; i.onerror = function () { res(null); }; i.src = src; }); }
+  function fmtMobile(m) { var d = String(m || "").replace(/\D/g, "").slice(-10); return d.length === 10 ? "+91 " + d.slice(0, 5) + " " + d.slice(5) : String(m || ""); }
+  function draw(o) {
+    var fontReady = (document.fonts && document.fonts.load) ? Promise.all([document.fonts.load("700 40px Inter"), document.fonts.load("400 20px Inter")]).catch(function () {}) : Promise.resolve();
+    return Promise.all([fontReady, loadImg(o.logo)]).then(function (a) {
+      var logo = a[1], c = document.createElement("canvas"); c.width = W; c.height = H; var x = c.getContext("2d");
+      var g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#0F1E3D"); g.addColorStop(1, "#16233F"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      x.fillStyle = "#D4A741"; x.fillRect(0, 0, 14, H);                       // gold edge
+      x.globalAlpha = .06; x.beginPath(); x.arc(W - 120, 120, 320, 0, 7); x.fillStyle = "#D4A741"; x.fill(); x.globalAlpha = 1;
+      // logo / monogram
+      var lx = 70, ly = 56, ls = 96;
+      if (logo) { x.save(); x.beginPath(); x.arc(lx + ls / 2, ly + ls / 2, ls / 2, 0, 7); x.clip(); x.drawImage(logo, lx, ly, ls, ls); x.restore(); }
+      else { var gg = x.createLinearGradient(lx, ly, lx + ls, ly + ls); gg.addColorStop(0, "#D4A741"); gg.addColorStop(1, "#B8863B"); x.fillStyle = gg; x.beginPath(); x.arc(lx + ls / 2, ly + ls / 2, ls / 2, 0, 7); x.fill();
+        x.fillStyle = "#0F1E3D"; x.font = "800 34px Inter, Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("VMW", lx + ls / 2, ly + ls / 2 + 2); }
+      x.textAlign = "left"; x.textBaseline = "alphabetic";
+      x.fillStyle = "#FFFFFF"; x.font = "800 38px Inter, Arial, sans-serif"; x.fillText("VAST MY WEALTH", lx + ls + 26, ly + 48);
+      x.fillStyle = "#D4A741"; x.font = "600 22px Inter, Arial, sans-serif"; x.fillText(o.subtitle || "Loans  ·  Investments  ·  Insurance", lx + ls + 28, ly + 82);
+      // person
+      x.fillStyle = "#FFFFFF"; fit(x, o.name || "", W - 150, 68, 800); x.fillText(o.name || "", 70, 330);
+      x.fillStyle = "#D4A741"; fit(x, o.designation || "", W - 150, 34, 600); x.fillText(o.designation || "", 70, 380);
+      x.fillStyle = "#D4A741"; x.fillRect(70, 410, 90, 4);
+      // contact
+      x.fillStyle = "#8FA0C4"; x.font = "600 20px Inter, Arial, sans-serif"; x.fillText("CALL / WHATSAPP", 70, 462);
+      x.fillStyle = "#FFFFFF"; x.font = "700 44px Inter, Arial, sans-serif"; x.fillText(fmtMobile(o.mobile), 70, 512);
+      // footer
+      x.fillStyle = "rgba(255,255,255,.14)"; x.fillRect(70, 568, W - 140, 2);
+      x.fillStyle = "#EAF0FC"; x.font = "700 24px Inter, Arial, sans-serif"; x.fillText(CO + "  |  " + ADDR, 70, 612);
+      x.fillStyle = "#8FA0C4"; x.font = "500 22px Inter, Arial, sans-serif"; x.fillText("Operations: " + OPS, 70, 650);
+      return new Promise(function (res) { c.toBlob(function (b) { res({ blob: b, url: c.toDataURL("image/png") }); }, "image/png"); });
+    });
+  }
+  function open(o) {
+    var old = document.getElementById("vmwCardModal"); if (old) old.remove();
+    var m = document.createElement("div"); m.id = "vmwCardModal";
+    m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:14px;font-family:Inter,system-ui,sans-serif";
+    m.innerHTML = '<div style="width:100%;max-width:520px;background:#111A2E;border:1px solid #233251;border-radius:14px;padding:14px;color:#EAF0FC">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b>My visiting card</b><button id="vcX" style="font-size:20px;color:#8FA0C4;background:none;border:0;cursor:pointer">✕</button></div>' +
+      '<div id="vcBox" style="min-height:120px;display:flex;align-items:center;justify-content:center;color:#8FA0C4;font-size:13px">Preparing your card…</div>' +
+      '<div style="display:flex;gap:8px;margin-top:12px"><button id="vcShare" disabled style="flex:1;padding:12px;border:0;border-radius:9px;background:#D4A741;color:#0F1E3D;font-weight:800;font-size:14px;cursor:pointer;opacity:.5">Share card</button>' +
+      '<button id="vcSave" disabled style="flex:1;padding:12px;border:1px solid #233251;border-radius:9px;background:#16223A;color:#EAF0FC;font-weight:700;font-size:14px;cursor:pointer;opacity:.5">Save image</button></div>' +
+      '<div style="font-size:11.5px;color:#8FA0C4;margin-top:8px;line-height:1.5">Share sends the card itself as a picture, for example straight into a WhatsApp chat. Your name, number and designation are filled in automatically.</div></div>';
+    document.body.appendChild(m);
+    var close = function () { m.remove(); }; m.querySelector("#vcX").onclick = close; m.onclick = function (e) { if (e.target === m) close(); };
+    draw(o).then(function (r) {
+      m.querySelector("#vcBox").innerHTML = '<img src="' + r.url + '" style="width:100%;border-radius:10px;display:block" alt="Visiting card">';
+      var fname = "VastMyWealth_" + String(o.name || "card").replace(/[^\w]+/g, "_") + ".png";
+      var sh = m.querySelector("#vcShare"), sv = m.querySelector("#vcSave");
+      [sh, sv].forEach(function (b) { b.disabled = false; b.style.opacity = 1; });
+      function save() { var a = document.createElement("a"); a.href = r.url; a.download = fname; document.body.appendChild(a); a.click(); a.remove(); }
+      sv.onclick = save;
+      sh.onclick = function () {
+        var file; try { file = new File([r.blob], fname, { type: "image/png" }); } catch (e) { file = null; }
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: (o.name || "") + " - Vast My Wealth", text: (o.name || "") + ", " + (o.designation || "") + " - Vast My Wealth" }).catch(function () {});
+        } else { save(); alert("Sharing is not available on this device, so the card image was saved. Attach it from your gallery."); }
+      };
+    });
+  }
+  return { open: open, draw: draw };
+})();
+
+$('cardBtn').addEventListener('click', function () { VMWCard.open({ name: SESS.name, mobile: SESS.mobile, designation: 'Partner - ' + SESS.dsaName, logo: 'logo.jpg' }); });
 /* ---------- start ---------- */
 (function () { var s = load('dsa_sess'); if (s) { try { SESS = JSON.parse(s); showApp(); } catch (e) { store('dsa_sess', null); } } })();
 </script>
