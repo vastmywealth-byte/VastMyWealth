@@ -434,7 +434,8 @@ var VMWCard = (function () {
       x.fillStyle = "rgba(255,255,255,.14)"; x.fillRect(70, 568, W - 140, 2);
       x.fillStyle = "#EAF0FC"; x.font = "700 24px Inter, Arial, sans-serif"; x.fillText(CO + "  |  " + ADDR, 70, 612);
       x.fillStyle = "#8FA0C4"; x.font = "500 22px Inter, Arial, sans-serif"; x.fillText("Operations: " + OPS, 70, 650);
-      return new Promise(function (res) { c.toBlob(function (b) { res({ blob: b, url: c.toDataURL("image/png") }); }, "image/png"); });
+      var url; try { url = c.toDataURL("image/png"); } catch (eT) { return o.logo ? draw({ name: o.name, mobile: o.mobile, designation: o.designation, subtitle: o.subtitle }) : Promise.reject(eT); }   // logo blocked: draw without it
+      return new Promise(function (res) { c.toBlob(function (b) { res({ blob: b, url: url }); }, "image/png"); });
     });
   }
   function open(o) {
