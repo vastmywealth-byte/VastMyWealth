@@ -61,7 +61,7 @@ function login(stage = 'email', email = '') {
   const send = async () => { try { await api('/api/lawyer/login-request', { method: 'POST', body: { email: em.value } }); toast('If this email is approved, a code was sent.'); login('code', em.value.trim().toLowerCase()); } catch (e) { toast(e.message); } };
   const verify = async () => { try { const r = await api('/api/lawyer/login-verify', { method: 'POST', body: { email, code: code.value } }); S.token = r.token; store.set('vmw.l.token', r.token); location.hash = '#/leads'; route(); } catch (e) { toast(e.message); } };
   chrome(h('div', { class: 'stack', style: 'margin-top:24px' },
-    h('div', { class: 'center' }, h('div', { class: 'logo-lg' }, 'P'), h('h1', {}, 'Advocate login'), h('p', { class: 'muted' }, 'For verified advocates only. We email you a one-time code.')),
+    h('div', { class: 'center' }, h('div', { class: 'logo-lg' }, 'P'), h('h1', {}, 'Student login'), h('p', { class: 'muted' }, 'For verified advocates only. We email you a one-time code.')),
     h('div', { class: 'card stack' },
       stage === 'email' ? [h('label', { class: 'lbl' }, 'Registered email'), em, h('button', { class: 'btn', onclick: send }, 'Send login code')]
         : [h('p', { class: 'muted', style: 'margin:0' }, 'Code sent to ' + email), code, h('button', { class: 'btn', onclick: verify }, 'Log in'), h('button', { class: 'btn ghost', onclick: () => login('email', email) }, 'Use a different email')]),
